@@ -1,0 +1,10 @@
+remove garbageC
+
+say "Garbage Collector (GC) disabled!"
+remember message = "Allocations bypass GC tracking directly."
+say "{message}"
+
+remember a = 50
+remember b = 50
+remember total = a + b
+say "Result: {total}"

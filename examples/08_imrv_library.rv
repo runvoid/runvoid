@@ -1,0 +1,12 @@
+say "--- Immediate Mode GUI (imrv) Showcase ---"
+
+imrv draw text "Runvoid Game Control Panel"
+remember sound_enabled = imrv draw checkbox "Enable Sound", 1
+remember music_enabled = imrv draw checkbox "Background Music", 0
+
+if sound_enabled is 0 {
+    say "Sound disabled!"
+}
+
+imrv draw button "Start Game"
+say "Ready to launch!"

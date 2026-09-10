@@ -1,0 +1,11 @@
+remove Basic
+
+remember count: Int = 100
+remember name: String = "Strict Type Mode"
+remember flag: Bool = true
+
+say "{name} active: {count}"
+
+if flag is true {
+    say "Flag is true!"
+}

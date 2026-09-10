@@ -1,0 +1,3 @@
+say "Executing Bash command via Runvoid:"
+run "echo '-> Hello from shell /bin/sh!' && uname -m"
+say "Command finished successfully!"

@@ -1,0 +1,29 @@
+remember target = 3
+
+say "--- Simple repeat ---"
+repeat target {
+    say "Repetition!"
+}
+
+say "--- Repeat with 'as i' ---"
+repeat 4 as i {
+    say "Step {i}"
+}
+
+say "--- While loop with condition ---"
+remember c = 1
+while c <= 3 {
+    say "While counter: {c}"
+    c = c + 1
+}
+
+say "--- Branching with if / otherwise if / otherwise ---"
+remember score = 85
+
+if score > 90 {
+    say "Excellent (A)"
+} otherwise if score >= 80 and score <= 90 {
+    say "Good (B)"
+} otherwise {
+    say "Pass (C)"
+}

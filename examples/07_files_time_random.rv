@@ -1,0 +1,19 @@
+say "--- Testing files, random numbers, and timers (v0.1.0) ---"
+
+# 1. File Writing
+say "Writing text to note.txt..."
+write "Runvoid v0.1 works great!" into "note.txt"
+
+# 2. File Reading
+say "Reading back from file:"
+remember text_from_file = read "note.txt"
+say "Contents: {text_from_file}"
+
+# 3. Random numbers
+remember lucky_number = random 10 to 99
+say "Your lucky number between 10 and 99 is: {lucky_number}"
+
+# 4. Timer / Sleep
+say "Waiting for 1 second..."
+wait 1
+say "Done waiting, proceeding!"

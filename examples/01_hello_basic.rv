@@ -1,0 +1,12 @@
+say "Hello, Runvoid world!"
+
+remember user = "Alex"
+remember year = 2026
+
+say "Hello, {user}! Welcome to the year {year}."
+
+remember num1 = 15
+remember num2 = 27
+remember sum = num1 + num2
+
+say "Sum of {num1} + {num2} = {sum}"

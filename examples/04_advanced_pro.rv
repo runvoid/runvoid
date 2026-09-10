@@ -1,0 +1,22 @@
+remove garbageC
+remove Basic
+add Advanced
+use ior
+
+action square(n: Int): Int {
+    give n * n
+}
+
+action add_numbers(a: Int, b: Int): Int {
+    give a + b
+}
+
+# Constant folding test: 10 * 10 + 50 -> 150 at compile-time!
+remember folded: Int = 10 * 10 + 50
+say "Folded constant: {folded}"
+
+remember val: Int = square(8)
+say "Square of 8 = {val}"
+
+remember sum: Int = add_numbers(val, folded)
+say "Sum of {val} + {folded} = {sum}"

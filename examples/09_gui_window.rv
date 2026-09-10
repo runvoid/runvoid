@@ -1,0 +1,8 @@
+window "Runvoid GUI Demo v0.1", 450, 320 {
+    label "Welcome to Runvoid GUI!"
+    checkbox "Enable Dark Mode", 1
+    checkbox "Automatic Updates", 0
+    button "Save Settings" {
+        say "Settings successfully saved!"
+    }
+}
