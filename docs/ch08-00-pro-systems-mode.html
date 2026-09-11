@@ -177,18 +177,33 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="8-pro-systems-mode"><a class="header" href="#8-pro-systems-mode">8. Pro Systems Mode</a></h1>
-<p>When your project outgrows high-level conveniences and demands direct hardware manipulation, strict static typing, and microsecond-level determinism, Runvoid transforms into an uncompromising systems programming language.</p>
-<p>In this chapter, we explore the capabilities unlocked by <strong>Pro Systems Mode</strong>:</p>
+<p>When your project demands deterministic performance, microsecond execution guarantees, raw hardware access, and direct interaction with the operating system kernel, Runvoid transforms into an uncompromising systems programming language.</p>
+<p>In high-level scripting mode, Runvoid prioritizes conversational simplicity, dynamic collections, and automated garbage collection. But under the surface, Runvoid was engineered from day one on top of native x86_64 machine code.</p>
+<p><strong>Pro Systems Mode</strong> gives you the ability to selectively disable high-level runtime layers and take manual command of the underlying hardware:</p>
 <ul>
-<li>Compiler directives and activation</li>
-<li>Strict static typing (<code>: Int</code>, <code>: String</code>, <code>: Bool</code>, <code>: Ptr</code>)</li>
-<li>The modular standard library (<code>use ior</code>, <code>math</code>, <code>sys</code>, <code>mem</code>, <code>fs</code>, <code>net</code>, <code>thread</code>)</li>
-<li>Raw pointers and manual heap management (<code>addr</code>, <code>@</code>, <code>alloc</code>, <code>free</code>)</li>
-<li>C-compatible POD structs and native C FFI (<code>extern "C"</code>)</li>
-<li>Native POSIX multithreading and hardware atomics (<code>atomic add</code>)</li>
-<li>Hardware inline assembly and CPU clock cycle profiling (<code>measure cycles</code>)</li>
-<li>Bare-metal freestanding binaries without libc (<code>add Freestanding</code>)</li>
+<li>Enforce strict, compile-time static typing with zero runtime overhead.</li>
+<li>Strip the garbage collection subsystem entirely for zero-pause determinism.</li>
+<li>Link modular, granular modules from the standard library without dragging in unused symbols.</li>
+<li>Allocate, inspect, and manipulate raw memory addresses via hardware pointers.</li>
+<li>Define C-compatible POD (Plain Old Data) structs and bind directly to C shared libraries (<code>.so</code> / <code>.dll</code>).</li>
+<li>Coordinate concurrent CPU cores with OS threads and atomic hardware primitives.</li>
+<li>Inject raw inline NASM assembly and profile CPU execution using the <code>rdtsc</code> cycle counter.</li>
+<li>Compile freestanding, bare-metal ELF binaries with no C runtime or standard library dependencies.</li>
 </ul>
+<hr />
+<h2 id="chapter-outline"><a class="header" href="#chapter-outline">Chapter Outline</a></h2>
+<p>This chapter guides you step-by-step through every facet of systems development in Runvoid:</p>
+<ul>
+<li><strong>8.1 Systems Philosophy &amp; Directives:</strong> How top-level compiler directives (<code>remove garbageC</code>, <code>remove Basic</code>, <code>add Advanced</code>, <code>add Freestanding</code>) reshape the compiler pipeline.</li>
+<li><strong>8.2 Strict Static Typing:</strong> Eliminating type ambiguity with explicit type signatures (<code>: Int</code>, <code>: String</code>, <code>: Bool</code>, <code>: Ptr</code>).</li>
+<li><strong>8.3 The Modular Standard Library:</strong> Zero-overhead imports (<code>use ior</code>, <code>math</code>, <code>sys</code>, <code>mem</code>, <code>fs</code>, <code>net</code>, <code>thread</code>) and dead-code elimination.</li>
+<li><strong>8.4 Raw Pointers &amp; Manual Memory:</strong> Address-of operators, memory dereferencing, manual heap allocation, and memory safety hygiene.</li>
+<li><strong>8.5 C-Compatible Structs &amp; C FFI:</strong> Struct memory alignment, field offsets, and linking with external C/C++ libraries.</li>
+<li><strong>8.6 Multithreading &amp; Hardware Atomics:</strong> Spawning native OS threads, mutex synchronization, and hardware lock-prefixed atomic instructions.</li>
+<li><strong>8.7 Inline Assembly &amp; CPU Cycle Profiling:</strong> Injecting hand-crafted NASM instructions and benchmarking performance with nanosecond cycle precision.</li>
+<li><strong>8.8 Bare-Metal Freestanding Binaries:</strong> Building operating system kernels, bootloaders, and firmware with custom <code>_start</code> entry points and zero runtime baggage.</li>
+</ul>
+<p>Welcome to the metal.</p>
 
                     </main>
 

@@ -177,40 +177,140 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="11-installation--system-requirements"><a class="header" href="#11-installation--system-requirements">1.1 Installation &amp; System Requirements</a></h1>
-<p>Runvoid compiles code down to native Linux x86_64 ELF binaries. To run the compiler, ensure you have the standard build toolchain installed on your Linux system.</p>
-<h2 id="system-prerequisites"><a class="header" href="#system-prerequisites">System Prerequisites</a></h2>
-<p>Runvoid requires:</p>
-<ul>
-<li>A Linux operating system on x86_64 architecture</li>
-<li><strong>Rust Toolchain:</strong> <code>rustc</code> and <code>cargo</code> (&gt;= 1.80)</li>
-<li><strong>Assembler:</strong> <code>nasm</code> (&gt;= 2.15)</li>
-<li><strong>Linker:</strong> <code>gcc</code> or GNU <code>ld</code></li>
-<li><strong>X11 Libraries:</strong> <code>libX11</code> (only needed if building GUI / Screen canvas applications)</li>
-</ul>
-<h3 id="installing-prerequisites-by-distribution"><a class="header" href="#installing-prerequisites-by-distribution">Installing Prerequisites by Distribution:</a></h3>
-<h4 id="arch-linux"><a class="header" href="#arch-linux">Arch Linux:</a></h4>
-<pre><code class="language-bash">sudo pacman -S rust cargo nasm gcc libx11
-</code></pre>
-<h4 id="ubuntu--debian--linux-mint"><a class="header" href="#ubuntu--debian--linux-mint">Ubuntu / Debian / Linux Mint:</a></h4>
-<pre><code class="language-bash">sudo apt update &amp;&amp; sudo apt install -y rustc cargo nasm gcc libx11-dev
-</code></pre>
-<h4 id="fedora"><a class="header" href="#fedora">Fedora:</a></h4>
-<pre><code class="language-bash">sudo dnf install -y rust cargo nasm gcc libX11-devel
-</code></pre>
-<h2 id="installing-runvoid"><a class="header" href="#installing-runvoid">Installing Runvoid</a></h2>
-<p>Clone the repository and build the release binary:</p>
+<p>Runvoid compiles high-level conversational code into native machine code for <strong>Linux x86_64</strong> (ELF64) and <strong>Windows x86_64</strong> (PE32+). To use Runvoid, you need the compiler itself along with the underlying assembler (<code>nasm</code>) and linker (<code>gcc</code>).</p>
+<p>This section guides you through installing Runvoid on Linux and Windows, configuring cross-compilation toolchains, and verifying your environment.</p>
+<hr />
+<h2 id="quick-start-native-installers"><a class="header" href="#quick-start-native-installers">Quick Start: Native Installers</a></h2>
+<p>Runvoid provides native, one-step installer scripts for both major operating systems.</p>
+<h3 id="installing-on-linux"><a class="header" href="#installing-on-linux">Installing on Linux</a></h3>
+<p>You can install Runvoid automatically using our shell installer:</p>
 <pre><code class="language-bash">git clone https://github.com/runvoid/runvoid.git
 cd runvoid
-cargo build --release
+chmod +x install.sh
+./install.sh
 </code></pre>
-<p>Once compilation completes, copy the executable to your path:</p>
-<pre><code class="language-bash">sudo cp target/release/runvoid /usr/local/bin/
+<p>The installer will:</p>
+<ol>
+<li>Detect your Linux distribution package manager (<code>pacman</code>, <code>apt</code>, <code>dnf</code>, <code>zypper</code>, <code>apk</code>).</li>
+<li>Offer to install missing prerequisites (<code>nasm</code>, <code>gcc</code>, <code>rust/cargo</code>).</li>
+<li>Compile the release binary using <code>cargo build --release</code>.</li>
+<li>Install <code>runvoid</code> to <code>/usr/local/bin</code> (or <code>~/.local/bin</code> if root access is not available).</li>
+<li>Verify that <code>runvoid</code> is accessible in your current shell <code>PATH</code>.</li>
+</ol>
+<h3 id="installing-on-windows"><a class="header" href="#installing-on-windows">Installing on Windows</a></h3>
+<p>On Windows 10 or 11 (64-bit), open <strong>PowerShell</strong> (or Windows Terminal) and run:</p>
+<pre><code class="language-powershell">git clone https://github.com/runvoid/runvoid.git
+cd runvoid
+powershell -ExecutionPolicy Bypass -File .\install.ps1
 </code></pre>
-<p>Verify your installation:</p>
+<p>Alternatively, you can double-click <strong><code>install.bat</code></strong> from Windows Explorer to launch the automated installer in a classic Command Prompt window.</p>
+<p>The Windows installer will:</p>
+<ol>
+<li>Check for <code>cargo</code>, <code>nasm</code>, and <code>gcc</code> (MinGW-w64).</li>
+<li>Build the optimized native <code>runvoid.exe</code> binary.</li>
+<li>Install the executable to <code>%LOCALAPPDATA%\Programs\Runvoid\bin</code>.</li>
+<li>Add the installation directory to your User <code>PATH</code> environment variable permanently.</li>
+<li>Verify the installation.</li>
+</ol>
+<hr />
+<h2 id="manual-installation--prerequisites"><a class="header" href="#manual-installation--prerequisites">Manual Installation &amp; Prerequisites</a></h2>
+<p>If you prefer full control over your environment, you can install the individual prerequisites manually.</p>
+<h3 id="linux-prerequisites"><a class="header" href="#linux-prerequisites">Linux Prerequisites</a></h3>
+<p>Runvoid requires:</p>
+<ul>
+<li><strong>Architecture:</strong> x86_64 (AMD64)</li>
+<li><strong>Rust Toolchain:</strong> <code>rustc</code> and <code>cargo</code> (&gt;= 1.80) — install via <a href="https://rustup.rs/">rustup.rs</a> or your distribution.</li>
+<li><strong>Assembler:</strong> <code>nasm</code> (&gt;= 2.15)</li>
+<li><strong>Linker / C Compiler:</strong> <code>gcc</code> or <code>clang</code></li>
+<li><strong>Optional X11 Library:</strong> <code>libX11</code> (required only for 2D Screen canvas / GUI applications)</li>
+</ul>
+<h4 id="arch-linux--manjaro"><a class="header" href="#arch-linux--manjaro">Arch Linux / Manjaro:</a></h4>
+<pre><code class="language-bash">sudo pacman -S rust cargo nasm gcc libx11
+</code></pre>
+<h4 id="ubuntu--debian--linux-mint--pop_os"><a class="header" href="#ubuntu--debian--linux-mint--pop_os">Ubuntu / Debian / Linux Mint / Pop!_OS:</a></h4>
+<pre><code class="language-bash">sudo apt update &amp;&amp; sudo apt install -y rustc cargo nasm gcc libx11-dev
+</code></pre>
+<h4 id="fedora--rhel--rocky-linux"><a class="header" href="#fedora--rhel--rocky-linux">Fedora / RHEL / Rocky Linux:</a></h4>
+<pre><code class="language-bash">sudo dnf install -y rust cargo nasm gcc libX11-devel
+</code></pre>
+<h4 id="opensuse"><a class="header" href="#opensuse">openSUSE:</a></h4>
+<pre><code class="language-bash">sudo zypper install rust cargo nasm gcc libX11-devel
+</code></pre>
+<h4 id="alpine-linux"><a class="header" href="#alpine-linux">Alpine Linux:</a></h4>
+<pre><code class="language-bash">sudo apk add rust cargo nasm gcc musl-dev libx11-dev
+</code></pre>
+<h3 id="windows-prerequisites"><a class="header" href="#windows-prerequisites">Windows Prerequisites</a></h3>
+<p>On Windows, install the following tools:</p>
+<ol>
+<li><strong>Rust:</strong> Install via <a href="https://rustup.rs">rustup.rs</a> (select <code>x86_64-pc-windows-msvc</code> or <code>x86_64-pc-windows-gnu</code>).</li>
+<li><strong>NASM:</strong> Install via Windows Package Manager (<code>winget</code>):
+<pre><code class="language-powershell">winget install NASM.NASM
+</code></pre>
+Or via Chocolatey:
+<pre><code class="language-powershell">choco install nasm
+</code></pre>
+</li>
+<li><strong>MinGW-w64 GCC:</strong>
+<pre><code class="language-powershell">winget install MSYS2.MSYS2
+</code></pre>
+Or install a standalone MinGW-w64 distribution (such as WinLibs) and ensure <code>gcc.exe</code> and <code>nasm.exe</code> are in your system <code>PATH</code>.</li>
+</ol>
+<hr />
+<h2 id="cross-compilation-setup-linux-to-windows"><a class="header" href="#cross-compilation-setup-linux-to-windows">Cross-Compilation Setup (Linux to Windows)</a></h2>
+<p>One of Runvoid’s flagship features is seamless <strong>cross-compilation</strong>: you can compile native Windows <code>.exe</code> binaries directly from your Linux workstation!</p>
+<p>To enable Windows cross-compilation on Linux:</p>
+<h3 id="arch-linux"><a class="header" href="#arch-linux">Arch Linux:</a></h3>
+<pre><code class="language-bash">sudo pacman -S mingw-w64-gcc wine
+</code></pre>
+<h3 id="ubuntu--debian"><a class="header" href="#ubuntu--debian">Ubuntu / Debian:</a></h3>
+<pre><code class="language-bash">sudo apt install -y gcc-mingw-w64 wine
+</code></pre>
+<h3 id="fedora"><a class="header" href="#fedora">Fedora:</a></h3>
+<pre><code class="language-bash">sudo dnf install -y mingw64-gcc wine
+</code></pre>
+<p>Once installed, simply pass <code>--target windows</code> to any <code>build</code> or <code>run</code> command:</p>
+<pre><code class="language-bash"># Compile and run a Windows .exe immediately on Linux using Wine
+runvoid run --target windows app.rv
+
+# Build a standalone Windows executable
+runvoid build --target windows app.rv -o my_tool.exe
+</code></pre>
+<hr />
+<h2 id="verifying-the-installation"><a class="header" href="#verifying-the-installation">Verifying the Installation</a></h2>
+<p>Verify that Runvoid is properly installed and discoverable in your terminal:</p>
 <pre><code class="language-bash">runvoid --version
 </code></pre>
-<p>You should see output similar to:</p>
-<pre><code class="language-text">runvoid 0.2.0
+<p>Output:</p>
+<pre><code class="language-text">runvoid 0.3.0
+</code></pre>
+<p>Print the interactive quick-reference cheat sheet:</p>
+<pre><code class="language-bash">runvoid cheat
+</code></pre>
+<p>If you see the full syntax cheatsheet with color-coded examples, your Runvoid environment is fully operational!</p>
+<hr />
+<h2 id="updating-and-uninstalling"><a class="header" href="#updating-and-uninstalling">Updating and Uninstalling</a></h2>
+<h3 id="updating-runvoid"><a class="header" href="#updating-runvoid">Updating Runvoid</a></h3>
+<p>To update to the latest release, pull the newest changes from the repository and re-run the installer:</p>
+<pre><code class="language-bash">git pull origin main
+./install.sh
+</code></pre>
+<h3 id="uninstalling-runvoid"><a class="header" href="#uninstalling-runvoid">Uninstalling Runvoid</a></h3>
+<p>On Linux:</p>
+<pre><code class="language-bash">./install.sh --uninstall
+</code></pre>
+<p>On Windows:</p>
+<pre><code class="language-powershell">powershell -ExecutionPolicy Bypass -File .\install.ps1 -Uninstall
+</code></pre>
+<hr />
+<h2 id="troubleshooting"><a class="header" href="#troubleshooting">Troubleshooting</a></h2>
+<h3 id="nasm-command-not-found"><a class="header" href="#nasm-command-not-found"><code>nasm: command not found</code></a></h3>
+<p>The Runvoid compiler relies on the Netwide Assembler (<code>nasm</code>) to translate generated assembly into object files. If you encounter this error, ensure <code>nasm</code> is installed and located in a directory listed in your <code>PATH</code> environment variable. On Windows, the default NASM installer places the executable in <code>C:\Program Files\NASM</code> or <code>C:\Users\&lt;User&gt;\AppData\Local\bin\NASM</code>.</p>
+<h3 id="linker-error-cannot-find--lx11"><a class="header" href="#linker-error-cannot-find--lx11">Linker Error: <code>cannot find -lX11</code></a></h3>
+<p>If you compile an application that utilizes the 2D Screen canvas (<code>open screen</code>) on Linux, the linker requires the X11 development headers. Install <code>libx11-dev</code> (Debian/Ubuntu) or <code>libX11-devel</code> (Fedora). If you are building headless CLI utilities or using Pro Systems mode, X11 is not needed.</p>
+<h3 id="windows-powershell-execution-policy-error"><a class="header" href="#windows-powershell-execution-policy-error">Windows PowerShell: Execution Policy Error</a></h3>
+<p>If PowerShell prevents running <code>install.ps1</code> with an execution policy error, run:</p>
+<pre><code class="language-powershell">Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.\install.ps1
 </code></pre>
 
                     </main>

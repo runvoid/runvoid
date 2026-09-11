@@ -177,67 +177,102 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="appendix-a-complete-keywords--directives-reference"><a class="header" href="#appendix-a-complete-keywords--directives-reference">Appendix A: Complete Keywords &amp; Directives Reference</a></h1>
-<div class="table-wrapper"><table><thead><tr><th>Keyword / Directive</th><th>Category</th><th>Syntax / Usage</th><th>Description</th></tr></thead><tbody>
-<tr><td><code>say</code></td><td>I/O</td><td><code>say &lt;expr&gt;</code></td><td>Prints expression followed by newline</td></tr>
-<tr><td><code>say same</code></td><td>I/O</td><td><code>say same &lt;expr&gt;</code></td><td>Prints expression without newline</td></tr>
-<tr><td><code>ask</code></td><td>I/O</td><td><code>ask &lt;prompt&gt;</code></td><td>Reads line from standard input</td></tr>
-<tr><td><code>ask hidden</code></td><td>I/O</td><td><code>ask hidden &lt;prompt&gt;</code></td><td>Reads password with masked input</td></tr>
-<tr><td><code>ask user</code></td><td>Dialog</td><td><code>ask user &lt;prompt&gt;</code></td><td>Graphical yes/no confirmation dialog</td></tr>
-<tr><td><code>choose</code></td><td>Menu</td><td><code>choose &lt;title&gt;, &lt;opt1&gt;, ...</code></td><td>Interactive arrow-key selection menu</td></tr>
-<tr><td><code>alert</code></td><td>Dialog</td><td><code>alert &lt;message&gt;</code></td><td>Graphical alert box</td></tr>
-<tr><td><code>remember</code></td><td>Variables</td><td><code>remember &lt;name&gt; = &lt;val&gt;</code></td><td>Declares a new variable</td></tr>
-<tr><td><code>if</code></td><td>Control</td><td><code>if &lt;cond&gt; { ... }</code></td><td>Conditional branch</td></tr>
-<tr><td><code>otherwise if</code></td><td>Control</td><td><code>otherwise if &lt;cond&gt; { ... }</code></td><td>Alternative conditional branch</td></tr>
-<tr><td><code>otherwise</code></td><td>Control</td><td><code>otherwise { ... }</code></td><td>Fallback branch</td></tr>
-<tr><td><code>repeat</code></td><td>Loop</td><td><code>repeat &lt;N&gt; [as &lt;var&gt;] { ... }</code></td><td>Fixed count loop</td></tr>
-<tr><td><code>while</code></td><td>Loop</td><td><code>while &lt;cond&gt; { ... }</code></td><td>Conditional loop</td></tr>
-<tr><td><code>stop</code></td><td>Loop</td><td><code>stop</code></td><td>Breaks out of loop</td></tr>
-<tr><td><code>skip</code></td><td>Loop</td><td><code>skip</code></td><td>Continues to next iteration</td></tr>
-<tr><td><code>for every ... in</code></td><td>List</td><td><code>for every &lt;item&gt; in &lt;list&gt;</code></td><td>Iterates over list elements</td></tr>
-<tr><td><code>add ... to</code></td><td>List</td><td><code>add &lt;item&gt; to &lt;list&gt;</code></td><td>Appends item to word list</td></tr>
-<tr><td><code>remove ... from</code></td><td>List</td><td><code>remove &lt;item&gt; from &lt;list&gt;</code></td><td>Removes item from word list</td></tr>
-<tr><td><code>count</code></td><td>List</td><td><code>{count &lt;list&gt;}</code></td><td>Returns number of items in list</td></tr>
-<tr><td><code>has</code></td><td>List</td><td><code>if &lt;list&gt; has &lt;item&gt;</code></td><td>Checks if item exists in list</td></tr>
-<tr><td><code>action</code></td><td>Function</td><td><code>action &lt;name&gt;(&lt;args&gt;) { ... }</code></td><td>Defines a function</td></tr>
-<tr><td><code>give</code></td><td>Function</td><td><code>give &lt;expr&gt;</code></td><td>Returns value from function</td></tr>
-<tr><td><code>beep</code></td><td>Audio</td><td><code>beep</code></td><td>Emits system terminal bell</td></tr>
-<tr><td><code>speak</code></td><td>Audio</td><td><code>speak &lt;text&gt;</code></td><td>Text-to-speech engine</td></tr>
-<tr><td><code>read</code></td><td>File I/O</td><td><code>read &lt;path&gt;</code></td><td>Reads entire file into string</td></tr>
-<tr><td><code>write ... into</code></td><td>File I/O</td><td><code>write &lt;content&gt; into &lt;path&gt;</code></td><td>Writes string into file</td></tr>
-<tr><td><code>create folder</code></td><td>Filesystem</td><td><code>create folder &lt;dir&gt;</code></td><td>Creates a directory</td></tr>
-<tr><td><code>delete file</code></td><td>Filesystem</td><td><code>delete file &lt;path&gt;</code></td><td>Deletes a file</td></tr>
-<tr><td><code>delete folder</code></td><td>Filesystem</td><td><code>delete folder &lt;dir&gt;</code></td><td>Deletes a directory</td></tr>
-<tr><td><code>copy file ... to</code></td><td>Filesystem</td><td><code>copy file &lt;src&gt; to &lt;dst&gt;</code></td><td>Copies file</td></tr>
-<tr><td><code>file ... exists</code></td><td>Filesystem</td><td><code>if file &lt;path&gt; exists</code></td><td>Checks file existence</td></tr>
-<tr><td><code>download ... into</code></td><td>Web</td><td><code>download &lt;url&gt; into &lt;path&gt;</code></td><td>Downloads URL to file</td></tr>
-<tr><td><code>read web</code></td><td>Web</td><td><code>read web &lt;url&gt;</code></td><td>HTTP GET request</td></tr>
-<tr><td><code>open web</code></td><td>Web</td><td><code>open web &lt;url&gt;</code></td><td>Opens URL in default browser</td></tr>
-<tr><td><code>make uppercase</code></td><td>String</td><td><code>make &lt;var&gt; uppercase</code></td><td>Converts string to uppercase</td></tr>
-<tr><td><code>make lowercase</code></td><td>String</td><td><code>make &lt;var&gt; lowercase</code></td><td>Converts string to lowercase</td></tr>
-<tr><td><code>make trim</code></td><td>String</td><td><code>make &lt;var&gt; trim</code></td><td>Trims leading/trailing whitespace</td></tr>
-<tr><td><code>replace ... with</code></td><td>String</td><td><code>replace &lt;a&gt; with &lt;b&gt; in &lt;str&gt;</code></td><td>Replaces substrings</td></tr>
-<tr><td><code>screen</code></td><td>Graphics</td><td><code>screen &lt;title&gt;, &lt;w&gt;, &lt;h&gt; { ... }</code></td><td>2D hardware graphics window</td></tr>
-<tr><td><code>window</code></td><td>GUI</td><td><code>window &lt;title&gt;, &lt;w&gt;, &lt;h&gt; { ... }</code></td><td>Desktop GUI window</td></tr>
-<tr><td><code>wait</code></td><td>Timers</td><td><code>wait &lt;seconds&gt;</code></td><td>Pauses execution</td></tr>
-<tr><td><code>random ... to</code></td><td>Math</td><td><code>random &lt;min&gt; to &lt;max&gt;</code></td><td>Generates random integer</td></tr>
-<tr><td><code>measure time</code></td><td>Profiling</td><td><code>measure time { ... }</code></td><td>Profiles time in milliseconds</td></tr>
-<tr><td><code>measure cycles</code></td><td>Profiling</td><td><code>measure cycles { ... }</code></td><td>Profiles time in CPU clock cycles</td></tr>
-<tr><td><code>remove garbageC</code></td><td>Directive</td><td><code>remove garbageC</code></td><td>Disables garbage collector</td></tr>
-<tr><td><code>remove Basic</code></td><td>Directive</td><td><code>remove Basic</code></td><td>Enforces strict static typing</td></tr>
-<tr><td><code>remove Linux</code></td><td>Directive</td><td><code>remove Linux</code></td><td>Freestanding mode (no libc)</td></tr>
-<tr><td><code>add Advanced</code></td><td>Directive</td><td><code>add Advanced</code></td><td>Enables Pro Systems Mode</td></tr>
-<tr><td><code>add Freestanding</code></td><td>Directive</td><td><code>add Freestanding</code></td><td>Emits <code>_start</code> entry point</td></tr>
-<tr><td><code>use</code></td><td>Module</td><td><code>use &lt;module&gt;</code></td><td>Imports stdlib module or file</td></tr>
-<tr><td><code>use lib</code></td><td>Library</td><td><code>use lib &lt;name&gt;</code></td><td>Links external dynamic C library</td></tr>
-<tr><td><code>asm</code></td><td>Hardware</td><td><code>asm { ... }</code></td><td>Emits verbatim x86_64 assembly</td></tr>
-<tr><td><code>addr</code></td><td>Pointer</td><td><code>addr &lt;var&gt;</code></td><td>Returns memory address of variable</td></tr>
-<tr><td><code>@</code></td><td>Pointer</td><td><code>@&lt;ptr&gt;</code> or <code>@&lt;ptr&gt; = &lt;val&gt;</code></td><td>Pointer dereference read/write</td></tr>
-<tr><td><code>alloc</code></td><td>Memory</td><td><code>alloc &lt;size&gt;</code></td><td>Allocates heap memory</td></tr>
-<tr><td><code>free</code></td><td>Memory</td><td><code>free &lt;ptr&gt;</code></td><td>Deallocates heap memory</td></tr>
-<tr><td><code>struct</code></td><td>Data</td><td><code>struct &lt;Name&gt; { ... }</code></td><td>Defines C-compatible POD struct</td></tr>
-<tr><td><code>extern "C"</code></td><td>FFI</td><td><code>extern "C" { action ... }</code></td><td>Imports C functions</td></tr>
-<tr><td><code>thread</code></td><td>Concurrency</td><td><code>thread { ... }</code></td><td>Spawns OS thread</td></tr>
-<tr><td><code>atomic add</code></td><td>Concurrency</td><td><code>atomic add &lt;var&gt;, &lt;val&gt;</code></td><td>Hardware atomic addition</td></tr>
+<p>This appendix provides an exhaustive reference of all keywords, directives, operators, and CLI commands supported by <strong>Runvoid 0.3.0</strong>.</p>
+<hr />
+<h2 id="1-keywords--statements-reference"><a class="header" href="#1-keywords--statements-reference">1. Keywords &amp; Statements Reference</a></h2>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Keyword / Statement</th><th style="text-align: left">Category</th><th style="text-align: left">Syntax Example</th><th style="text-align: left">Description</th></tr></thead><tbody>
+<tr><td style="text-align: left"><strong><code>say</code></strong></td><td style="text-align: left">Console I/O</td><td style="text-align: left"><code>say "Hello"</code></td><td style="text-align: left">Prints expression followed by newline to stdout</td></tr>
+<tr><td style="text-align: left"><strong><code>say same</code></strong></td><td style="text-align: left">Console I/O</td><td style="text-align: left"><code>say same "Count: "</code></td><td style="text-align: left">Prints expression without trailing newline</td></tr>
+<tr><td style="text-align: left"><strong><code>say &lt;color&gt;</code></strong></td><td style="text-align: left">Console I/O</td><td style="text-align: left"><code>say green "Success"</code></td><td style="text-align: left">Prints colored text (<code>green</code>, <code>red</code>, <code>yellow</code>, <code>cyan</code>, etc.)</td></tr>
+<tr><td style="text-align: left"><strong><code>ask</code></strong></td><td style="text-align: left">Console I/O</td><td style="text-align: left"><code>remember name = ask "Name: "</code></td><td style="text-align: left">Prompts user and reads line from stdin</td></tr>
+<tr><td style="text-align: left"><strong><code>ask hidden</code></strong></td><td style="text-align: left">Console I/O</td><td style="text-align: left"><code>remember pw = ask hidden "Key: "</code></td><td style="text-align: left">Reads password from stdin with echoing disabled</td></tr>
+<tr><td style="text-align: left"><strong><code>ask user</code></strong></td><td style="text-align: left">GUI Dialog</td><td style="text-align: left"><code>remember ok = ask user "Proceed?"</code></td><td style="text-align: left">Native modal Yes/No confirmation dialog</td></tr>
+<tr><td style="text-align: left"><strong><code>choose</code></strong></td><td style="text-align: left">Menu</td><td style="text-align: left"><code>choose "Pick:", "A", "B"</code></td><td style="text-align: left">Interactive terminal arrow-key menu</td></tr>
+<tr><td style="text-align: left"><strong><code>alert</code></strong></td><td style="text-align: left">GUI Dialog</td><td style="text-align: left"><code>alert "Operation completed!"</code></td><td style="text-align: left">Native modal information alert dialog</td></tr>
+<tr><td style="text-align: left"><strong><code>remember</code></strong></td><td style="text-align: left">Variables</td><td style="text-align: left"><code>remember score = 100</code></td><td style="text-align: left">Declares a new variable in current scope</td></tr>
+<tr><td style="text-align: left"><strong><code>remember &lt;name&gt;: &lt;type&gt;</code></strong></td><td style="text-align: left">Variables</td><td style="text-align: left"><code>remember count: Int = 10</code></td><td style="text-align: left">Declares strictly typed variable (Pro Mode)</td></tr>
+<tr><td style="text-align: left"><strong><code>if</code></strong></td><td style="text-align: left">Control Flow</td><td style="text-align: left"><code>if x &gt; 0 { ... }</code></td><td style="text-align: left">Conditional branch</td></tr>
+<tr><td style="text-align: left"><strong><code>otherwise if</code></strong></td><td style="text-align: left">Control Flow</td><td style="text-align: left"><code>otherwise if x &lt; 0 { ... }</code></td><td style="text-align: left">Alternative conditional branch</td></tr>
+<tr><td style="text-align: left"><strong><code>otherwise</code></strong></td><td style="text-align: left">Control Flow</td><td style="text-align: left"><code>otherwise { ... }</code></td><td style="text-align: left">Fallback branch</td></tr>
+<tr><td style="text-align: left"><strong><code>match</code></strong></td><td style="text-align: left">Control Flow</td><td style="text-align: left"><code>match status { when 200 -&gt; ... }</code></td><td style="text-align: left">Multi-branch pattern matching</td></tr>
+<tr><td style="text-align: left"><strong><code>when</code></strong></td><td style="text-align: left">Control Flow</td><td style="text-align: left"><code>when 404 -&gt; say "Not found"</code></td><td style="text-align: left">Branch arm inside <code>match</code></td></tr>
+<tr><td style="text-align: left"><strong><code>repeat</code></strong></td><td style="text-align: left">Loops</td><td style="text-align: left"><code>repeat 5 times { ... }</code></td><td style="text-align: left">Fixed-iteration loop</td></tr>
+<tr><td style="text-align: left"><strong><code>repeat ... as</code></strong></td><td style="text-align: left">Loops</td><td style="text-align: left"><code>repeat 5 as i { ... }</code></td><td style="text-align: left">Fixed-iteration loop with bound index variable</td></tr>
+<tr><td style="text-align: left"><strong><code>while</code></strong></td><td style="text-align: left">Loops</td><td style="text-align: left"><code>while condition { ... }</code></td><td style="text-align: left">Condition-driven loop</td></tr>
+<tr><td style="text-align: left"><strong><code>stop</code></strong></td><td style="text-align: left">Loops</td><td style="text-align: left"><code>stop</code></td><td style="text-align: left">Breaks out of active loop (C <code>break</code>)</td></tr>
+<tr><td style="text-align: left"><strong><code>skip</code></strong></td><td style="text-align: left">Loops</td><td style="text-align: left"><code>skip</code></td><td style="text-align: left">Skips to next loop iteration (C <code>continue</code>)</td></tr>
+<tr><td style="text-align: left"><strong><code>for every ... in</code></strong></td><td style="text-align: left">Collections</td><td style="text-align: left"><code>for every item in list { ... }</code></td><td style="text-align: left">Iterates over all elements in collection</td></tr>
+<tr><td style="text-align: left"><strong><code>add ... to</code></strong></td><td style="text-align: left">Collections</td><td style="text-align: left"><code>add "item" to backpack</code></td><td style="text-align: left">Appends item to list or inserts key into map</td></tr>
+<tr><td style="text-align: left"><strong><code>remove ... from</code></strong></td><td style="text-align: left">Collections</td><td style="text-align: left"><code>remove "item" from backpack</code></td><td style="text-align: left">Deletes element or key from collection</td></tr>
+<tr><td style="text-align: left"><strong><code>count</code></strong></td><td style="text-align: left">Collections</td><td style="text-align: left"><code>{count backpack}</code></td><td style="text-align: left">Returns element count of collection or map</td></tr>
+<tr><td style="text-align: left"><strong><code>has</code></strong></td><td style="text-align: left">Collections</td><td style="text-align: left"><code>if backpack has "Torch"</code></td><td style="text-align: left">Checks membership or key existence</td></tr>
+<tr><td style="text-align: left"><strong><code>keys</code></strong></td><td style="text-align: left">Maps</td><td style="text-align: left"><code>remember k = keys player</code></td><td style="text-align: left">Returns list of all keys in dictionary</td></tr>
+<tr><td style="text-align: left"><strong><code>values</code></strong></td><td style="text-align: left">Maps</td><td style="text-align: left"><code>remember v = values player</code></td><td style="text-align: left">Returns list of all values in dictionary</td></tr>
+<tr><td style="text-align: left"><strong><code>action</code></strong></td><td style="text-align: left">Functions</td><td style="text-align: left"><code>action greet(name) { ... }</code></td><td style="text-align: left">Defines reusable subroutine</td></tr>
+<tr><td style="text-align: left"><strong><code>give</code></strong></td><td style="text-align: left">Functions</td><td style="text-align: left"><code>give result</code></td><td style="text-align: left">Returns value from function</td></tr>
+<tr><td style="text-align: left"><strong><code>beep</code></strong></td><td style="text-align: left">Audio</td><td style="text-align: left"><code>beep</code> or <code>beep 440 for 200</code></td><td style="text-align: left">System alert chime or tone</td></tr>
+<tr><td style="text-align: left"><strong><code>play synth</code></strong></td><td style="text-align: left">Audio</td><td style="text-align: left"><code>play synth 523, 150</code></td><td style="text-align: left">Square-wave frequency tone generator</td></tr>
+<tr><td style="text-align: left"><strong><code>speak</code></strong></td><td style="text-align: left">Audio</td><td style="text-align: left"><code>speak "Task done"</code></td><td style="text-align: left">Native OS text-to-speech engine</td></tr>
+<tr><td style="text-align: left"><strong><code>read</code></strong></td><td style="text-align: left">File I/O</td><td style="text-align: left"><code>remember txt = read "file.txt"</code></td><td style="text-align: left">Reads entire file into string</td></tr>
+<tr><td style="text-align: left"><strong><code>write ... into</code></strong></td><td style="text-align: left">File I/O</td><td style="text-align: left"><code>write data into "file.txt"</code></td><td style="text-align: left">Writes string to file</td></tr>
+<tr><td style="text-align: left"><strong><code>create folder</code></strong></td><td style="text-align: left">Filesystem</td><td style="text-align: left"><code>create folder "dist"</code></td><td style="text-align: left">Creates directory path</td></tr>
+<tr><td style="text-align: left"><strong><code>delete file</code></strong></td><td style="text-align: left">Filesystem</td><td style="text-align: left"><code>delete file "temp.dat"</code></td><td style="text-align: left">Removes file from disk</td></tr>
+<tr><td style="text-align: left"><strong><code>delete folder</code></strong></td><td style="text-align: left">Filesystem</td><td style="text-align: left"><code>delete folder "tmp"</code></td><td style="text-align: left">Removes directory from disk</td></tr>
+<tr><td style="text-align: left"><strong><code>copy file ... to</code></strong></td><td style="text-align: left">Filesystem</td><td style="text-align: left"><code>copy file "a" to "b"</code></td><td style="text-align: left">Copies file across filesystem</td></tr>
+<tr><td style="text-align: left"><strong><code>file ... exists</code></strong></td><td style="text-align: left">Filesystem</td><td style="text-align: left"><code>if file "cfg.json" exists</code></td><td style="text-align: left">Verifies file existence on disk</td></tr>
+<tr><td style="text-align: left"><strong><code>download ... into</code></strong></td><td style="text-align: left">Web</td><td style="text-align: left"><code>download url into "app.zip"</code></td><td style="text-align: left">Downloads remote file via HTTP</td></tr>
+<tr><td style="text-align: left"><strong><code>read web</code></strong></td><td style="text-align: left">Web</td><td style="text-align: left"><code>remember res = read web url</code></td><td style="text-align: left">Performs HTTP GET request</td></tr>
+<tr><td style="text-align: left"><strong><code>open web</code></strong></td><td style="text-align: left">Web</td><td style="text-align: left"><code>open web "https://..."</code></td><td style="text-align: left">Opens URL in default desktop browser</td></tr>
+<tr><td style="text-align: left"><strong><code>screen</code></strong></td><td style="text-align: left">Graphics</td><td style="text-align: left"><code>screen "Game", 800, 600 { ... }</code></td><td style="text-align: left">Accelerated 2D canvas viewport</td></tr>
+<tr><td style="text-align: left"><strong><code>window</code></strong></td><td style="text-align: left">GUI</td><td style="text-align: left"><code>window "Panel", 400, 300 { ... }</code></td><td style="text-align: left">Native desktop GUI window</td></tr>
+<tr><td style="text-align: left"><strong><code>wait</code></strong></td><td style="text-align: left">Timers</td><td style="text-align: left"><code>wait 1000</code></td><td style="text-align: left">Pauses thread execution (ms)</td></tr>
+<tr><td style="text-align: left"><strong><code>random ... to</code></strong></td><td style="text-align: left">Math</td><td style="text-align: left"><code>random 1 to 100</code></td><td style="text-align: left">Generates cryptographically secure random integer</td></tr>
+<tr><td style="text-align: left"><strong><code>measure time</code></strong></td><td style="text-align: left">Profiling</td><td style="text-align: left"><code>measure time { ... }</code></td><td style="text-align: left">Measures wall-clock time in milliseconds</td></tr>
+<tr><td style="text-align: left"><strong><code>measure cycles</code></strong></td><td style="text-align: left">Profiling</td><td style="text-align: left"><code>measure cycles { ... }</code></td><td style="text-align: left">Measures execution time in CPU clock cycles (<code>RDTSC</code>)</td></tr>
+<tr><td style="text-align: left"><strong><code>test</code></strong></td><td style="text-align: left">Testing</td><td style="text-align: left"><code>test "name" { ... }</code></td><td style="text-align: left">Defines automated unit test suite</td></tr>
+<tr><td style="text-align: left"><strong><code>verify that</code></strong></td><td style="text-align: left">Testing</td><td style="text-align: left"><code>verify that a is b</code></td><td style="text-align: left">Asserts condition in test suite</td></tr>
+</tbody></table>
+</div>
+<hr />
+<h2 id="2-compiler-directives-reference"><a class="header" href="#2-compiler-directives-reference">2. Compiler Directives Reference</a></h2>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Directive</th><th style="text-align: left">Placement</th><th style="text-align: left">Effect</th></tr></thead><tbody>
+<tr><td style="text-align: left"><strong><code>remove garbageC</code></strong></td><td style="text-align: left">Top of file</td><td style="text-align: left">Strips GC runtime; allocates via direct OS allocator</td></tr>
+<tr><td style="text-align: left"><strong><code>remove Basic</code></strong></td><td style="text-align: left">Top of file</td><td style="text-align: left">Enforces strict compile-time static typing</td></tr>
+<tr><td style="text-align: left"><strong><code>remove Linux</code></strong></td><td style="text-align: left">Top of file</td><td style="text-align: left">Strips standard Linux libc runtime</td></tr>
+<tr><td style="text-align: left"><strong><code>add Advanced</code></strong></td><td style="text-align: left">Top of file</td><td style="text-align: left">Enables raw pointers, atomics, FFI, and inline assembly</td></tr>
+<tr><td style="text-align: left"><strong><code>add Freestanding</code></strong></td><td style="text-align: left">Top of file</td><td style="text-align: left">Emits bare-metal <code>_start</code> entry point with zero runtime</td></tr>
+<tr><td style="text-align: left"><strong><code>use &lt;module&gt;</code></strong></td><td style="text-align: left">Top of file</td><td style="text-align: left">Imports stdlib module (<code>ior</code>, <code>math</code>, <code>sys</code>, <code>mem</code>, <code>fs</code>, <code>net</code>, <code>thread</code>)</td></tr>
+<tr><td style="text-align: left"><strong><code>use lib "&lt;name&gt;"</code></strong></td><td style="text-align: left">Top of file</td><td style="text-align: left">Links external C dynamic library (<code>-lname</code>)</td></tr>
+<tr><td style="text-align: left"><strong><code>use "&lt;file.rv&gt;"</code></strong></td><td style="text-align: left">Top of file</td><td style="text-align: left">Recursively imports another Runvoid source file</td></tr>
+</tbody></table>
+</div>
+<hr />
+<h2 id="3-systems-mode-primitives"><a class="header" href="#3-systems-mode-primitives">3. Systems Mode Primitives</a></h2>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Primitive</th><th style="text-align: left">Syntax Example</th><th style="text-align: left">Description</th></tr></thead><tbody>
+<tr><td style="text-align: left"><strong><code>addr</code></strong></td><td style="text-align: left"><code>addr variable</code></td><td style="text-align: left">Returns 64-bit hardware memory address of variable</td></tr>
+<tr><td style="text-align: left"><strong><code>@</code> (Read)</strong></td><td style="text-align: left"><code>remember val = @ptr</code></td><td style="text-align: left">Dereferences memory pointer to read 64-bit value</td></tr>
+<tr><td style="text-align: left"><strong><code>@</code> (Write)</strong></td><td style="text-align: left"><code>@ptr = 500</code></td><td style="text-align: left">Stores 64-bit value directly into memory address</td></tr>
+<tr><td style="text-align: left"><strong><code>alloc</code></strong></td><td style="text-align: left"><code>remember p: Ptr = alloc 64</code></td><td style="text-align: left">Allocates unmanaged heap block of N bytes</td></tr>
+<tr><td style="text-align: left"><strong><code>free</code></strong></td><td style="text-align: left"><code>free p</code></td><td style="text-align: left">Deallocates unmanaged heap block</td></tr>
+<tr><td style="text-align: left"><strong><code>struct</code></strong></td><td style="text-align: left"><code>struct Point { x, y }</code></td><td style="text-align: left">Defines C-compatible 8-byte aligned POD struct</td></tr>
+<tr><td style="text-align: left"><strong><code>extern "C"</code></strong></td><td style="text-align: left"><code>extern "C" { action puts(...) }</code></td><td style="text-align: left">Declares external C ABI foreign function signatures</td></tr>
+<tr><td style="text-align: left"><strong><code>asm</code></strong></td><td style="text-align: left"><code>asm { mov rax, 42 }</code></td><td style="text-align: left">Injects verbatim x86_64 NASM instructions</td></tr>
+<tr><td style="text-align: left"><strong><code>thread</code></strong></td><td style="text-align: left"><code>thread { ... }</code></td><td style="text-align: left">Spawns concurrent operating system thread</td></tr>
+<tr><td style="text-align: left"><strong><code>atomic add</code></strong></td><td style="text-align: left"><code>atomic add counter, 1</code></td><td style="text-align: left">Emits hardware bus-locked <code>lock add</code> CPU instruction</td></tr>
+</tbody></table>
+</div>
+<hr />
+<h2 id="4-cli-subcommands--flags-reference"><a class="header" href="#4-cli-subcommands--flags-reference">4. CLI Subcommands &amp; Flags Reference</a></h2>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Subcommand</th><th style="text-align: left">Usage</th><th style="text-align: left">Options / Flags</th></tr></thead><tbody>
+<tr><td style="text-align: left"><strong><code>runvoid run</code></strong></td><td style="text-align: left"><code>runvoid run &lt;file.rv&gt; [args...]</code></td><td style="text-align: left"><code>--target &lt;linux|windows&gt;</code>, <code>--verbose</code></td></tr>
+<tr><td style="text-align: left"><strong><code>runvoid build</code></strong></td><td style="text-align: left"><code>runvoid build &lt;file.rv&gt; -o &lt;name&gt;</code></td><td style="text-align: left"><code>-o &lt;path&gt;</code>, <code>--target &lt;linux|windows&gt;</code>, <code>--verbose</code></td></tr>
+<tr><td style="text-align: left"><strong><code>runvoid emit-asm</code></strong></td><td style="text-align: left"><code>runvoid emit-asm &lt;file.rv&gt;</code></td><td style="text-align: left"><code>--target &lt;linux|windows&gt;</code></td></tr>
+<tr><td style="text-align: left"><strong><code>runvoid test</code></strong></td><td style="text-align: left"><code>runvoid test [path]</code></td><td style="text-align: left"><code>--target &lt;linux|windows&gt;</code></td></tr>
+<tr><td style="text-align: left"><strong><code>runvoid watch</code></strong></td><td style="text-align: left"><code>runvoid watch &lt;file.rv&gt;</code></td><td style="text-align: left"><code>--target &lt;linux|windows&gt;</code></td></tr>
+<tr><td style="text-align: left"><strong><code>runvoid fmt</code></strong></td><td style="text-align: left"><code>runvoid fmt &lt;file.rv&gt;</code></td><td style="text-align: left"><code>-w</code> (overwrite in-place)</td></tr>
+<tr><td style="text-align: left"><strong><code>runvoid repl</code></strong></td><td style="text-align: left"><code>runvoid repl</code></td><td style="text-align: left">Interactive shell with state persistence</td></tr>
+<tr><td style="text-align: left"><strong><code>runvoid new</code></strong></td><td style="text-align: left"><code>runvoid new &lt;game|gui|script&gt; &lt;file&gt;</code></td><td style="text-align: left">Project scaffolding</td></tr>
+<tr><td style="text-align: left"><strong><code>runvoid cheat</code></strong></td><td style="text-align: left"><code>runvoid cheat</code></td><td style="text-align: left">Terminal syntax cheatsheet</td></tr>
 </tbody></table>
 </div>
                     </main>

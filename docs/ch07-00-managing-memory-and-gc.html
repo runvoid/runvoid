@@ -177,24 +177,69 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="7-managing-memory--the-garbage-collector"><a class="header" href="#7-managing-memory--the-garbage-collector">7. Managing Memory &amp; The Garbage Collector</a></h1>
-<p>Understanding memory management is vital for systems programming. Runvoid offers two distinct memory paradigms: an automatic Garbage Collector for beginners, and a zero-runtime manual model for systems engineers.</p>
-<h2 id="automatic-mark-and-sweep-garbage-collector"><a class="header" href="#automatic-mark-and-sweep-garbage-collector">Automatic Mark-and-Sweep Garbage Collector</a></h2>
-<p>By default, all dynamically allocated strings and word lists in Runvoid are managed by a conservative <strong>Mark-and-Sweep Garbage Collector</strong> built directly into the native runtime:</p>
-<ul>
-<li>Allocations are tracked in a lightweight pool.</li>
-<li>When memory pressure increases, the GC traverses the call stack and data references to free unused allocations.</li>
-<li>Beginners never need to worry about memory leaks, double-frees, or segmentation faults.</li>
-</ul>
-<h2 id="disabling-the-garbage-collector-remove-garbagec"><a class="header" href="#disabling-the-garbage-collector-remove-garbagec">Disabling the Garbage Collector: <code>remove garbageC</code></a></h2>
-<p>For programs requiring deterministic zero-pause execution, you can completely remove the garbage collection runtime:</p>
-<pre><code class="language-runvoid">remove garbageC
+<p>Memory management is the cornerstone of systems engineering. In languages like Python, Java, and Go, developers are separated from the metal by heavy, stop-the-world garbage collectors that consume significant RAM. In C and C++, developers must manually manage every byte with <code>malloc</code> and <code>free</code>, inviting catastrophic bugs like use-after-free, double-frees, and buffer overflows.</p>
+<p>Runvoid provides the best of both worlds:</p>
+<ol>
+<li><strong>Application Mode:</strong> A conservative, lightweight <strong>Mark-and-Sweep Garbage Collector</strong> built directly into the native runtime that prevents memory leaks without developer intervention.</li>
+<li><strong>Pro Systems Mode:</strong> The ability to strip the garbage collector entirely with a single directive (<code>remove garbageC</code>), granting total deterministic control over raw memory.</li>
+</ol>
+<hr />
+<h2 id="1-stack-vs-heap-in-runvoid"><a class="header" href="#1-stack-vs-heap-in-runvoid">1. Stack vs. Heap in Runvoid</a></h2>
+<p>To understand memory management, you must understand the distinction between the hardware stack and the operating system heap.</p>
+<pre><code>       +------------------------------------+
+       |          HARDWARE STACK            |
+       |  - Managed via %rsp / %rbp         |
+       |  - Ultra-fast (single instruction) |
+       |  - Stores: integers, booleans,     |
+       |    pointers, function frames       |
+       +------------------------------------+
+                         |
+                         | Points to dynamic buffers
+                         v
+       +------------------------------------+
+       |              HEAP                  |
+       |  - Managed by Runtime Allocator    |
+       |  - Stores: dynamic strings, lists, |
+       |    dictionaries, user structs      |
+       |  - Cleaned by GC or manual `free`  |
+       +------------------------------------+
 </code></pre>
-<p>When <code>remove garbageC</code> is declared at the top of your program:</p>
-<ul>
-<li>The entire GC tracking subsystem is stripped from the compiled binary.</li>
-<li>Allocations bypass GC tracking and use a fast direct heap allocator.</li>
-<li>Binaries become smaller and exhibit predictable execution latency.</li>
-</ul>
+<h3 id="the-stack"><a class="header" href="#the-stack">The Stack</a></h3>
+<p>When you declare scalar variables (<code>remember count = 10</code>, <code>remember active = true</code>), the Runvoid compiler allocates slots directly in the CPU stack frame (<code>[rbp - 8]</code>). When the enclosing function finishes and executes <code>ret</code>, the stack pointer <code>%rsp</code> is restored in a single CPU clock cycle, instantly reclaiming the memory.</p>
+<h3 id="the-heap"><a class="header" href="#the-heap">The Heap</a></h3>
+<p>When you allocate dynamically sized data—such as concatenated strings, growing lists, or dictionaries—their size cannot always be known at compile time. The runtime requests memory from the OS kernel using <code>mmap</code>/<code>brk</code> on Linux or <code>HeapAlloc</code> on Windows.</p>
+<hr />
+<h2 id="2-the-conservative-mark-and-sweep-gc"><a class="header" href="#2-the-conservative-mark-and-sweep-gc">2. The Conservative Mark-and-Sweep GC</a></h2>
+<p>In default mode, Runvoid includes an embedded, conservative Mark-and-Sweep collector:</p>
+<h3 id="how-it-works"><a class="header" href="#how-it-works">How It Works:</a></h3>
+<ol>
+<li><strong>Allocation Tracking:</strong> Every time a string or collection is dynamically allocated, its memory block header is recorded in an active allocation table.</li>
+<li><strong>Conservative Stack Scanning (Mark Phase):</strong> When an allocation threshold is reached, the GC pauses briefly to inspect the active CPU registers (<code>%rax</code>, <code>%rbx</code>, <code>%rcx</code>, <code>%rdx</code>, <code>%rsi</code>, <code>%rdi</code>, <code>%r8</code>–<code>%r15</code>) and the stack memory between <code>%rsp</code> and the base of the call stack. Any pointer-like value referencing a managed heap block marks that block as <strong>live</strong>.</li>
+<li><strong>Sweep Phase:</strong> The collector iterates through the allocation table. Any blocks that were not marked during the scan are unreferenced garbage: their memory is freed immediately back to the OS or allocator pool.</li>
+</ol>
+<p>Because the collector is conservative and native (written in optimized C and assembly), GC pause times are typically <strong>under 50 microseconds</strong>, several orders of magnitude faster than the Java or Python runtimes.</p>
+<hr />
+<h2 id="3-disabling-the-garbage-collector-remove-garbagec"><a class="header" href="#3-disabling-the-garbage-collector-remove-garbagec">3. Disabling the Garbage Collector: <code>remove garbageC</code></a></h2>
+<p>When writing real-time audio synthesizers, embedded operating system drivers, or high-throughput network proxies, even a 50-microsecond pause can cause buffer underruns or latency spikes.</p>
+<p>Runvoid allows you to eliminate the garbage collector completely with a single top-level directive:</p>
+<pre><code class="language-runvoid">remove garbageC
+
+action compute_hash(data) {
+    // Allocations here bypass the GC tracker
+    say "Processing data in zero-pause mode..."
+}
+</code></pre>
+<h3 id="what-happens-when-you-declare-remove-garbagec"><a class="header" href="#what-happens-when-you-declare-remove-garbagec">What Happens When You Declare <code>remove garbageC</code>?</a></h3>
+<ol>
+<li><strong>Zero Runtime Overhead:</strong> The compiler instructs the linker to eliminate the garbage collection scan loops, allocation headers, and thread-suspension machinery.</li>
+<li><strong>Direct System Allocations:</strong> Memory allocations bypass the tracking table and call the operating system’s raw memory allocator directly.</li>
+<li><strong>Smaller Binaries:</strong> Stripping the GC machinery shrinks the compiled binary footprint by an additional 12–18 KB.</li>
+<li><strong>Deterministic Latency:</strong> Your code executes with predictable instruction timings, critical for game engines and hard real-time systems.</li>
+</ol>
+<hr />
+<h2 id="4-manual-memory-in-systems-mode"><a class="header" href="#4-manual-memory-in-systems-mode">4. Manual Memory in Systems Mode</a></h2>
+<p>Once you have removed the garbage collector, how do you handle dynamic memory?</p>
+<p>In Chapter 8, we will explore <strong>Pro Systems Mode</strong>, where you can use raw pointers, allocate explicit memory blocks with <code>allocate</code>, inspect byte addresses, and explicitly reclaim memory with <code>free</code>—delivering the absolute control of C with the safety and readability of Runvoid!</p>
 
                     </main>
 

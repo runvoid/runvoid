@@ -9,7 +9,7 @@ pub mod token;
 pub mod typechecker;
 
 use clap::{Parser as ClapParser, Subcommand};
-use compiler::{Compiler, CompilerOptions};
+use compiler::{Compiler, CompilerOptions, TargetOs};
 use std::fs;
 use std::path::PathBuf;
 
@@ -34,9 +34,13 @@ enum Commands {
         /// Verbose optimizer output
         #[arg(short, long)]
         verbose: bool,
+
+        /// Target OS (linux, windows)
+        #[arg(short, long, value_enum)]
+        target: Option<TargetOs>,
     },
 
-    /// Compile a Runvoid file into a standalone native ELF binary
+    /// Compile a Runvoid file into a standalone native binary
     Build {
         /// Path to the .rv source file
         file: PathBuf,
@@ -48,6 +52,10 @@ enum Commands {
         /// Verbose optimizer output
         #[arg(short, long)]
         verbose: bool,
+
+        /// Target OS (linux, windows)
+        #[arg(short, long, value_enum)]
+        target: Option<TargetOs>,
     },
 
     /// Emit generated NASM assembly (x86_64) without compiling to binary
@@ -58,6 +66,10 @@ enum Commands {
         /// Output .asm file path
         #[arg(short, long)]
         output: Option<PathBuf>,
+
+        /// Target OS (linux, windows)
+        #[arg(short, long, value_enum)]
+        target: Option<TargetOs>,
     },
 
     /// Format a Runvoid source file
@@ -78,6 +90,10 @@ enum Commands {
         /// Verbose output
         #[arg(short, long)]
         verbose: bool,
+
+        /// Target OS (linux, windows)
+        #[arg(short, long, value_enum)]
+        target: Option<TargetOs>,
     },
 
     /// Launch the interactive Runvoid REPL
@@ -91,6 +107,10 @@ enum Commands {
         /// Verbose output
         #[arg(short, long)]
         verbose: bool,
+
+        /// Target OS (linux, windows)
+        #[arg(short, long, value_enum)]
+        target: Option<TargetOs>,
     },
 
     /// Create a new starter project from a template (game, gui, script)
@@ -110,12 +130,18 @@ fn main() {
     let cli = Cli::parse();
 
     let result = match cli.command {
-        Commands::Run { file, verbose } => {
+        Commands::Run {
+            file,
+            verbose,
+            target,
+        } => {
+            let t = target.unwrap_or_default();
             let options = CompilerOptions {
                 output_path: None,
                 run_after_build: true,
                 emit_asm_only: false,
                 verbose,
+                target: t,
             };
             Compiler::compile_file(&file, &options)
         }
@@ -123,10 +149,16 @@ fn main() {
             file,
             output,
             verbose,
+            target,
         } => {
+            let t = target.unwrap_or_default();
             let out_file = output.unwrap_or_else(|| {
                 let mut p = file.clone();
-                p.set_extension("");
+                if t == TargetOs::Windows {
+                    p.set_extension("exe");
+                } else {
+                    p.set_extension("");
+                }
                 p
             });
             let options = CompilerOptions {
@@ -134,28 +166,43 @@ fn main() {
                 run_after_build: false,
                 emit_asm_only: false,
                 verbose,
+                target: t,
             };
             Compiler::compile_file(&file, &options)
         }
-        Commands::EmitAsm { file, output } => {
+        Commands::EmitAsm {
+            file,
+            output,
+            target,
+        } => {
+            let t = target.unwrap_or_default();
             let options = CompilerOptions {
                 output_path: output,
                 run_after_build: false,
                 emit_asm_only: true,
                 verbose: false,
+                target: t,
             };
             Compiler::compile_file(&file, &options)
         }
-        Commands::Test { file, verbose } => {
-            run_tests(file, verbose);
+        Commands::Test {
+            file,
+            verbose,
+            target,
+        } => {
+            run_tests(file, verbose, target);
             return;
         }
         Commands::Repl => {
             run_repl();
             return;
         }
-        Commands::Watch { file, verbose } => {
-            run_watch(file, verbose);
+        Commands::Watch {
+            file,
+            verbose,
+            target,
+        } => {
+            run_watch(file, verbose, target);
             return;
         }
         Commands::Fmt { file, write } => {
@@ -271,7 +318,7 @@ beep
     }
 }
 
-fn run_tests(file: Option<PathBuf>, verbose: bool) {
+fn run_tests(file: Option<PathBuf>, verbose: bool, target: Option<TargetOs>) {
     let test_files = if let Some(f) = file {
         vec![f]
     } else {
@@ -310,6 +357,7 @@ fn run_tests(file: Option<PathBuf>, verbose: bool) {
     println!("Running {} test file(s)...", test_files.len());
     let mut passed = 0;
     let mut failed = 0;
+    let t = target.unwrap_or_default();
 
     for test_file in &test_files {
         println!("\n▶️ Running test file: {:?}", test_file);
@@ -318,6 +366,7 @@ fn run_tests(file: Option<PathBuf>, verbose: bool) {
             run_after_build: true,
             emit_asm_only: false,
             verbose,
+            target: t,
         };
         match Compiler::compile_file(test_file, &options) {
             Ok(Some(0)) | Ok(None) => {
@@ -443,6 +492,7 @@ fn run_repl() {
             run_after_build: true,
             emit_asm_only: false,
             verbose: false,
+            target: TargetOs::default(),
         };
 
         match Compiler::compile_file(&tmp_path, &options) {
@@ -468,7 +518,7 @@ fn run_repl() {
     let _ = fs::remove_file(tmp_path);
 }
 
-fn run_watch(file: PathBuf, verbose: bool) {
+fn run_watch(file: PathBuf, verbose: bool, target: Option<TargetOs>) {
     if !file.exists() {
         eprintln!("Error: File '{:?}' not found", file);
         std::process::exit(1);
@@ -480,6 +530,7 @@ fn run_watch(file: PathBuf, verbose: bool) {
     );
 
     let mut last_modified = fs::metadata(&file).and_then(|m| m.modified()).ok();
+    let t = target.unwrap_or_default();
 
     let execute = |path: &PathBuf| {
         println!("\n\x1b[1;34m[runvoid watch]\x1b[0m Running {:?}...", path);
@@ -488,6 +539,7 @@ fn run_watch(file: PathBuf, verbose: bool) {
             run_after_build: true,
             emit_asm_only: false,
             verbose,
+            target: t,
         };
         if let Err(e) = Compiler::compile_file(path, &options) {
             eprintln!("\x1b[1;31m[Error]\x1b[0m {}", e);

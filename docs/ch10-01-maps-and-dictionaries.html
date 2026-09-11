@@ -177,48 +177,90 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="101-key-value-dictionaries--maps"><a class="header" href="#101-key-value-dictionaries--maps">10.1 Key-Value Dictionaries &amp; Maps</a></h1>
-<p>Runvoid 0.3.0 brings native dictionary and hash map data structures, allowing developers to manage structured associative data without needing external dependencies.</p>
-<h2 id="defining-maps"><a class="header" href="#defining-maps">Defining Maps</a></h2>
-<p>Maps can be created using either conversational pairs or bracketed key-value notation:</p>
-<pre><code class="language-runvoid">// Conversational notation
-remember player = name: "Alex", hp: 100, class: "Mage"
-
-// JSON-style brace notation
-remember config = { "host": "127.0.0.1", "port": 8080 }
-
-// Empty map
-remember cache = {}
+<p>Real-world applications frequently model data with named fields and dynamic attributes—user profiles, HTTP configuration headers, JSON payloads, and game entity state.</p>
+<p>Runvoid 0.3.0 introduces first-class <strong>Key-Value Dictionaries (Maps)</strong>, combining human-friendly syntax with a high-performance native open-addressing hash table implementation.</p>
+<hr />
+<h2 id="1-defining-dictionaries"><a class="header" href="#1-defining-dictionaries">1. Defining Dictionaries</a></h2>
+<p>Runvoid offers two expressive styles for declaring maps:</p>
+<h3 id="conversational-field-notation"><a class="header" href="#conversational-field-notation">Conversational Field Notation</a></h3>
+<p>Ideal for declaring domain objects and state models:</p>
+<pre><code class="language-runvoid">remember hero = name: "Aria", hp: 100, level: 5, class: "Ranger"
 </code></pre>
-<h2 id="reading-values"><a class="header" href="#reading-values">Reading Values</a></h2>
-<p>You can read map values in two ways:</p>
-<ol>
-<li><strong>Bracket Indexing:</strong> <code>player["name"]</code></li>
-<li><strong>Possessive Syntax:</strong> <code>player's name</code></li>
-</ol>
-<pre><code class="language-runvoid">say "Hero Name: {player['name']}"
-say "Hit Points: {player's hp}"
-</code></pre>
-<h2 id="mutating-maps"><a class="header" href="#mutating-maps">Mutating Maps</a></h2>
-<p>Adding and removing key-value pairs uses conversational English commands:</p>
-<pre><code class="language-runvoid">// Add new key-value pair or overwrite existing
-add "shield": 50 to player
-
-// Remove key
-remove "class" from player
-</code></pre>
-<h2 id="checking-keys--counting-entries"><a class="header" href="#checking-keys--counting-entries">Checking Keys &amp; Counting Entries</a></h2>
-<pre><code class="language-runvoid">// Check key existence
-if player has "shield" {
-    say green "Shield is equipped!"
+<h3 id="json-style-brace-notation"><a class="header" href="#json-style-brace-notation">JSON-Style Brace Notation</a></h3>
+<p>Familiar to developers working with REST APIs, configuration files, and serialized data:</p>
+<pre><code class="language-runvoid">remember server_config = {
+    "host": "0.0.0.0",
+    "port": 8080,
+    "max_connections": 10000,
+    "tls_enabled": true
 }
 
-// Count number of key-value pairs
-say "Total attributes: {count player}"
-
-// Retrieve keys and values as lists
-remember all_keys = keys player
-remember all_values = values player
+// Initializing an empty map:
+remember session_cache = {}
 </code></pre>
+<hr />
+<h2 id="2-accessing-map-properties"><a class="header" href="#2-accessing-map-properties">2. Accessing Map Properties</a></h2>
+<p>Runvoid allows you to retrieve values using either standard bracket indexing or conversational English possessive syntax:</p>
+<h3 id="1-traditional-bracket-indexing"><a class="header" href="#1-traditional-bracket-indexing">1. Traditional Bracket Indexing</a></h3>
+<pre><code class="language-runvoid">remember host_address = server_config["host"]
+say "Binding to host: {host_address}"
+</code></pre>
+<h3 id="2-conversational-possessive-syntax-entitys-property"><a class="header" href="#2-conversational-possessive-syntax-entitys-property">2. Conversational Possessive Syntax (<code>entity's property</code>)</a></h3>
+<p>To write code that reads like natural English, use the possessive <code>'s</code> operator:</p>
+<pre><code class="language-runvoid">say "Character Name: {hero's name}"
+say "Current Health: {hero's hp}"
+say "Character Level: {hero's level}"
+</code></pre>
+<p>The possessive syntax translates directly to a dictionary lookup for that field name, with zero runtime performance difference.</p>
+<hr />
+<h2 id="3-mutating-dictionaries"><a class="header" href="#3-mutating-dictionaries">3. Mutating Dictionaries</a></h2>
+<h3 id="adding-and-updating-entries-add--to"><a class="header" href="#adding-and-updating-entries-add--to">Adding and Updating Entries: <code>add ... to</code></a></h3>
+<p>You can insert a new key-value pair or overwrite an existing key’s value using conversational syntax:</p>
+<pre><code class="language-runvoid">// Insert a new key:
+add "mana": 75 to hero
+
+// Update an existing key:
+add "hp": 120 to hero
+
+say "Updated Mana: {hero's mana}"
+say "Restored HP: {hero's hp}"
+</code></pre>
+<h3 id="removing-entries-remove--from"><a class="header" href="#removing-entries-remove--from">Removing Entries: <code>remove ... from</code></a></h3>
+<p>To delete a key-value entry from a dictionary:</p>
+<pre><code class="language-runvoid">remove "class" from hero
+</code></pre>
+<hr />
+<h2 id="4-querying-and-inspecting-maps"><a class="header" href="#4-querying-and-inspecting-maps">4. Querying and Inspecting Maps</a></h2>
+<h3 id="checking-key-existence-has"><a class="header" href="#checking-key-existence-has">Checking Key Existence: <code>has</code></a></h3>
+<p>Verify whether a given key exists in a dictionary using the <code>has</code> operator:</p>
+<pre><code class="language-runvoid">if hero has "mana" {
+    say green "Caster abilities unlocked."
+} otherwise {
+    say yellow "Physical fighter build."
+}
+</code></pre>
+<h3 id="measuring-size-count"><a class="header" href="#measuring-size-count">Measuring Size: <code>count</code></a></h3>
+<p>Get the total number of active key-value pairs currently stored in the map:</p>
+<pre><code class="language-runvoid">say "Total attributes tracked: {count hero}"
+</code></pre>
+<h3 id="extracting-keys-and-values"><a class="header" href="#extracting-keys-and-values">Extracting Keys and Values</a></h3>
+<p>You can extract all keys or values as standard Runvoid word lists for batch processing or iteration:</p>
+<pre><code class="language-runvoid">remember attributes = keys hero
+say "Attribute keys: {count attributes}"
+
+for every attr in attributes {
+    say " - {attr}: {hero[attr]}"
+}
+</code></pre>
+<hr />
+<h2 id="5-under-the-hood-native-hash-table-architecture"><a class="header" href="#5-under-the-hood-native-hash-table-architecture">5. Under the Hood: Native Hash Table Architecture</a></h2>
+<p>Behind the scenes in the Runvoid native runtime (<code>runtime/gui.c</code>), maps are implemented as compact, cache-conscious hash tables:</p>
+<ol>
+<li><strong>Hash Algorithm:</strong> Keys are hashed using the <strong>FNV-1a 64-bit algorithm</strong>, which provides optimal distribution across string and integer keys with minimal CPU clock cycle overhead.</li>
+<li><strong>Collision Resolution:</strong> Collisions are resolved using <strong>open addressing with linear probing</strong>, maximizing CPU L1/L2 cache locality by keeping entries contiguous in memory.</li>
+<li><strong>Dynamic Resizing:</strong> The hash table maintains a load factor threshold of 0.70. When exceeded, the capacity doubles and keys are re-indexed into a contiguous memory block.</li>
+<li><strong>Zero Overhead Reads:</strong> When key literals are known at compile time, their hashes are precomputed during compilation, skipping runtime hashing passes completely!</li>
+</ol>
 
                     </main>
 

@@ -13,11 +13,49 @@ static TEMP_COUNTER: AtomicU64 = AtomicU64::new(0);
 const RUNTIME_ASM: &str = include_str!("../runtime/runtime.asm");
 const RUNTIME_GUI_C: &str = include_str!("../runtime/gui.c");
 
+#[derive(clap::ValueEnum, Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TargetOs {
+    Linux,
+    Windows,
+}
+
+impl Default for TargetOs {
+    fn default() -> Self {
+        if cfg!(target_os = "windows") {
+            TargetOs::Windows
+        } else {
+            TargetOs::Linux
+        }
+    }
+}
+
+impl std::fmt::Display for TargetOs {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            TargetOs::Linux => write!(f, "linux"),
+            TargetOs::Windows => write!(f, "windows"),
+        }
+    }
+}
+
 pub struct CompilerOptions {
     pub output_path: Option<PathBuf>,
     pub run_after_build: bool,
     pub emit_asm_only: bool,
     pub verbose: bool,
+    pub target: TargetOs,
+}
+
+impl Default for CompilerOptions {
+    fn default() -> Self {
+        Self {
+            output_path: None,
+            run_after_build: false,
+            emit_asm_only: false,
+            verbose: false,
+            target: TargetOs::default(),
+        }
+    }
 }
 
 pub struct Compiler;
@@ -49,7 +87,7 @@ impl Compiler {
         }
 
         // 5. Code Generation
-        let codegen = CodeGenerator::new(opt_program.directives.clone());
+        let codegen = CodeGenerator::new(opt_program.directives.clone(), options.target);
         let (generated_asm, has_gui, has_helpers) = codegen.generate(&opt_program);
 
         if options.emit_asm_only {
@@ -78,22 +116,25 @@ impl Compiler {
         fs::create_dir_all(&temp_dir)
             .map_err(|e| format!("Failed to create temporary directory: {}", e))?;
 
-        let runtime_asm_path = temp_dir.join("runtime.asm");
-        let runtime_obj_path = temp_dir.join("runtime.o");
         let user_asm_path = temp_dir.join("user.asm");
-        let user_obj_path = temp_dir.join("user.o");
-        let gui_c_path = temp_dir.join("gui.c");
-        let gui_obj_path = temp_dir.join("gui.o");
-
+        let default_bin_name = if options.target == TargetOs::Windows {
+            "runvoid_bin.exe"
+        } else {
+            "runvoid_bin"
+        };
         let final_bin_path = if let Some(p) = &options.output_path {
             p.clone()
         } else {
-            temp_dir.join("runvoid_bin")
+            temp_dir.join(default_bin_name)
         };
 
         let is_freestanding =
             opt_program.directives.remove_linux && opt_program.directives.add_freestanding;
         if is_freestanding {
+            if options.target == TargetOs::Windows {
+                return Err("Freestanding mode is currently supported on Linux only.".to_string());
+            }
+            let user_obj_path = temp_dir.join("user.o");
             fs::write(&user_asm_path, &generated_asm)
                 .map_err(|e| format!("Failed to write user.asm: {}", e))?;
 
@@ -144,14 +185,120 @@ impl Compiler {
             return Ok(Some(0));
         }
 
+        let nasm_opt = if is_advanced { "-O3" } else { "-O1" };
+
+        if options.target == TargetOs::Windows {
+            let user_obj_path = temp_dir.join("user.obj");
+            let gui_c_path = temp_dir.join("gui.c");
+            let gui_obj_path = temp_dir.join("gui.obj");
+
+            fs::write(&user_asm_path, &generated_asm)
+                .map_err(|e| format!("Failed to write user.asm: {}", e))?;
+
+            let nasm_user = Command::new("nasm")
+                .args(["-f", "win64", nasm_opt])
+                .arg(&user_asm_path)
+                .args(["-o"])
+                .arg(&user_obj_path)
+                .output()
+                .map_err(|e| format!("Failed to execute nasm (ensure nasm is installed): {}", e))?;
+
+            if !nasm_user.status.success() {
+                return Err(format!(
+                    "Assembly error in user code (win64):\n{}\nGenerated ASM was:\n{}",
+                    String::from_utf8_lossy(&nasm_user.stderr),
+                    generated_asm
+                ));
+            }
+
+            // On Windows, the complete C runtime (including all base runtime calls) is in gui.c
+            fs::write(&gui_c_path, RUNTIME_GUI_C)
+                .map_err(|e| format!("Failed to write gui.c: {}", e))?;
+
+            let c_compiler = if cfg!(target_os = "windows") {
+                "gcc"
+            } else {
+                "x86_64-w64-mingw32-gcc"
+            };
+
+            let mut gcc_gui_cmd = Command::new(c_compiler);
+            gcc_gui_cmd.args(["-c", "-O2", "-DNO_GUI"]);
+            gcc_gui_cmd.arg(&gui_c_path).args(["-o"]).arg(&gui_obj_path);
+
+            let gcc_gui = gcc_gui_cmd.output().map_err(|e| {
+                format!(
+                    "Failed to compile Windows runtime module with {}: {}",
+                    c_compiler, e
+                )
+            })?;
+
+            if !gcc_gui.status.success() {
+                return Err(format!(
+                    "Compilation error in gui.c for Windows:\n{}",
+                    String::from_utf8_lossy(&gcc_gui.stderr)
+                ));
+            }
+
+            // Link with MinGW gcc
+            let mut link_cmd = Command::new(c_compiler);
+            if is_advanced {
+                link_cmd.args(["-O3", "-s", "-Wl,--gc-sections"]);
+            }
+            link_cmd.arg(&user_obj_path).arg(&gui_obj_path);
+            link_cmd.args(["-lws2_32", "-lwinmm", "-luser32", "-lshell32"]);
+            for lib in &opt_program.directives.libs {
+                link_cmd.arg(format!("-l{}", lib));
+            }
+            link_cmd.arg("-o").arg(&final_bin_path);
+
+            let link_output = link_cmd
+                .output()
+                .map_err(|e| format!("Failed to link Windows binary with {}: {}", c_compiler, e))?;
+
+            if !link_output.status.success() {
+                return Err(format!(
+                    "Linker error ({}):\n{}",
+                    c_compiler,
+                    String::from_utf8_lossy(&link_output.stderr)
+                ));
+            }
+
+            if options.run_after_build {
+                let mut run_cmd = if cfg!(target_os = "windows") {
+                    Command::new(&final_bin_path)
+                } else {
+                    let mut c = Command::new("wine");
+                    c.arg(&final_bin_path);
+                    c
+                };
+                let status = run_cmd
+                    .status()
+                    .map_err(|e| format!("Failed to execute compiled Windows binary: {}", e))?;
+                let _ = fs::remove_dir_all(&temp_dir);
+                return Ok(status.code());
+            }
+
+            println!("Successfully compiled Windows binary to {:?}", final_bin_path);
+            let _ = fs::remove_file(&user_asm_path);
+            let _ = fs::remove_file(&user_obj_path);
+            let _ = fs::remove_file(&gui_c_path);
+            let _ = fs::remove_file(&gui_obj_path);
+            return Ok(Some(0));
+        }
+
+        // Target: Linux
+        let runtime_asm_path = temp_dir.join("runtime.asm");
+        let runtime_obj_path = temp_dir.join("runtime.o");
+        let user_obj_path = temp_dir.join("user.o");
+        let gui_c_path = temp_dir.join("gui.c");
+        let gui_obj_path = temp_dir.join("gui.o");
+
         fs::write(&runtime_asm_path, RUNTIME_ASM)
             .map_err(|e| format!("Failed to write runtime.asm: {}", e))?;
         fs::write(&user_asm_path, &generated_asm)
             .map_err(|e| format!("Failed to write user.asm: {}", e))?;
 
         // Run nasm for runtime
-        let nasm_opt = if is_advanced { "-O3" } else { "-O1" };
-
         let nasm_rt = Command::new("nasm")
             .args(["-f", "elf64", nasm_opt])
             .arg(&runtime_asm_path)
@@ -292,8 +439,29 @@ mod tests {
             run_after_build: true,
             emit_asm_only: false,
             verbose: false,
+            target: TargetOs::Linux,
         };
         Compiler::compile_source(code, &options)
+    }
+
+    #[test]
+    fn test_windows_target_cross_compilation() {
+        let code = r#"
+            say "Hello from Windows target test!"
+            remember x = 40
+            remember y = 2
+            say x + y
+        "#;
+        let options = CompilerOptions {
+            output_path: None,
+            run_after_build: true,
+            emit_asm_only: false,
+            verbose: false,
+            target: TargetOs::Windows,
+        };
+        let res = Compiler::compile_source(code, &options);
+        assert!(res.is_ok(), "Windows target compile/run failed: {:?}", res.err());
+        assert_eq!(res.unwrap(), Some(0));
     }
 
     #[test]

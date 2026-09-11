@@ -177,56 +177,134 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="13-the-compiler--cli-tooling"><a class="header" href="#13-the-compiler--cli-tooling">1.3 The Compiler &amp; CLI Tooling</a></h1>
-<p>The <code>runvoid</code> command-line tool provides everything you need to develop, format, benchmark, and deploy native applications.</p>
-<h2 id="key-subcommands"><a class="header" href="#key-subcommands">Key Subcommands</a></h2>
-<h3 id="1-runvoid-run-filerv"><a class="header" href="#1-runvoid-run-filerv">1. <code>runvoid run &lt;file.rv&gt;</code></a></h3>
-<p>Compiles your code directly into memory and executes it immediately:</p>
-<pre><code class="language-bash">$ runvoid run hello.rv
+<p>The <code>runvoid</code> command-line tool is a unified developer kit designed to handle compilation, execution, testing, code formatting, project scaffolding, and live interactive development.</p>
+<p>This section provides an exhaustive guide to the subcommands and flags offered by the <code>runvoid</code> CLI.</p>
+<hr />
+<h2 id="subcommand-overview"><a class="header" href="#subcommand-overview">Subcommand Overview</a></h2>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Subcommand</th><th style="text-align: left">Description</th><th style="text-align: left">Common Flags</th></tr></thead><tbody>
+<tr><td style="text-align: left"><strong><code>run</code></strong></td><td style="text-align: left">Compile and execute a <code>.rv</code> source file immediately</td><td style="text-align: left"><code>--target &lt;linux|windows&gt;</code>, <code>--verbose</code></td></tr>
+<tr><td style="text-align: left"><strong><code>build</code></strong></td><td style="text-align: left">Compile to a standalone binary executable</td><td style="text-align: left"><code>-o &lt;path&gt;</code>, <code>--target &lt;linux|windows&gt;</code>, <code>--verbose</code></td></tr>
+<tr><td style="text-align: left"><strong><code>emit-asm</code></strong></td><td style="text-align: left">Output the raw x86_64 NASM assembly code</td><td style="text-align: left"><code>--target &lt;linux|windows&gt;</code></td></tr>
+<tr><td style="text-align: left"><strong><code>test</code></strong></td><td style="text-align: left">Discover and run automated test suites</td><td style="text-align: left"><code>[path]</code>, <code>--target &lt;linux|windows&gt;</code></td></tr>
+<tr><td style="text-align: left"><strong><code>watch</code></strong></td><td style="text-align: left">Recompile and rerun automatically upon file changes</td><td style="text-align: left"><code>--target &lt;linux|windows&gt;</code></td></tr>
+<tr><td style="text-align: left"><strong><code>fmt</code></strong></td><td style="text-align: left">Format Runvoid source code to canonical style</td><td style="text-align: left"><code>-w</code> (in-place write)</td></tr>
+<tr><td style="text-align: left"><strong><code>repl</code></strong></td><td style="text-align: left">Start an interactive Read-Eval-Print Loop</td><td style="text-align: left"></td></tr>
+<tr><td style="text-align: left"><strong><code>new</code></strong></td><td style="text-align: left">Scaffold new starter projects or templates</td><td style="text-align: left"><code>&lt;game|gui|script&gt; &lt;file&gt;</code></td></tr>
+<tr><td style="text-align: left"><strong><code>cheat</code></strong></td><td style="text-align: left">Print an interactive syntax cheat sheet</td><td style="text-align: left"></td></tr>
+</tbody></table>
+</div>
+<hr />
+<h2 id="1-runvoid-run"><a class="header" href="#1-runvoid-run">1. <code>runvoid run</code></a></h2>
+<p>The <code>run</code> subcommand compiles the target source file into a temporary binary and executes it immediately:</p>
+<pre><code class="language-bash">$ runvoid run app.rv
 </code></pre>
-<h3 id="2-runvoid-build-filerv--o-name"><a class="header" href="#2-runvoid-build-filerv--o-name">2. <code>runvoid build &lt;file.rv&gt; [-o &lt;name&gt;]</code></a></h3>
-<p>Builds an optimized standalone Linux ELF executable:</p>
-<pre><code class="language-bash">$ runvoid build hello.rv -o my_app
-$ ./my_app
+<h3 id="passing-arguments-to-your-program"><a class="header" href="#passing-arguments-to-your-program">Passing Arguments to Your Program</a></h3>
+<p>Any trailing arguments passed after the source filename are forwarded directly to your program:</p>
+<pre><code class="language-bash">$ runvoid run server.rv --port 8080 --host 0.0.0.0
 </code></pre>
-<p>Add <code>--verbose</code> to inspect the compilation stages:</p>
-<pre><code class="language-bash">$ runvoid build hello.rv -o my_app --verbose
+<h3 id="cross-platform-execution-with---target"><a class="header" href="#cross-platform-execution-with---target">Cross-Platform Execution with <code>--target</code></a></h3>
+<p>You can run a Windows binary directly on Linux using Wine by specifying <code>--target windows</code>:</p>
+<pre><code class="language-bash">$ runvoid run --target windows app.rv
 </code></pre>
-<h3 id="3-runvoid-emit-asm-filerv"><a class="header" href="#3-runvoid-emit-asm-filerv">3. <code>runvoid emit-asm &lt;file.rv&gt;</code></a></h3>
-<p>Inspect the generated x86_64 NASM assembly code directly:</p>
-<pre><code class="language-bash">$ runvoid emit-asm hello.rv
+<hr />
+<h2 id="2-runvoid-build"><a class="header" href="#2-runvoid-build">2. <code>runvoid build</code></a></h2>
+<p>The <code>build</code> command translates your Runvoid code into an optimized, standalone binary executable.</p>
+<pre><code class="language-bash">$ runvoid build main.rv -o my_tool
+[runvoid] Compiling main.rv -&gt; my_tool (target: linux)...
+[runvoid] Build completed successfully: my_tool
 </code></pre>
-<h3 id="4-runvoid-fmt--w-filerv"><a class="header" href="#4-runvoid-fmt--w-filerv">4. <code>runvoid fmt [-w] &lt;file.rv&gt;</code></a></h3>
-<p>Automatically format and indent your code:</p>
-<pre><code class="language-bash">$ runvoid fmt hello.rv        # Print formatted code
-$ runvoid fmt -w hello.rv     # Overwrite file in-place
+<h3 id="available-options"><a class="header" href="#available-options">Available Options:</a></h3>
+<ul>
+<li><strong><code>-o &lt;output&gt;</code></strong>: Specifies the output binary filename. If omitted, the base name of the source file is used (e.g. <code>main</code> or <code>main.exe</code>).</li>
+<li><strong><code>--target &lt;linux|windows&gt;</code></strong>: Specifies the compilation target. Defaults to the host operating system.</li>
+<li><strong><code>--verbose</code></strong>: Outputs detailed diagnostics for each phase of the build pipeline (lexer, parser, NASM assembler invocation, linker command line).</li>
+</ul>
+<p>Example of a Windows cross-compilation build:</p>
+<pre><code class="language-bash">$ runvoid build --target windows src/main.rv -o dist/release/app.exe
 </code></pre>
-<h3 id="5-runvoid-new-gameguiscript-namerv"><a class="header" href="#5-runvoid-new-gameguiscript-namerv">5. <code>runvoid new &lt;game|gui|script&gt; &lt;name.rv&gt;</code></a></h3>
-<p>Scaffold beginner-friendly starter projects:</p>
-<pre><code class="language-bash">$ runvoid new game arcade.rv    # 2D screen game template
-$ runvoid new gui dashboard.rv  # Desktop GUI template
-$ runvoid new script tool.rv    # Conversational script template
+<hr />
+<h2 id="3-runvoid-emit-asm"><a class="header" href="#3-runvoid-emit-asm">3. <code>runvoid emit-asm</code></a></h2>
+<p>Inspect the x86_64 NASM assembly instructions generated by the code generator:</p>
+<pre><code class="language-bash">$ runvoid emit-asm main.rv
 </code></pre>
-<h3 id="6-runvoid-test-file"><a class="header" href="#6-runvoid-test-file">6. <code>runvoid test [file]</code></a></h3>
-<p>Run built-in test suites and assertions across your project:</p>
-<pre><code class="language-bash">$ runvoid test                  # Run all tests in tests/ and *_test.rv
-$ runvoid test tests/suite.rv   # Run a specific test file
+<p>You can redirect the output to save the assembly file for manual auditing or optimization:</p>
+<pre><code class="language-bash">$ runvoid emit-asm main.rv &gt; main.asm
 </code></pre>
-<h3 id="7-runvoid-repl"><a class="header" href="#7-runvoid-repl">7. <code>runvoid repl</code></a></h3>
-<p>Launch an interactive read-eval-print loop with persistent state:</p>
+<p>This is especially helpful when writing systems code, verifying register allocation, or auditing Pro Systems mode inline assembly blocks.</p>
+<hr />
+<h2 id="4-runvoid-test"><a class="header" href="#4-runvoid-test">4. <code>runvoid test</code></a></h2>
+<p>Runvoid includes a native unit and integration test runner. It discovers test files matching <code>*_test.rv</code> or any tests located in the <code>tests/</code> directory:</p>
+<pre><code class="language-bash">$ runvoid test
+[runvoid test] Discovering tests...
+[PASS] tests/math_test.rv (4 assertions passed)
+[PASS] tests/strings_test.rv (6 assertions passed)
+[PASS] tests/collections_test.rv (8 assertions passed)
+------------------------------------------------------
+Result: 3 test suites, 18 assertions, 0 failures (12ms)
+</code></pre>
+<p>You can also target a specific file:</p>
+<pre><code class="language-bash">$ runvoid test tests/math_test.rv
+</code></pre>
+<p>Tests use the built-in <code>assert</code> statement:</p>
+<pre><code class="language-runvoid">assert 2 + 2 == 4, "Addition is broken"
+assert "hello".length == 5, "Length mismatch"
+</code></pre>
+<hr />
+<h2 id="5-runvoid-watch"><a class="header" href="#5-runvoid-watch">5. <code>runvoid watch</code></a></h2>
+<p>The <code>watch</code> subcommand provides continuous development and hot-reloading. When you save changes in your editor, <code>runvoid watch</code> detects the filesystem modification, clears the terminal, recompiles your code, and runs it instantly:</p>
+<pre><code class="language-bash">$ runvoid watch app.rv
+[runvoid watch] Watching app.rv for changes...
+[runvoid watch] File changed. Rebuilding...
+Hello from updated code!
+</code></pre>
+<p>Press <code>Ctrl+C</code> to exit watch mode.</p>
+<hr />
+<h2 id="6-runvoid-fmt"><a class="header" href="#6-runvoid-fmt">6. <code>runvoid fmt</code></a></h2>
+<p>The <code>fmt</code> command applies canonical code formatting rules to your Runvoid files:</p>
+<ul>
+<li>Standardizes 4-space indentation.</li>
+<li>Ensures clean spacing around binary operators (<code>+</code>, <code>-</code>, <code>*</code>, <code>/</code>, <code>==</code>).</li>
+<li>Formats curly braces according to the one-true-brace (OTBS) standard.</li>
+<li>Cleans up trailing whitespace.</li>
+</ul>
+<p>Preview formatting differences without modifying the file:</p>
+<pre><code class="language-bash">$ runvoid fmt src/app.rv
+</code></pre>
+<p>Format and update the file in-place:</p>
+<pre><code class="language-bash">$ runvoid fmt -w src/app.rv
+</code></pre>
+<hr />
+<h2 id="7-runvoid-repl"><a class="header" href="#7-runvoid-repl">7. <code>runvoid repl</code></a></h2>
+<p>The interactive Read-Eval-Print Loop (REPL) allows you to experiment with language features, test expressions, and prototype logic line by line:</p>
 <pre><code class="language-bash">$ runvoid repl
-runvoid&gt; remember hero = name: "Alex", hp: 100
-runvoid&gt; hero's hp
-100
-runvoid&gt; :help
+Runvoid v0.3.0 Interactive Shell
+Type :exit to quit, :help for commands.
+
+runvoid&gt; remember numbers = [10, 20, 30]
+runvoid&gt; numbers[1]
+20
+runvoid&gt; say "Total items: {numbers.length}"
+Total items: 3
+runvoid&gt; :exit
 </code></pre>
-<h3 id="8-runvoid-watch-filerv"><a class="header" href="#8-runvoid-watch-filerv">8. <code>runvoid watch &lt;file.rv&gt;</code></a></h3>
-<p>Hot-reload your application on every file save:</p>
-<pre><code class="language-bash">$ runvoid watch main.rv
+<hr />
+<h2 id="8-runvoid-new"><a class="header" href="#8-runvoid-new">8. <code>runvoid new</code></a></h2>
+<p>The <code>new</code> command scaffolds starter projects using established best-practice templates:</p>
+<pre><code class="language-bash"># Generate an interactive 2D graphical game template:
+$ runvoid new game space_invaders.rv
+
+# Generate a native desktop GUI application template:
+$ runvoid new gui dashboard.rv
+
+# Generate a conversational systems utility script:
+$ runvoid new script audit_tool.rv
 </code></pre>
-<h3 id="9-runvoid-cheat"><a class="header" href="#9-runvoid-cheat">9. <code>runvoid cheat</code></a></h3>
-<p>Displays an interactive color-coded terminal cheat sheet anytime you need a quick syntax reminder:</p>
+<hr />
+<h2 id="9-runvoid-cheat"><a class="header" href="#9-runvoid-cheat">9. <code>runvoid cheat</code></a></h2>
+<p>Whenever you need a quick syntax refresher in the terminal, run:</p>
 <pre><code class="language-bash">$ runvoid cheat
 </code></pre>
+<p>This renders a concise, colorized summary of variables, loops, collections, dialogs, audio primitives, and Pro Systems directives directly in your console.</p>
 
                     </main>
 

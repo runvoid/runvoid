@@ -177,21 +177,104 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="9-compiler-architecture--ecosystem"><a class="header" href="#9-compiler-architecture--ecosystem">9. Compiler Architecture &amp; Ecosystem</a></h1>
-<p>The Runvoid compiler is written in <strong>Rust</strong> and targets <strong>NASM x86_64 Linux</strong> following the System V AMD64 ABI.</p>
-<h2 id="compiler-internal-pipeline"><a class="header" href="#compiler-internal-pipeline">Compiler Internal Pipeline</a></h2>
-<ol>
-<li><strong><code>src/lexer.rs</code></strong>: Tokenizes source text, scanning identifiers, numbers, keywords, and interpolated strings (<code>"Hello {user}"</code>).</li>
-<li><strong><code>src/parser.rs</code></strong>: Builds the Abstract Syntax Tree (AST) using a recursive descent parser. Handles recursive multi-file imports (<code>use "other.rv"</code>).</li>
-<li><strong><code>src/typechecker.rs</code></strong>: Verifies directive constraints, checks module requirements, verifies type annotations in Pro Mode, and validates struct schemas.</li>
-<li><strong><code>src/optimizer.rs</code></strong>: Implements AST optimization passes including compile-time Constant Folding and Dead Code Elimination (DCE).</li>
-<li><strong><code>src/codegen.rs</code></strong>: Emits high-performance x86_64 NASM assembly code.</li>
-<li><strong><code>runtime/runtime.asm</code> &amp; <code>runtime/gui.c</code></strong>: Native Linux syscall implementations and minimal X11 windowing backend.</li>
-<li><strong><code>src/compiler.rs</code></strong>: Orchestrates assembler (<code>nasm</code>) and linker (<code>gcc</code> / <code>ld</code>) invocations in isolated temporary workspaces.</li>
-</ol>
-<h2 id="tooling--ecosystem"><a class="header" href="#tooling--ecosystem">Tooling &amp; Ecosystem</a></h2>
+<p>The Runvoid compiler is engineered from the ground up in <strong>Rust</strong> to provide memory-safe, deterministic, and lightning-fast compilation. It targets <strong>x86_64 machine architecture</strong> by generating human-readable <strong>NASM assembly code</strong>, which is assembled and linked into standalone native executables for <strong>Linux</strong> and <strong>Windows</strong>.</p>
+<p>Understanding the compiler’s internal pipeline gives you deep insight into how your conversational code transforms into raw silicon instructions.</p>
+<hr />
+<h2 id="1-high-level-compiler-pipeline"><a class="header" href="#1-high-level-compiler-pipeline">1. High-Level Compiler Pipeline</a></h2>
+<pre><code>  +-------------------------------------------------------------+
+  | Source Code (.rv)                                           |
+  +-------------------------------------------------------------+
+                                 |
+                                 v
+  +-------------------------------------------------------------+
+  | Lexical Analysis (src/lexer.rs)                             |
+  | Tokenizes text, handles comments &amp; string interpolations    |
+  +-------------------------------------------------------------+
+                                 |
+                                 v
+  +-------------------------------------------------------------+
+  | Recursive Descent Parser (src/parser.rs)                    |
+  | Builds AST, resolves recursive multi-file imports (`use`)   |
+  +-------------------------------------------------------------+
+                                 |
+                                 v
+  +-------------------------------------------------------------+
+  | Typechecker &amp; Semantic Validator (src/typechecker.rs)       |
+  | Checks directive rules, validates strict types &amp; structs    |
+  +-------------------------------------------------------------+
+                                 |
+                                 v
+  +-------------------------------------------------------------+
+  | AST Optimizer (src/optimizer.rs)                            |
+  | Constant folding, algebraic reduction, dead-code removal    |
+  +-------------------------------------------------------------+
+                                 |
+                                 v
+  +-------------------------------------------------------------+
+  | x86_64 NASM Code Generator (src/codegen.rs)                 |
+  | Emits System V AMD64 assembly, stack frames, align checks   |
+  +-------------------------------------------------------------+
+                                 |
+                 +---------------+---------------+
+                 |                               |
+                 v (Linux)                       v (Windows)
+  +-----------------------------+ +-----------------------------+
+  | Assembler: nasm -f elf64    | | Assembler: nasm -f win64    |
+  | Linker: gcc -no-pie         | | Linker: x86_64-w64-mingw32  |
+  +-----------------------------+ +-----------------------------+
+                 |                               |
+                 v                               v
+       Linux ELF64 Binary             Windows PE32+ .exe
+</code></pre>
+<hr />
+<h2 id="2-walkthrough-of-compiler-modules"><a class="header" href="#2-walkthrough-of-compiler-modules">2. Walkthrough of Compiler Modules</a></h2>
+<h3 id="1-lexical-analysis-srclexerrs"><a class="header" href="#1-lexical-analysis-srclexerrs">1. Lexical Analysis (<code>src/lexer.rs</code>)</a></h3>
+<p>The lexer scans the input UTF-8 source stream character-by-character. It converts conversational keywords (<code>remember</code>, <code>action</code>, <code>otherwise</code>, <code>repeat</code>), symbols, numbers, and identifiers into a strongly typed <code>Token</code> stream.</p>
 <ul>
-<li><strong><code>src/formatter.rs</code></strong>: The built-in formatter powering <code>runvoid fmt [-w]</code>.</li>
-<li><strong>VS Code Extension (<code>editors/vscode/</code>)</strong>: Official TextMate syntax grammar, bracket-matching rules, and snippet configuration for Visual Studio Code.</li>
+<li>String literals with embedded expressions (e.g., <code>"Value: {x + 1}"</code>) are parsed into distinct template chunks and expression tokens.</li>
+<li>Comments (<code>//</code>, <code>#</code>, <code>;</code>) are stripped without polluting the AST.</li>
+</ul>
+<h3 id="2-recursive-descent-parser-srcparserrs"><a class="header" href="#2-recursive-descent-parser-srcparserrs">2. Recursive Descent Parser (<code>src/parser.rs</code>)</a></h3>
+<p>The parser converts the token stream into an Abstract Syntax Tree (<code>Program</code> and <code>Statement</code> nodes).</p>
+<ul>
+<li>Statements are parsed top-down using recursive descent.</li>
+<li>When an imported file is encountered (<code>use "path/file.rv"</code>), the parser recursively reads and parses the target file, deduplicating symbols and merging AST subtrees.</li>
+</ul>
+<h3 id="3-typechecker--semantic-validation-srctypecheckerrs"><a class="header" href="#3-typechecker--semantic-validation-srctypecheckerrs">3. Typechecker &amp; Semantic Validation (<code>src/typechecker.rs</code>)</a></h3>
+<p>The typechecker verifies that the AST adheres to all declared architectural directives:</p>
+<ul>
+<li>When <code>remove Basic</code> is present, it validates that every variable and function declares a valid static type (<code>Int</code>, <code>String</code>, <code>Bool</code>, <code>Ptr</code>, or user-defined <code>struct</code>).</li>
+<li>Checks that functions are called with the correct argument arity and compatible types.</li>
+<li>Verifies that <code>extern "C"</code> declarations conform to C ABI calling conventions.</li>
+</ul>
+<h3 id="4-ast-optimizer-srcoptimizerrs"><a class="header" href="#4-ast-optimizer-srcoptimizerrs">4. AST Optimizer (<code>src/optimizer.rs</code>)</a></h3>
+<p>Before emitting assembly code, Runvoid passes the AST through optimization passes:</p>
+<ul>
+<li><strong>Constant Folding:</strong> Expressions involving compile-time literals (e.g., <code>remember x = 10 * 60 + 5</code>) are evaluated during compilation into <code>605</code>, eliminating runtime CPU cycles.</li>
+<li><strong>Dead Code Elimination (DCE):</strong> Unreachable branches inside <code>if false</code> or code after early <code>give</code> statements are pruned.</li>
+</ul>
+<h3 id="5-assembly-code-generator-srccodegenrs"><a class="header" href="#5-assembly-code-generator-srccodegenrs">5. Assembly Code Generator (<code>src/codegen.rs</code>)</a></h3>
+<p>The code generator walks the optimized AST and outputs clean, commented x86_64 NASM assembly code:</p>
+<ul>
+<li><strong>Stack Alignment:</strong> Automatically maintains strict 16-byte stack frame alignment before any external function call, preventing SIMD alignment faults on Windows and Linux.</li>
+<li><strong>Cross-Platform Read-Only Sections:</strong> Emits <code>section .rodata</code> on Linux and <code>section .rdata</code> on Windows.</li>
+<li><strong>Calling Conventions:</strong> Generates System V AMD64 ABI compliant code (<code>rdi</code>, <code>rsi</code>, <code>rdx</code>, <code>rcx</code>, <code>r8</code>, <code>r9</code>).</li>
+</ul>
+<h3 id="6-c-runtime-layer-runtimeguic--runtimeruntimeasm"><a class="header" href="#6-c-runtime-layer-runtimeguic--runtimeruntimeasm">6. C Runtime Layer (<code>runtime/gui.c</code> &amp; <code>runtime/runtime.asm</code>)</a></h3>
+<p>The native runtime provides high-performance implementations for strings, dynamic collections, terminal I/O, dialogs, audio, and graphics.</p>
+<ul>
+<li>Marked with <code>RV_API</code> (<code>__attribute__((sysv_abi))</code>) to ensure seamless interop between the NASM assembly output and MinGW GCC.</li>
+<li>Compiles with zero external dependencies on Linux and Windows.</li>
+</ul>
+<h3 id="7-compiler-orchestrator-srccompilerrs"><a class="header" href="#7-compiler-orchestrator-srccompilerrs">7. Compiler Orchestrator (<code>src/compiler.rs</code>)</a></h3>
+<p>Manages the build pipeline: invokes <code>nasm</code>, compiles <code>runtime/gui.c</code>, links the final object files using GCC or MinGW GCC, and cleans up temporary build artifacts.</p>
+<hr />
+<h2 id="3-tooling-and-editor-ecosystem"><a class="header" href="#3-tooling-and-editor-ecosystem">3. Tooling and Editor Ecosystem</a></h2>
+<p>Runvoid ships with first-class developer tooling:</p>
+<ul>
+<li><strong>Source Formatter (<code>src/formatter.rs</code>):</strong> Powers <code>runvoid fmt [-w]</code>, parsing and formatting Runvoid source code into standard 4-space indented canonical style.</li>
+<li><strong>Interactive REPL (<code>src/repl.rs</code>):</strong> An interactive terminal shell that evaluates statements line-by-line while maintaining scope state.</li>
+<li><strong>VS Code Extension (<code>editors/vscode/</code>):</strong> Contains official TextMate grammar definitions (<code>syntaxes/runvoid.tmLanguage.json</code>), language configuration (<code>language-configuration.json</code>), and code snippets for Visual Studio Code.</li>
 </ul>
 
                     </main>

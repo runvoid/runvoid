@@ -177,9 +177,15 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="85-c-compatible-structs--c-ffi"><a class="header" href="#85-c-compatible-structs--c-ffi">8.5 C-Compatible Structs &amp; C FFI</a></h1>
-<p>Pro Systems Mode allows defining C-compatible composite data types and calling native C libraries with zero overhead.</p>
-<h2 id="c-compatible-pod-structs"><a class="header" href="#c-compatible-pod-structs">C-Compatible POD Structs</a></h2>
-<p>Define 8-byte aligned Plain Old Data (POD) structures matching standard C struct memory layouts:</p>
+<p>Systems programming rarely happens in an isolated vacuum. Operating system kernels, hardware drivers, cryptography suites, and graphical engines (such as Vulkan, DirectX, SQLite, and OpenSSL) expose standard <strong>C Application Binary Interfaces (ABIs)</strong>.</p>
+<p>Runvoid Pro Systems Mode provides binary-level compatibility with C:</p>
+<ol>
+<li><strong>C-Compatible POD Structs:</strong> Define composite types whose physical memory layout matches C structures byte-for-byte.</li>
+<li><strong>Native C FFI (<code>extern "C"</code>):</strong> Call any C function with zero marshalling or wrapper overhead.</li>
+</ol>
+<hr />
+<h2 id="1-c-compatible-plain-old-data-pod-structs"><a class="header" href="#1-c-compatible-plain-old-data-pod-structs">1. C-Compatible Plain Old Data (POD) Structs</a></h2>
+<p>In Runvoid, you declare composite data structures using the <code>struct</code> keyword:</p>
 <pre><code class="language-runvoid">remove garbageC
 remove Basic
 add Advanced
@@ -190,21 +196,55 @@ struct Vector3D {
     y,
     z
 }
-
-# Instantiate struct:
-remember vec: Vector3D = Vector3D(10, 20, 30)
-
-# Field access:
-say vec.x   // 10
-say vec.y   // 20
-say vec.z   // 30
-
-# Field mutation:
-vec.x = 99
-say vec.x   // 99
 </code></pre>
-<h2 id="native-c-foreign-function-interface-ffi"><a class="header" href="#native-c-foreign-function-interface-ffi">Native C Foreign Function Interface (FFI)</a></h2>
-<p>Call external C functions directly from libc or linked libraries using <code>extern "C"</code> blocks:</p>
+<h3 id="memory-layout--alignment"><a class="header" href="#memory-layout--alignment">Memory Layout &amp; Alignment</a></h3>
+<p>Every field in a standard Runvoid struct occupies an 8-byte aligned word in memory:</p>
+<pre><code>Offset:   +0x00               +0x08               +0x10               +0x18
+          +-------------------+-------------------+-------------------+
+Field:    |      x (8B)       |      y (8B)       |      z (8B)       |
+          +-------------------+-------------------+-------------------+
+Total Size: 24 bytes (0x18)
+</code></pre>
+<p>This layout matches the C language layout:</p>
+<pre><code class="language-c">// Equivalent C definition:
+typedef struct {
+    int64_t x;
+    int64_t y;
+    int64_t z;
+} Vector3D;
+</code></pre>
+<p>Because there is no hidden object header, vtable pointer, or garbage collection metadata, you can pass a Runvoid struct directly to C libraries without translation!</p>
+<hr />
+<h2 id="2-instantiating-and-accessing-structs"><a class="header" href="#2-instantiating-and-accessing-structs">2. Instantiating and Accessing Structs</a></h2>
+<h3 id="stack-allocation"><a class="header" href="#stack-allocation">Stack Allocation</a></h3>
+<p>You can instantiate a struct directly on the stack:</p>
+<pre><code class="language-runvoid">remember position: Vector3D = Vector3D(100, 250, -50)
+
+// Accessing fields:
+say "Position X: {position.x}"
+say "Position Y: {position.y}"
+say "Position Z: {position.z}"
+
+// Mutating fields in-place:
+position.z = 0
+say "Grounded Z: {position.z}"
+</code></pre>
+<h3 id="pointer-to-struct"><a class="header" href="#pointer-to-struct">Pointer to Struct</a></h3>
+<p>You can take the memory address of a struct using <code>addr</code> to pass it by reference:</p>
+<pre><code class="language-runvoid">remember pos_ptr: Ptr = addr position
+
+action translate_x(target: Ptr, delta: Int): Void {
+    // Offset 0 corresponds to field x:
+    remember current_x: Int = @target
+    @target = current_x + delta
+}
+
+translate_x(pos_ptr, 25)
+say "Updated X: {position.x}" // Prints: 125
+</code></pre>
+<hr />
+<h2 id="3-foreign-function-interface-extern-c"><a class="header" href="#3-foreign-function-interface-extern-c">3. Foreign Function Interface (<code>extern "C"</code>)</a></h2>
+<p>Runvoid allows you to import external C symbols directly into your program using <code>extern "C"</code> blocks:</p>
 <pre><code class="language-runvoid">remove garbageC
 remove Basic
 add Advanced
@@ -213,17 +253,33 @@ use ior
 extern "C" {
     action puts(s: String) -&gt; Int
     action abs(n: Int) -&gt; Int
+    action time(tloc: Ptr) -&gt; Int
 }
 
-puts("Hello from native C puts via FFI!")
+// Call standard C library functions directly:
+puts("Direct greeting via libc puts()!")
 
-remember diff: Int = 0 - 55
-remember positive: Int = abs(diff)
-say positive   // 55
+remember current_epoch: Int = time(0)
+say "Current Unix timestamp: {current_epoch}"
+
+remember diff: Int = 0 - 42
+remember absolute: Int = abs(diff)
+say "Absolute value of -42 is: {absolute}"
 </code></pre>
-<blockquote>
-<p><strong>Note on Strings:</strong> Runvoid strings automatically pass their internal null-terminated C string pointer (<code>char*</code>) to extern functions.</p>
-</blockquote>
+<h3 id="type-mapping-table"><a class="header" href="#type-mapping-table">Type Mapping Table</a></h3>
+<p>When declaring C function signatures in Runvoid, use this mapping:</p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">C Type</th><th style="text-align: left">Runvoid Pro Type</th><th style="text-align: left">Hardware Representation</th></tr></thead><tbody>
+<tr><td style="text-align: left"><code>int64_t</code>, <code>long long</code>, <code>ssize_t</code></td><td style="text-align: left"><code>Int</code></td><td style="text-align: left">64-bit register (<code>%rax</code>, <code>%rdi</code>, etc.)</td></tr>
+<tr><td style="text-align: left"><code>const char*</code>, <code>char*</code></td><td style="text-align: left"><code>String</code> or <code>Ptr</code></td><td style="text-align: left">64-bit pointer to null-terminated UTF-8</td></tr>
+<tr><td style="text-align: left"><code>void*</code>, <code>size_t*</code>, opaque struct pointers</td><td style="text-align: left"><code>Ptr</code></td><td style="text-align: left">64-bit memory address</td></tr>
+<tr><td style="text-align: left"><code>bool</code>, <code>int</code> (as flag)</td><td style="text-align: left"><code>Bool</code> or <code>Int</code></td><td style="text-align: left">64-bit register (<code>1</code> / <code>0</code>)</td></tr>
+<tr><td style="text-align: left"><code>void</code> (no return)</td><td style="text-align: left"><code>Void</code></td><td style="text-align: left">Absence of return value</td></tr>
+</tbody></table>
+</div>
+<hr />
+<h2 id="4-string-passing-convention"><a class="header" href="#4-string-passing-convention">4. String Passing Convention</a></h2>
+<p>Runvoid strings are null-terminated in memory. When you pass a Runvoid <code>String</code> to an <code>extern "C"</code> function expecting a <code>const char*</code> (such as <code>puts</code>, <code>fopen</code>, or <code>printf</code>), the compiler automatically supplies the 64-bit memory pointer to the null-terminated byte sequence in the register <code>%rdi</code>.</p>
+<p>There is <strong>zero heap allocation, zero string copying, and zero marshalling overhead</strong>.</p>
 
                     </main>
 

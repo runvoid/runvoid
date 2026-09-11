@@ -177,25 +177,104 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="33-functions--actions"><a class="header" href="#33-functions--actions">3.3 Functions &amp; Actions</a></h1>
-<p>Functions are prevalent in Runvoid code. You’ve already seen one of the most important built-in actions in the language: <code>say</code>.</p>
-<h2 id="defining-functions"><a class="header" href="#defining-functions">Defining Functions</a></h2>
-<p>In Runvoid, you define functions using the <code>action</code> keyword. Values are returned using <code>give</code>:</p>
-<pre><code class="language-runvoid">action add_numbers(x, y) {
-    give x + y
+<p>Functions are the primary building blocks for structuring reusable logic in Runvoid. In keeping with Runvoid’s conversational philosophy, functions are introduced with the keyword <code>action</code>, and values are returned using <code>give</code>.</p>
+<hr />
+<h2 id="defining-an-action"><a class="header" href="#defining-an-action">Defining an Action</a></h2>
+<p>Here is how you declare a basic action in Runvoid:</p>
+<pre><code class="language-runvoid">action greet() {
+    say "Hello from inside an action!"
 }
 
-remember total = add_numbers(15, 30)
-say "15 + 30 = {total}"
+greet()
 </code></pre>
-<h2 id="functions-with-parameters"><a class="header" href="#functions-with-parameters">Functions with Parameters</a></h2>
-<p>Parameters allow you to pass values into functions. When a function executes, its arguments are passed using standard x86_64 System V AMD64 ABI registers (<code>rdi</code>, <code>rsi</code>, <code>rdx</code>, etc.), ensuring zero overhead:</p>
-<pre><code class="language-runvoid">action greet(user) {
-    say "Hello, {user}! Welcome back."
+<p>An action definition starts with <code>action</code>, followed by the function name, a pair of parentheses <code>()</code>, and a body enclosed in curly braces <code>{ ... }</code>. You call an action by writing its name followed by parentheses.</p>
+<hr />
+<h2 id="parameters-and-arguments"><a class="header" href="#parameters-and-arguments">Parameters and Arguments</a></h2>
+<p>Actions can accept one or more parameters. Parameters are variables declared as part of a function’s signature:</p>
+<pre><code class="language-runvoid">action introduce(name, title) {
+    say "Presenting {title} {name}!"
 }
 
-greet("Alex")
-greet("Sarah")
+introduce("Arthur", "King")
+introduce("Merlin", "Archmage")
 </code></pre>
+<p>When an action is invoked, the values passed to it are called <strong>arguments</strong>. Arguments are evaluated from left to right and passed into the action.</p>
+<hr />
+<h2 id="returning-values-with-give"><a class="header" href="#returning-values-with-give">Returning Values with <code>give</code></a></h2>
+<p>To send data back to the caller from an action, use the <code>give</code> statement:</p>
+<pre><code class="language-runvoid">action square(n) {
+    give n * n
+}
+
+remember result = square(7)
+say "7 squared is: {result}" // Prints: 49
+</code></pre>
+<h3 id="early-returns"><a class="header" href="#early-returns">Early Returns</a></h3>
+<p>The <code>give</code> statement terminates the function immediately, returning control and the specified value to the caller. You can use early returns for guard clauses:</p>
+<pre><code class="language-runvoid">action absolute_value(n) {
+    if n &lt; 0 {
+        give 0 - n
+    }
+    give n
+}
+
+say absolute_value(-42) // Prints: 42
+say absolute_value(15)  // Prints: 15
+</code></pre>
+<p>If an action reaches the end of its body without encountering an explicit <code>give</code>, it returns <code>0</code> (or <code>void</code>) automatically.</p>
+<hr />
+<h2 id="recursive-actions"><a class="header" href="#recursive-actions">Recursive Actions</a></h2>
+<p>Runvoid fully supports recursive functions. Because the Runvoid compiler maintains a genuine x86_64 stack frame for each function call, recursive logic executes safely and efficiently.</p>
+<p>Here is a classic recursive implementation of the factorial algorithm:</p>
+<pre><code class="language-runvoid">action factorial(n) {
+    if n &lt;= 1 {
+        give 1
+    }
+    give n * factorial(n - 1)
+}
+
+say "5! = {factorial(5)}"   // Prints: 120
+say "10! = {factorial(10)}" // Prints: 3628800
+</code></pre>
+<p>Here is a recursive Fibonacci generator:</p>
+<pre><code class="language-runvoid">action fibonacci(n) {
+    if n &lt;= 0 { give 0 }
+    if n == 1 { give 1 }
+    give fibonacci(n - 1) + fibonacci(n - 2)
+}
+
+say "Fibonacci(8) = {fibonacci(8)}" // Prints: 21
+</code></pre>
+<hr />
+<h2 id="how-actions-execute-on-hardware-the-x86_64-abi"><a class="header" href="#how-actions-execute-on-hardware-the-x86_64-abi">How Actions Execute on Hardware (The x86_64 ABI)</a></h2>
+<p>When you define an action in Runvoid, the compiler generates a standard x86_64 subroutine:</p>
+<ol>
+<li><strong>Stack Frame Setup:</strong>
+<pre><code class="language-nasm">push rbp
+mov rbp, rsp
+sub rsp, 32          ; Allocate stack space for local variables
+</code></pre>
+</li>
+<li><strong>Argument Passing:</strong>
+Runvoid utilizes the high-performance <strong>System V AMD64 ABI</strong>:
+<ul>
+<li>First 6 integer/pointer arguments are passed directly in registers: <code>%rdi</code>, <code>%rsi</code>, <code>%rdx</code>, <code>%rcx</code>, <code>%r8</code>, <code>%r9</code>.</li>
+<li>On Windows, the compiler adapts the runtime using <code>__attribute__((sysv_abi))</code> and strict 16-byte stack alignment, ensuring uniform calling conventions across all operating systems.</li>
+</ul>
+</li>
+<li><strong>Return Value:</strong>
+<ul>
+<li>The expression passed to <code>give</code> is evaluated into the <code>%rax</code> accumulator register.</li>
+</ul>
+</li>
+<li><strong>Epilogue:</strong>
+<pre><code class="language-nasm">mov rsp, rbp
+pop rbp
+ret
+</code></pre>
+</li>
+</ol>
+<p>Because Runvoid adheres directly to the hardware calling convention, there is no interpreter overhead or stack virtualization—an action call in Runvoid is as fast as a function call in C or Rust.</p>
 
                     </main>
 

@@ -177,18 +177,71 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="81-systems-philosophy--directives"><a class="header" href="#81-systems-philosophy--directives">8.1 Systems Philosophy &amp; Directives</a></h1>
-<p>Activating Pro Systems Mode requires explicitly stating your intention to opt out of beginner-level runtime conveniences.</p>
-<h2 id="the-three-core-directives"><a class="header" href="#the-three-core-directives">The Three Core Directives</a></h2>
-<p>Place these directives at the very top of your source file:</p>
+<p>Activating Pro Systems Mode requires explicitly stating your architectural intentions to the compiler. Unlike traditional compilers that rely on arcane command-line flags (<code>-fno-builtin</code>, <code>-nostdlib</code>, <code>-fPIC</code>), Runvoid places architectural intent directly in the source code using <strong>top-level compiler directives</strong>.</p>
+<hr />
+<h2 id="the-core-systems-directives"><a class="header" href="#the-core-systems-directives">The Core Systems Directives</a></h2>
+<p>To transition a Runvoid file from conversational scripting into hardened systems mode, place directives at the very top of your file:</p>
 <pre><code class="language-runvoid">remove garbageC
 remove Basic
 add Advanced
 </code></pre>
-<p>What each directive means:</p>
+<p>Let’s examine what each directive instructs the compiler to do:</p>
+<h3 id="1-remove-garbagec"><a class="header" href="#1-remove-garbagec">1. <code>remove garbageC</code></a></h3>
+<p>Instructs the compiler and linker to eliminate the entire Garbage Collection subsystem:</p>
+<ul>
+<li>Memory allocations bypass the GC tracking pool and use direct OS allocator calls (<code>mmap</code> / <code>HeapAlloc</code>).</li>
+<li>The runtime eliminates stack scanning and mark-and-sweep passes.</li>
+<li>Shrinks the binary size by 12–18 KB and guarantees <strong>zero garbage-collection pauses</strong>.</li>
+</ul>
+<h3 id="2-remove-basic"><a class="header" href="#2-remove-basic">2. <code>remove Basic</code></a></h3>
+<p>Disables permissive, dynamic type inference and implicit coercions:</p>
+<ul>
+<li>Every variable declaration with <code>remember</code> must supply an explicit type annotation (e.g. <code>remember x: Int = 42</code>).</li>
+<li>Every action must declare parameter types and a return type (e.g. <code>action compute(n: Int) -&gt; Int</code>).</li>
+<li>The compiler emits strict compile-time errors on type mismatches instead of attempting dynamic runtime conversions.</li>
+</ul>
+<h3 id="3-add-advanced"><a class="header" href="#3-add-advanced">3. <code>add Advanced</code></a></h3>
+<p>Unlocks low-level hardware and systems programming primitives:</p>
+<ul>
+<li>Grants access to raw memory pointers (<code>addr</code>, <code>@</code>), pointer arithmetic, and manual allocation (<code>alloc</code>, <code>free</code>).</li>
+<li>Enables inline NASM assembly blocks (<code>inline_asm</code>).</li>
+<li>Enables C FFI (<code>extern "C"</code>) and direct OS system calls.</li>
+<li>Activates advanced compiler optimization passes: Dead Code Elimination (DCE), Constant Folding, Peephole Optimization, and Link-Time Optimization (LTO).</li>
+</ul>
+<h3 id="4-add-freestanding"><a class="header" href="#4-add-freestanding">4. <code>add Freestanding</code></a></h3>
+<p>Enables bare-metal freestanding compilation:</p>
+<ul>
+<li>Strips the C standard library (<code>libc</code> / <code>msvcrt</code>) completely.</li>
+<li>Bypasses the standard runtime entry point (<code>main</code>) and transfers control directly to a custom <code>_start</code> symbol.</li>
+<li>Enables compilation of bootloaders, kernel modules, embedded firmware, and hypervisors.</li>
+</ul>
+<hr />
+<h2 id="directive-combinations--architectural-archetypes"><a class="header" href="#directive-combinations--architectural-archetypes">Directive Combinations &amp; Architectural Archetypes</a></h2>
+<p>Runvoid’s modular directive design allows you to craft the exact runtime environment your application demands:</p>
+<pre><code>+---------------------------+-----------------------------------------------+
+| Directive Pattern         | Best Suited For                               |
++---------------------------+-----------------------------------------------+
+| (No directives)           | Scripts, rapid CLI prototypes, 2D GUI games   |
+| remove garbageC           | Game loops, real-time audio DSP, low latency  |
+| remove garbageC           | Systems utilities, network daemons, high-perf |
+| remove Basic              | C libraries, embedded CLI tools               |
+| add Advanced              |                                               |
+| add Freestanding          | OS kernels, bootloaders, microcontrollers     |
++---------------------------+-----------------------------------------------+
+</code></pre>
+<hr />
+<h2 id="how-directives-modify-the-compiler-pipeline"><a class="header" href="#how-directives-modify-the-compiler-pipeline">How Directives Modify the Compiler Pipeline</a></h2>
+<p>During compilation, directives are processed during the very first AST traversal stage:</p>
 <ol>
-<li><strong><code>remove garbageC</code></strong>: Completely strips the Garbage Collection runtime and GC tracking metadata from the compiled executable.</li>
-<li><strong><code>remove Basic</code></strong>: Turns off permissive type inference. Requires all variables and functions to declare explicit, static types.</li>
-<li><strong><code>add Advanced</code></strong>: Enables systems-level intrinsics, raw memory pointers, C FFI, inline assembly, and aggressive compiler optimizations (Constant Folding, Dead Code Elimination, Peephole, LTO).</li>
+<li><strong>AST Root Verification:</strong> Directives must appear before any executable statements or action declarations.</li>
+<li><strong>Typechecker Hardening:</strong> If <code>remove Basic</code> is detected, the typechecker enforces strict static type validation on every node.</li>
+<li><strong>Codegen Configuration:</strong>
+<ul>
+<li>If <code>remove garbageC</code> is active, GC hook injections around pointer allocations are suppressed.</li>
+<li>If <code>add Advanced</code> is active, NASM code generation allows direct register assignments and memory dereferences.</li>
+<li>If <code>add Freestanding</code> is active, the linker flags are altered to <code>-nostdlib -static</code> (on Linux) or <code>/NODEFAULTLIB</code> (on Windows).</li>
+</ul>
+</li>
 </ol>
 
                     </main>

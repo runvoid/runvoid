@@ -177,32 +177,107 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="4-natural-word-lists--collections"><a class="header" href="#4-natural-word-lists--collections">4. Natural Word Lists &amp; Collections</a></h1>
-<p>Most programming languages feature arrays, vectors, or lists. In Runvoid, collections are designed to read like conversational English phrases.</p>
-<h2 id="creating-word-lists"><a class="header" href="#creating-word-lists">Creating Word Lists</a></h2>
-<p>Create a collection simply by separating elements with commas:</p>
-<pre><code class="language-runvoid">remember backpack = "Torch", "Shield", "Health Potion"
-</code></pre>
-<h2 id="adding-and-removing-elements"><a class="header" href="#adding-and-removing-elements">Adding and Removing Elements</a></h2>
-<pre><code class="language-runvoid"># Appending to a list:
-add "Magic Ring" to backpack
+<p>Nearly every real-world program needs to store, organize, and manipulate collections of related items—whether it’s a list of network connections, game inventory items, or sensor readings.</p>
+<p>In Runvoid, collections are designed to read like conversational English phrases while maintaining the performance of native heap-allocated dynamic arrays.</p>
+<hr />
+<h2 id="1-creating-collections"><a class="header" href="#1-creating-collections">1. Creating Collections</a></h2>
+<p>You can declare a list using either standard bracket syntax or comma-separated natural word lists:</p>
+<pre><code class="language-runvoid">// Using brackets:
+remember numbers = [10, 20, 30, 40, 50]
 
-# Removing from a list:
-remove "Shield" from backpack
+// Using natural word list syntax:
+remember backpack = "Torch", "Iron Shield", "Health Potion"
 </code></pre>
-<h2 id="checking-membership-has"><a class="header" href="#checking-membership-has">Checking Membership: <code>has</code></a></h2>
+<p>Both forms initialize a dynamically sized array stored on the heap with an 8-byte length header and contiguous element memory.</p>
+<hr />
+<h2 id="2-modifying-collections-adding-and-removing"><a class="header" href="#2-modifying-collections-adding-and-removing">2. Modifying Collections: Adding and Removing</a></h2>
+<p>Runvoid provides conversational statements for mutating collections:</p>
+<h3 id="appending-elements-add--to"><a class="header" href="#appending-elements-add--to">Appending Elements: <code>add ... to</code></a></h3>
+<p>To append an element to the end of a list:</p>
+<pre><code class="language-runvoid">add "Magic Ring" to backpack
+add 60 to numbers
+</code></pre>
+<h3 id="removing-elements-remove--from"><a class="header" href="#removing-elements-remove--from">Removing Elements: <code>remove ... from</code></a></h3>
+<p>To find and remove an element from a list:</p>
+<pre><code class="language-runvoid">remove "Iron Shield" from backpack
+</code></pre>
+<p>If the item exists in the collection, the elements after it are shifted down to fill the gap, and the collection’s length is decremented.</p>
+<hr />
+<h2 id="3-querying-collections"><a class="header" href="#3-querying-collections">3. Querying Collections</a></h2>
+<h3 id="checking-membership-with-has"><a class="header" href="#checking-membership-with-has">Checking Membership with <code>has</code></a></h3>
+<p>Runvoid provides the <code>has</code> operator to check whether an element is present in a collection:</p>
 <pre><code class="language-runvoid">if backpack has "Torch" {
-    say "You have light in dark caverns!"
+    say green "You can navigate dark dungeons safely!"
+} otherwise {
+    say yellow "It is too dark to see anything!"
 }
 </code></pre>
-<h2 id="counting-elements"><a class="header" href="#counting-elements">Counting Elements</a></h2>
-<pre><code class="language-runvoid">say "Total gear items: {count backpack}"
+<h3 id="collection-size-count-and-length"><a class="header" href="#collection-size-count-and-length">Collection Size: <code>count</code> and <code>.length</code></a></h3>
+<p>To inspect how many elements are currently stored in a collection:</p>
+<pre><code class="language-runvoid">say "Backpack contains: {count backpack} items."
+say "Number list has: {numbers.length} elements."
 </code></pre>
-<h2 id="iterating-with-for-every--in"><a class="header" href="#iterating-with-for-every--in">Iterating with <code>for every ... in</code></a></h2>
-<p>Iterate through every element without managing indices or boundaries:</p>
-<pre><code class="language-runvoid">for every item in backpack {
-    say " - {item}"
+<h3 id="accessing-elements-by-index"><a class="header" href="#accessing-elements-by-index">Accessing Elements by Index</a></h3>
+<p>You can access individual elements using zero-based index brackets:</p>
+<pre><code class="language-runvoid">remember first_item = backpack[0]
+say "Primary equipped item: {first_item}"
+</code></pre>
+<hr />
+<h2 id="4-iterating-with-for-every--in"><a class="header" href="#4-iterating-with-for-every--in">4. Iterating with <code>for every ... in</code></a></h2>
+<p>Walking through every element of a list is one of the most common operations in programming. Runvoid provides the readable <code>for every item in collection</code> loop:</p>
+<pre><code class="language-runvoid">say "=== Inventory Status ==="
+
+for every item in backpack {
+    say " * {item}"
 }
 </code></pre>
+<p>Under the hood, the compiler tracks the collection’s pointer and length, automatically advancing through each element until the boundary is reached. You never have to worry about off-by-one errors or manual index tracking.</p>
+<hr />
+<h2 id="5-complete-example-equipment-inventory-system"><a class="header" href="#5-complete-example-equipment-inventory-system">5. Complete Example: Equipment Inventory System</a></h2>
+<p>Let’s combine these concepts into a complete inventory management example:</p>
+<pre><code class="language-runvoid">say cyan "=== ADVENTURE RPG INVENTORY ==="
+
+remember inventory = "Iron Sword", "Leather Armor", "Healing Salve", "Rations"
+
+say "Current gear count: {count inventory}"
+
+// Equip a newly discovered weapon:
+say "Found an Ancient Crossbow!"
+add "Ancient Crossbow" to inventory
+
+// Use up an item:
+if inventory has "Healing Salve" {
+    say green "Consumed Healing Salve: Health restored +50 HP."
+    remove "Healing Salve" from inventory
+}
+
+// Display final inventory report:
+say yellow "Updated Gear List:"
+for every gear in inventory {
+    say " [x] {gear}"
+}
+</code></pre>
+<p>Running the code:</p>
+<pre><code class="language-bash">$ runvoid run inventory.rv
+=== ADVENTURE RPG INVENTORY ===
+Current gear count: 4
+Found an Ancient Crossbow!
+Consumed Healing Salve: Health restored +50 HP.
+Updated Gear List:
+ [x] Iron Sword
+ [x] Leather Armor
+ [x] Rations
+ [x] Ancient Crossbow
+</code></pre>
+<hr />
+<h2 id="6-under-the-hood-memory-layout"><a class="header" href="#6-under-the-hood-memory-layout">6. Under the Hood: Memory Layout</a></h2>
+<p>In Runvoid, dynamic collections are managed by the runtime’s memory allocator:</p>
+<ul>
+<li>Each collection is represented by a pointer to a heap buffer.</li>
+<li>The buffer header contains an 8-byte length and an 8-byte capacity.</li>
+<li>Elements are stored contiguously as 64-bit pointers or scalar values.</li>
+<li>When the capacity is exceeded, the runtime reallocates the buffer with a 1.5x growth factor, minimizing reallocations while keeping memory waste low.</li>
+</ul>
 
                     </main>
 

@@ -177,62 +177,127 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="5-console-dialogs-audio--system-utilities"><a class="header" href="#5-console-dialogs-audio--system-utilities">5. Console Dialogs, Audio &amp; System Utilities</a></h1>
-<p>Runvoid includes batteries-included primitives for interacting with the user, playing sounds, querying the web, and manipulating files.</p>
-<h2 id="interactive-menus-choose"><a class="header" href="#interactive-menus-choose">Interactive Menus: <code>choose</code></a></h2>
-<p>Present an interactive arrow-key selection menu directly inside the terminal:</p>
-<pre><code class="language-runvoid">remember weapon = choose "Select your primary weapon:", "Iron Sword", "Elven Bow", "Fire Staff"
-say "Equipped weapon: {weapon}"
+<p>Modern applications often require seamless interaction with the operating system—displaying native alert dialogs, reading sensitive passwords, playing sound alerts, inspecting files, or benchmarking execution times.</p>
+<p>Runvoid provides batteries-included system primitives that automatically adapt to <strong>Linux</strong> and <strong>Windows</strong> without requiring platform-specific <code>#ifdef</code> boilerplate.</p>
+<hr />
+<h2 id="1-native-gui-dialogs--confirmations"><a class="header" href="#1-native-gui-dialogs--confirmations">1. Native GUI Dialogs &amp; Confirmations</a></h2>
+<p>Runvoid allows you to trigger native desktop dialogs directly from conversational code:</p>
+<h3 id="information-alerts-alert"><a class="header" href="#information-alerts-alert">Information Alerts: <code>alert</code></a></h3>
+<p>Display an operating system modal dialog box with an “OK” confirmation button:</p>
+<pre><code class="language-runvoid">alert "Database backup completed successfully!"
 </code></pre>
-<h2 id="hidden-passwords-ask-hidden"><a class="header" href="#hidden-passwords-ask-hidden">Hidden Passwords: <code>ask hidden</code></a></h2>
-<p>Read sensitive credentials without echoing keystrokes to the terminal:</p>
-<pre><code class="language-runvoid">remember token = ask hidden "Enter access key: "
-</code></pre>
-<h2 id="dialog-boxes--confirmations"><a class="header" href="#dialog-boxes--confirmations">Dialog Boxes &amp; Confirmations</a></h2>
-<pre><code class="language-runvoid">remember proceed = ask user "Would you like to overwrite existing files?"
+<ul>
+<li><strong>On Windows:</strong> Calls the Win32 <code>MessageBoxA(NULL, message, "Alert", MB_OK | MB_ICONINFORMATION)</code>.</li>
+<li><strong>On Linux:</strong> Automatically dispatches to <code>zenity</code>, <code>kdialog</code>, or Python <code>tkinter</code>, gracefully falling back to a formatted terminal prompt if no graphical display server is detected.</li>
+</ul>
+<h3 id="binary-questions-ask-user"><a class="header" href="#binary-questions-ask-user">Binary Questions: <code>ask user</code></a></h3>
+<p>Prompt the user for a Yes/No or OK/Cancel decision:</p>
+<pre><code class="language-runvoid">remember proceed = ask user "Do you want to overwrite the existing configuration?"
+
 if proceed {
-    say "Proceeding with write..."
+    say green "Proceeding with file overwrite..."
+} otherwise {
+    say yellow "Operation cancelled by user."
 }
+</code></pre>
+<p>On Windows, this renders a native modal dialog with <strong>Yes</strong> and <strong>No</strong> buttons (<code>MB_YESNO</code>), returning <code>1</code> for Yes and <code>0</code> for No.</p>
+<hr />
+<h2 id="2-advanced-terminal-interaction"><a class="header" href="#2-advanced-terminal-interaction">2. Advanced Terminal Interaction</a></h2>
+<h3 id="password-masking-ask-hidden"><a class="header" href="#password-masking-ask-hidden">Password Masking: <code>ask hidden</code></a></h3>
+<p>When prompting for sensitive credentials such as database passwords, API tokens, or encryption keys, use <code>ask hidden</code> to disable terminal character echo:</p>
+<pre><code class="language-runvoid">remember api_token = ask hidden "Enter your secret API key: "
+say "Key captured safely ({api_token.length} characters)."
+</code></pre>
+<h3 id="arrow-key-menus-choose"><a class="header" href="#arrow-key-menus-choose">Arrow-Key Menus: <code>choose</code></a></h3>
+<p>Runvoid includes a built-in terminal menu widget. It presents an interactive list where users can navigate using their arrow keys and press Enter to select:</p>
+<pre><code class="language-runvoid">remember environment = choose "Select target deployment tier:", "Local Development", "Staging Cluster", "Production (US-East)"
+say "Selected environment: {environment}"
+</code></pre>
+<hr />
+<h2 id="3-audio--speech-synthesis"><a class="header" href="#3-audio--speech-synthesis">3. Audio &amp; Speech Synthesis</a></h2>
+<h3 id="system-beep--frequency-tone-beep"><a class="header" href="#system-beep--frequency-tone-beep">System Beep &amp; Frequency Tone: <code>beep</code></a></h3>
+<p>Trigger system tones and PC speaker audio:</p>
+<pre><code class="language-runvoid">// Simple terminal chime:
+beep
 
-alert "Operation completed successfully!"
+// Explicit frequency (Hz) and duration (milliseconds):
+beep 440 for 200  // Concert A (440 Hz) for 200ms
+beep 880 for 150  // Higher octave (880 Hz) for 150ms
 </code></pre>
-<h2 id="terminal-bell--text-to-speech"><a class="header" href="#terminal-bell--text-to-speech">Terminal Bell &amp; Text-to-Speech</a></h2>
-<pre><code class="language-runvoid">beep                      # Terminal bell chime
-speak "Mission completed" # System text-to-speech
+<ul>
+<li><strong>On Windows:</strong> Uses the hardware-level <code>Beep(frequency, duration)</code> Win32 API.</li>
+<li><strong>On Linux:</strong> Emits a terminal bell escape code or interacts with the PC speaker device.</li>
+</ul>
+<h3 id="text-to-speech-speak"><a class="header" href="#text-to-speech-speak">Text-to-Speech: <code>speak</code></a></h3>
+<p>Synthesize spoken English text through the default operating system speech engine:</p>
+<pre><code class="language-runvoid">speak "System update finished. All services are operational."
 </code></pre>
-<h2 id="file-io--filesystem-operations"><a class="header" href="#file-io--filesystem-operations">File I/O &amp; Filesystem Operations</a></h2>
-<pre><code class="language-runvoid"># Direct file reading and writing:
-write "Runvoid v0.2.0 data" into "log.txt"
-remember content = read "log.txt"
+<hr />
+<h2 id="4-cross-platform-file--directory-io"><a class="header" href="#4-cross-platform-file--directory-io">4. Cross-Platform File &amp; Directory I/O</a></h2>
+<p>Runvoid makes filesystem manipulation conversational and concise:</p>
+<h3 id="reading-and-writing-files"><a class="header" href="#reading-and-writing-files">Reading and Writing Files</a></h3>
+<pre><code class="language-runvoid">// Write text into a file (creates or overwrites):
+write "Runvoid v0.3.0 Build Cache\nStatus: OK" into "build.log"
+
+// Read the contents of a file into a string:
+remember content = read "build.log"
+say "File contents:"
 say content
-
-# Directories and files:
-create folder "backups"
-copy file "log.txt" to "backups/log.txt"
-delete file "log.txt"
-
-if file "backups/log.txt" exists {
-    say "Backup exists on disk."
+</code></pre>
+<h3 id="checking-file-existence"><a class="header" href="#checking-file-existence">Checking File Existence</a></h3>
+<pre><code class="language-runvoid">if file "config.json" exists {
+    say green "Configuration file found."
+} otherwise {
+    say yellow "Creating default configuration..."
+    write "{}" into "config.json"
 }
 </code></pre>
-<h2 id="web-networking"><a class="header" href="#web-networking">Web Networking</a></h2>
-<pre><code class="language-runvoid">download "https://runvoid.org/logo.png" into "logo.png"
-remember api_response = read web "https://api.github.com"
+<h3 id="directory-management--file-operations"><a class="header" href="#directory-management--file-operations">Directory Management &amp; File Operations</a></h3>
+<pre><code class="language-runvoid">// Create directory tree:
+create folder "dist/bundles"
+
+// Copy files:
+copy file "build.log" to "dist/bundles/build.log"
+
+// Delete files:
+delete file "build.log"
 </code></pre>
-<h2 id="text-transforms--performance-timers"><a class="header" href="#text-transforms--performance-timers">Text Transforms &amp; Performance Timers</a></h2>
-<pre><code class="language-runvoid">remember title = "   The Great Kingdom   "
-make title uppercase    # "   THE GREAT KINGDOM   "
-make title lowercase    # "   the great kingdom   "
-make title trim         # "The Great Kingdom"
+<hr />
+<h2 id="5-web-networking"><a class="header" href="#5-web-networking">5. Web Networking</a></h2>
+<p>Fetch remote data or download assets using built-in web primitives:</p>
+<pre><code class="language-runvoid">// Read raw text/JSON from an HTTP endpoint:
+remember user_agent_info = read web "https://httpbin.org/user-agent"
+say user_agent_info
 
-remember replaced = replace "Kingdom" with "Empire" in title
+// Download remote files directly to disk:
+download "https://runvoid.org/favicon.ico" into "icon.ico"
+</code></pre>
+<hr />
+<h2 id="6-text-transformations--performance-profiling"><a class="header" href="#6-text-transformations--performance-profiling">6. Text Transformations &amp; Performance Profiling</a></h2>
+<h3 id="in-place-string-transformations"><a class="header" href="#in-place-string-transformations">In-Place String Transformations</a></h3>
+<p>Runvoid supports conversational text modifiers:</p>
+<pre><code class="language-runvoid">remember heading = "   the runvoid language   "
 
-# Benchmarking in milliseconds:
-measure time {
-    remember count = 0
-    repeat 1000000 as i {
-        count = count + 1
+make heading uppercase  // "   THE RUNVOID LANGUAGE   "
+make heading lowercase  // "   the runvoid language   "
+make heading trim       // "the runvoid language"
+
+remember announcement = replace "runvoid" with "Runvoid Native" in heading
+say announcement
+</code></pre>
+<h3 id="high-precision-code-profiling-measure-time"><a class="header" href="#high-precision-code-profiling-measure-time">High-Precision Code Profiling: <code>measure time</code></a></h3>
+<p>Measure the exact elapsed time of any block of code with microsecond precision:</p>
+<pre><code class="language-runvoid">measure time {
+    remember accumulator = 0
+    repeat 10000000 as i {
+        accumulator = accumulator + i
     }
+    say "Sum completed: {accumulator}"
 }
+</code></pre>
+<p>The runtime captures the starting and ending hardware timestamps (<code>clock_gettime</code> with <code>CLOCK_MONOTONIC</code> on Linux, <code>QueryPerformanceCounter</code> on Windows) and prints the elapsed milliseconds directly to the console:</p>
+<pre><code class="language-text">Sum completed: 49999995000000
+[Execution Time: 8.42 ms]
 </code></pre>
 
                     </main>

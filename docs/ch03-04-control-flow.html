@@ -177,55 +177,126 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="34-control-flow-if-otherwise-while-repeat"><a class="header" href="#34-control-flow-if-otherwise-while-repeat">3.4 Control Flow: if, otherwise, while, repeat</a></h1>
-<p>The ability to run some code depending on whether a condition is true and to run some code repeatedly while a condition is true are basic building blocks in most programming languages. The most common constructs that let you control the flow of execution of Runvoid code are <code>if</code> expressions and loops.</p>
-<h2 id="branching-if-and-otherwise"><a class="header" href="#branching-if-and-otherwise">Branching: <code>if</code> and <code>otherwise</code></a></h2>
-<p>An <code>if</code> block allows you to branch your code depending on conditions:</p>
-<pre><code class="language-runvoid">remember number = 6
+<p>The ability to run specific blocks of code depending on runtime conditions and to repeat instructions until a goal is met are essential building blocks of any software system.</p>
+<p>Runvoid provides rich, readable control flow constructs that eliminate syntactic noise while compiling into optimized x86_64 conditional jumps and loop structures.</p>
+<hr />
+<h2 id="1-branching-with-if-and-otherwise"><a class="header" href="#1-branching-with-if-and-otherwise">1. Branching with <code>if</code> and <code>otherwise</code></a></h2>
+<p>An <code>if</code> statement allows your program to branch dynamically based on conditions:</p>
+<pre><code class="language-runvoid">remember temperature = 28
 
-if number % 4 is 0 {
-    say "number is divisible by 4"
-} otherwise if number % 3 is 0 {
-    say "number is divisible by 3"
-} otherwise if number % 2 is 0 {
-    say "number is divisible by 2"
+if temperature &gt; 30 {
+    say yellow "It's hot outside! Stay hydrated."
+} otherwise if temperature &lt; 10 {
+    say cyan "It's chilly! Wear a jacket."
 } otherwise {
-    say "number is not divisible by 4, 3, or 2"
+    say green "The weather is pleasant."
 }
 </code></pre>
-<h2 id="fixed-repetition-repeat"><a class="header" href="#fixed-repetition-repeat">Fixed Repetition: <code>repeat</code></a></h2>
-<p>To run a block of code a set number of times:</p>
+<h3 id="understanding-the-branching-flow"><a class="header" href="#understanding-the-branching-flow">Understanding the Branching Flow</a></h3>
+<ol>
+<li>Runvoid evaluates the condition expression immediately following <code>if</code>.</li>
+<li>If the condition evaluates to <code>true</code> (or non-zero), the statements inside the first <code>{ ... }</code> block execute, and the remaining branches are skipped.</li>
+<li>If the condition is <code>false</code>, execution falls through to check the first <code>otherwise if</code> condition.</li>
+<li>If none of the conditions evaluate to <code>true</code>, the <code>otherwise</code> block executes as a fallback.</li>
+</ol>
+<h3 id="conversational-equality-checkers"><a class="header" href="#conversational-equality-checkers">Conversational Equality Checkers</a></h3>
+<p>You can use <code>is</code> and <code>is not</code> in place of <code>==</code> and <code>!=</code> for enhanced human readability:</p>
+<pre><code class="language-runvoid">remember status_code = 404
+
+if status_code is 200 {
+    say green "OK: Resource found."
+} otherwise if status_code is 404 {
+    say red "Not Found: The requested resource does not exist."
+} otherwise {
+    say yellow "Unhandled status code: {status_code}"
+}
+</code></pre>
+<hr />
+<h2 id="2-fixed-repetition-repeat"><a class="header" href="#2-fixed-repetition-repeat">2. Fixed Repetition: <code>repeat</code></a></h2>
+<p>When you know in advance exactly how many times a block of code needs to execute, use the <code>repeat</code> statement. This eliminates manual index initialization and increment boilerplate:</p>
 <pre><code class="language-runvoid">repeat 3 times {
-    say "Processing..."
+    say "Pinging server..."
 }
 </code></pre>
-<p>You can optionally bind the current iteration index (0-indexed):</p>
-<pre><code class="language-runvoid">repeat 5 as index {
-    say "Step {index}"
+<h3 id="accessing-the-iteration-index"><a class="header" href="#accessing-the-iteration-index">Accessing the Iteration Index</a></h3>
+<p>If your loop body needs access to the current loop counter, bind it with <code>as &lt;identifier&gt;</code>:</p>
+<pre><code class="language-runvoid">repeat 5 as step {
+    say "Processing batch chunk #{step}"
 }
 </code></pre>
-<h2 id="conditional-loops-while"><a class="header" href="#conditional-loops-while">Conditional Loops: <code>while</code></a></h2>
-<pre><code class="language-runvoid">remember count = 3
-while count &gt; 0 {
-    say "{count}..."
-    count = count - 1
+<p><em>Note: The loop counter starts at index <code>0</code> and increments up to <code>N - 1</code>.</em></p>
+<hr />
+<h2 id="3-condition-driven-loops-while"><a class="header" href="#3-condition-driven-loops-while">3. Condition-Driven Loops: <code>while</code></a></h2>
+<p>When the number of iterations cannot be known beforehand (for example, reading data until EOF, waiting for a socket, or simulating game frames), use <code>while</code>:</p>
+<pre><code class="language-runvoid">remember countdown = 5
+
+while countdown &gt; 0 {
+    say "{countdown}..."
+    countdown = countdown - 1
 }
-say "LIFTOFF!"
+
+say green "LIFTOFF!"
 </code></pre>
-<h2 id="loop-controls-stop-and-skip"><a class="header" href="#loop-controls-stop-and-skip">Loop Controls: <code>stop</code> and <code>skip</code></a></h2>
+<p>The condition is evaluated before every iteration. If the condition is false upon reaching the loop for the first time, the body never executes.</p>
+<hr />
+<h2 id="4-loop-control-statements-stop-and-skip"><a class="header" href="#4-loop-control-statements-stop-and-skip">4. Loop Control Statements: <code>stop</code> and <code>skip</code></a></h2>
+<p>Runvoid provides two imperative statements to alter loop execution flow from inside the body:</p>
 <ul>
-<li><code>stop</code>: Breaks out of the current loop immediately.</li>
-<li><code>skip</code>: Skips the rest of the current iteration and begins the next.</li>
+<li><strong><code>stop</code></strong>: Immediately terminates the current loop and transfers control to the statement following the loop’s closing brace (identical to <code>break</code> in C and Rust).</li>
+<li><strong><code>skip</code></strong>: Immediately terminates the current iteration and jumps directly to the evaluation of the next iteration (identical to <code>continue</code> in C and Rust).</li>
 </ul>
-<pre><code class="language-runvoid">repeat 10 as step {
-    if step is 2 {
+<h3 id="example-combining-stop-and-skip"><a class="header" href="#example-combining-stop-and-skip">Example: Combining <code>stop</code> and <code>skip</code></a></h3>
+<pre><code class="language-runvoid">repeat 10 as number {
+    // Skip odd numbers:
+    if number % 2 != 0 {
         skip
     }
-    if step is 5 {
+
+    // Stop early once we reach 8:
+    if number == 8 {
+        say "Reached limit: {number}. Stopping loop."
         stop
     }
-    say "Step: {step}"
+
+    say "Even number: {number}"
 }
 </code></pre>
+<p>Output:</p>
+<pre><code class="language-text">Even number: 0
+Even number: 2
+Even number: 4
+Even number: 6
+Reached limit: 8. Stopping loop.
+</code></pre>
+<hr />
+<h2 id="5-under-the-hood-emitted-assembly-branches"><a class="header" href="#5-under-the-hood-emitted-assembly-branches">5. Under the Hood: Emitted Assembly Branches</a></h2>
+<p>In assembly language, control flow is implemented using comparisons (<code>cmp</code> or <code>test</code>) and conditional jump instructions (<code>je</code>, <code>jne</code>, <code>jl</code>, <code>jg</code>).</p>
+<p>Consider this Runvoid statement:</p>
+<pre><code class="language-runvoid">if count &gt; 10 {
+    say "High"
+} otherwise {
+    say "Low"
+}
+</code></pre>
+<p>The Runvoid compiler produces the following clean NASM sequence:</p>
+<pre><code class="language-nasm">    ; Evaluate condition: count &gt; 10
+    mov rax, [rbp - 8]
+    cmp rax, 10
+    jle .L_otherwise_0
+
+    ; If true:
+    lea rdi, [str_high]
+    call print_string
+    jmp .L_end_0
+
+.L_otherwise_0:
+    ; If false:
+    lea rdi, [str_low]
+    call print_string
+
+.L_end_0:
+</code></pre>
+<p>Because branches map directly to hardware jump targets, Runvoid loops and conditionals benefit from modern CPU branch predictors with zero intermediate interpretation cost.</p>
 
                     </main>
 

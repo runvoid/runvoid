@@ -177,30 +177,93 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="83-the-modular-standard-library"><a class="header" href="#83-the-modular-standard-library">8.3 The Modular Standard Library</a></h1>
-<p>To ensure minimal binary size and zero unneeded code, Pro Mode does not link a monolithic runtime. Instead, you explicitly import only the modules your program requires.</p>
-<h2 id="available-modules"><a class="header" href="#available-modules">Available Modules</a></h2>
-<div class="table-wrapper"><table><thead><tr><th>Module</th><th>Purpose</th><th>Linked Libraries</th></tr></thead><tbody>
-<tr><td><code>use ior</code></td><td>Console input/output: <code>say</code>, <code>ask</code></td><td>Built-in</td></tr>
-<tr><td><code>use math</code></td><td>High-performance math: <code>sqrt</code>, <code>sin</code>, <code>cos</code>, <code>pow</code>, <code>abs</code></td><td><code>-lm</code></td></tr>
-<tr><td><code>use sys</code></td><td>System primitives: <code>exit</code>, <code>getpid</code></td><td>Built-in</td></tr>
-<tr><td><code>use mem</code></td><td>Raw heap allocations: <code>alloc</code>, <code>free</code></td><td>Built-in</td></tr>
-<tr><td><code>use fs</code></td><td>Direct file operations: <code>read</code>, <code>write</code>, <code>copy</code>, <code>delete</code></td><td>Built-in</td></tr>
-<tr><td><code>use net</code></td><td>Low-level TCP sockets: <code>tcp_listen</code>, <code>tcp_send</code>, etc.</td><td>Built-in</td></tr>
-<tr><td><code>use thread</code></td><td>Native POSIX threads: <code>thread { ... }</code></td><td><code>-lpthread</code></td></tr>
+<p>In traditional programming environments, even an empty program often compiles into a multi-megabyte binary because the standard library bundles a monolithic runtime full of unneeded features.</p>
+<p>In Runvoid Pro Systems Mode, the monolithic runtime is discarded. The standard library is decomposed into <strong>isolated, zero-overhead modules</strong>. You explicitly declare the subsystems your program requires using the <code>use</code> statement, and the compiler’s dead-code elimination ensures not a single unnecessary byte enters your binary.</p>
+<hr />
+<h2 id="1-standard-library-modules-reference"><a class="header" href="#1-standard-library-modules-reference">1. Standard Library Modules Reference</a></h2>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Directive</th><th style="text-align: left">Purpose</th><th style="text-align: left">Unlocked Keywords &amp; Primitives</th><th style="text-align: left">Linker Flags</th></tr></thead><tbody>
+<tr><td style="text-align: left"><strong><code>use ior</code></strong></td><td style="text-align: left">High-performance console I/O</td><td style="text-align: left"><code>say</code>, <code>ask</code>, terminal colors</td><td style="text-align: left">None (Header-only)</td></tr>
+<tr><td style="text-align: left"><strong><code>use math</code></strong></td><td style="text-align: left">Hardware mathematical intrinsics</td><td style="text-align: left"><code>sqrt</code>, <code>sin</code>, <code>cos</code>, <code>pow</code>, <code>abs</code>, <code>floor</code>, <code>ceil</code></td><td style="text-align: left"><code>-lm</code></td></tr>
+<tr><td style="text-align: left"><strong><code>use sys</code></strong></td><td style="text-align: left">Low-level OS process management</td><td style="text-align: left"><code>exit</code>, <code>getpid</code>, <code>get_env</code>, <code>exec_cmd</code></td><td style="text-align: left">None</td></tr>
+<tr><td style="text-align: left"><strong><code>use mem</code></strong></td><td style="text-align: left">Raw manual memory allocators</td><td style="text-align: left"><code>alloc</code>, <code>free</code>, <code>realloc</code>, <code>copy_mem</code></td><td style="text-align: left">None</td></tr>
+<tr><td style="text-align: left"><strong><code>use fs</code></strong></td><td style="text-align: left">High-throughput direct file I/O</td><td style="text-align: left"><code>read_bytes</code>, <code>write_bytes</code>, <code>open_file</code>, <code>close_file</code></td><td style="text-align: left">None</td></tr>
+<tr><td style="text-align: left"><strong><code>use net</code></strong></td><td style="text-align: left">Cross-platform BSD / Winsock2 networking</td><td style="text-align: left"><code>tcp_listen</code>, <code>tcp_accept</code>, <code>tcp_connect</code>, <code>tcp_send</code>, <code>tcp_recv</code></td><td style="text-align: left"><code>-lws2_32</code> (Win)</td></tr>
+<tr><td style="text-align: left"><strong><code>use thread</code></strong></td><td style="text-align: left">Native OS multithreading</td><td style="text-align: left"><code>thread { ... }</code>, <code>mutex_lock</code>, <code>mutex_unlock</code></td><td style="text-align: left"><code>-lpthread</code> (Linux)</td></tr>
 </tbody></table>
 </div>
-<h2 id="linking-external-c-libraries-use-lib"><a class="header" href="#linking-external-c-libraries-use-lib">Linking External C Libraries (<code>use lib</code>)</a></h2>
-<p>Link third-party C dynamic libraries directly into your executable:</p>
-<pre><code class="language-runvoid">use lib "raylib"
+<hr />
+<h2 id="2-granular-module-inclusion-example"><a class="header" href="#2-granular-module-inclusion-example">2. Granular Module Inclusion Example</a></h2>
+<p>Here is a lean systems service using only the I/O and process control modules:</p>
+<pre><code class="language-runvoid">remove garbageC
+remove Basic
+add Advanced
+
+use ior
+use sys
+
+remember pid: Int = getpid()
+say "Process initialized under PID: {pid}"
+
+if pid &lt;= 0 {
+    say red "Critical error: Failed to obtain valid PID."
+    exit(1)
+}
+
+say green "Daemon ready."
+exit(0)
+</code></pre>
+<p>Because neither <code>use math</code>, <code>use net</code>, nor <code>use thread</code> were imported, the linker excludes those libraries entirely. The resulting executable is a razor-thin <strong>14 KB</strong> binary that launches in less than a single millisecond!</p>
+<hr />
+<h2 id="3-linking-external-c-libraries-use-lib"><a class="header" href="#3-linking-external-c-libraries-use-lib">3. Linking External C Libraries (<code>use lib</code>)</a></h2>
+<p>When your systems application needs to interface with existing third-party C or C++ shared libraries—such as SQLite, Raylib, OpenSSL, or zlib—use the <code>use lib</code> directive:</p>
+<pre><code class="language-runvoid">remove garbageC
+remove Basic
+add Advanced
+
+use ior
 use lib "sqlite3"
+use lib "ssl"
+use lib "crypto"
 </code></pre>
-<p>The compiler passes these as <code>-lraylib</code> and <code>-lsqlite3</code> to the linker.</p>
-<h2 id="multi-file-modular-code-use-filerv"><a class="header" href="#multi-file-modular-code-use-filerv">Multi-File Modular Code (<code>use “file.rv”</code>)</a></h2>
-<p>Split large codebases across multiple files:</p>
-<pre><code class="language-runvoid">use "engine/physics.rv"
-use "engine/renderer.rv"
+<h3 id="compiler-linker-integration"><a class="header" href="#compiler-linker-integration">Compiler Linker Integration</a></h3>
+<p>When the compiler encounters <code>use lib "name"</code>, it instructs the linker to pass:</p>
+<ul>
+<li><code>-lname</code> to GCC on Linux.</li>
+<li><code>-lname</code> with MinGW-w64 on Windows.</li>
+</ul>
+<p>This makes integrating external C libraries completely seamless, requiring no complex CMake or Makefile configurations.</p>
+<hr />
+<h2 id="4-multi-file-project-architecture-use-filerv"><a class="header" href="#4-multi-file-project-architecture-use-filerv">4. Multi-File Project Architecture (<code>use "file.rv"</code>)</a></h2>
+<p>As your systems software grows, keeping all code in a single file becomes unmaintainable. Runvoid supports file-level modularization via <code>use "relative/path.rv"</code>:</p>
+<pre><code>my_project/
+|-- main.rv
+|-- network/
+|   `-- socket.rv
+`-- utils/
+    |-- crypto.rv
+    `-- logger.rv
 </code></pre>
-<p>The compiler recursively parses imported files and merges their Abstract Syntax Tree definitions at compile time.</p>
+<h3 id="in-utilsloggerrv"><a class="header" href="#in-utilsloggerrv">In <code>utils/logger.rv</code>:</a></h3>
+<pre><code class="language-runvoid">action log_event(tag: String, msg: String): Void {
+    say "[{tag}] {msg}"
+}
+</code></pre>
+<h3 id="in-mainrv"><a class="header" href="#in-mainrv">In <code>main.rv</code>:</a></h3>
+<pre><code class="language-runvoid">remove garbageC
+remove Basic
+add Advanced
+
+use ior
+use "utils/logger.rv"
+
+log_event("SYS", "System bootstrap sequence started.")
+</code></pre>
+<p>During compilation, the Runvoid compiler:</p>
+<ol>
+<li>Recursively traces all <code>use "..."</code> file paths relative to the calling source file.</li>
+<li>Resolves and deduplicates AST declarations to prevent cyclic dependency loops.</li>
+<li>Inlines and type-checks the unified AST in a single compile pass.</li>
+</ol>
 
                     </main>
 

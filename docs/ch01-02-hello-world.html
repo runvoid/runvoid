@@ -177,27 +177,118 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="12-hello-world"><a class="header" href="#12-hello-world">1.2 Hello, World!</a></h1>
-<p>Now that you’ve installed Runvoid, let’s write your first program. It’s traditional when learning a new language to write a little program that prints the text <code>Hello, world!</code> to the screen, so we’ll do the same here!</p>
-<h2 id="writing-the-program"><a class="header" href="#writing-the-program">Writing the Program</a></h2>
-<p>Create a new file named <code>main.rv</code>:</p>
+<p>Now that you have installed Runvoid and its toolchain prerequisites, let’s write your first program. It is a time-honored tradition when learning a new programming language to write a small program that prints the text <code>Hello, world!</code> to the screen. In this section, we will do exactly that!</p>
+<hr />
+<h2 id="creating-a-project-directory"><a class="header" href="#creating-a-project-directory">Creating a Project Directory</a></h2>
+<p>Start by making a directory for your first project:</p>
+<pre><code class="language-bash">mkdir -p ~/projects/hello_world
+cd ~/projects/hello_world
+</code></pre>
+<p>Next, create a new source file named <code>main.rv</code>. The <code>.rv</code> extension is the standard file extension for all Runvoid source code.</p>
+<p>Open <code>main.rv</code> in your preferred text editor (such as VS Code, Neovim, or Nano) and enter the following single line of code:</p>
 <pre><code class="language-runvoid">say "Hello, world!"
 </code></pre>
-<p>Save the file. That’s the entire program! No <code>fn main()</code>, no headers, no class wrappers.</p>
-<h2 id="running-the-program"><a class="header" href="#running-the-program">Running the Program</a></h2>
-<p>To run your program immediately without generating lingering binary files, use the <code>run</code> command:</p>
+<p>Save the file. That is the entire program!</p>
+<p>Notice what is <strong>not</strong> there:</p>
+<ul>
+<li>No boilerplate <code>fn main() { ... }</code> or <code>int main(int argc, char *argv[])</code>.</li>
+<li>No class wrappers like <code>public class Program { public static void main(String[] args) { ... } }</code>.</li>
+<li>No mandatory header includes like <code>#include &lt;stdio.h&gt;</code> or <code>use std::io;</code>.</li>
+</ul>
+<p>In Runvoid, top-level code executes directly from top to bottom, while still allowing you to define modular functions, structures, and directives wherever needed.</p>
+<hr />
+<h2 id="compiling-and-running-the-program"><a class="header" href="#compiling-and-running-the-program">Compiling and Running the Program</a></h2>
+<p>Runvoid provides two ways to run your code:</p>
+<h3 id="1-rapid-execution-with-runvoid-run"><a class="header" href="#1-rapid-execution-with-runvoid-run">1. Rapid Execution with <code>runvoid run</code></a></h3>
+<p>During active development and rapid prototyping, you can compile and execute a program in a single step using the <code>run</code> command:</p>
 <pre><code class="language-bash">$ runvoid run main.rv
 Hello, world!
 </code></pre>
-<p>If <code>Hello, world!</code> printed to your terminal, congratulations! You have officially written and run your first Runvoid program.</p>
-<h2 id="anatomy-of-a-runvoid-program"><a class="header" href="#anatomy-of-a-runvoid-program">Anatomy of a Runvoid Program</a></h2>
-<p>Let’s review the <code>Hello, world!</code> program in detail.</p>
+<p>If <code>Hello, world!</code> printed cleanly to your terminal, congratulations! You have officially written, compiled, and executed your first Runvoid program.</p>
+<p>Under the hood, <code>runvoid run</code> compiles your source code into a temporary native binary in your system temp folder, executes it with any arguments you specify, and automatically cleans up the temporary files when done.</p>
+<h3 id="2-standalone-binary-compilation-with-runvoid-build"><a class="header" href="#2-standalone-binary-compilation-with-runvoid-build">2. Standalone Binary Compilation with <code>runvoid build</code></a></h3>
+<p>When you are ready to distribute your software or measure true bare-metal performance, compile a permanent, standalone native binary with the <code>build</code> command:</p>
+<pre><code class="language-bash">$ runvoid build main.rv -o hello
+[runvoid] Compiling main.rv -&gt; hello (target: linux)...
+[runvoid] Build completed successfully: hello
+</code></pre>
+<p>Now execute the native binary directly from your shell without the <code>runvoid</code> compiler:</p>
+<pre><code class="language-bash">$ ./hello
+Hello, world!
+</code></pre>
+<p>Let’s check the size of the resulting binary:</p>
+<pre><code class="language-bash">$ ls -lh hello
+-rwxr-xr-x 1 user user 16K hello
+</code></pre>
+<p>The resulting executable is a mere <strong>16 kilobytes</strong>! It requires no virtual machine, no Python runtime, and no Node.js engine. It is pure, raw x86_64 machine instructions.</p>
+<hr />
+<h2 id="anatomy-of-the-program"><a class="header" href="#anatomy-of-the-program">Anatomy of the Program</a></h2>
+<p>Let’s examine our one-line program in detail:</p>
 <pre><code class="language-runvoid">say "Hello, world!"
 </code></pre>
+<p>Here are the key elements:</p>
+<ol>
+<li>
+<p><strong><code>say</code></strong>: This is a core statement in Runvoid. It instructs the program to output the evaluated expression or string to standard output (<code>stdout</code>), followed automatically by an operating system newline (<code>\n</code>).</p>
+<p>Runvoid also supports first-class terminal colors directly on <code>say</code> statements without importing any third-party terminal styling libraries:</p>
+<pre><code class="language-runvoid">say green "Success: Operation completed."
+say red "Error: Invalid parameter."
+say cyan "Info: Connecting to server..."
+</code></pre>
+</li>
+<li>
+<p><strong><code>"Hello, world!"</code></strong>: This is a string literal. In Runvoid, string literals are enclosed in double quotes. In the compiled binary, string literals are stored as null-terminated UTF-8 byte sequences in the read-only data section of the executable.</p>
+</li>
+</ol>
+<hr />
+<h2 id="under-the-hood-dissecting-the-assembly"><a class="header" href="#under-the-hood-dissecting-the-assembly">Under the Hood: Dissecting the Assembly</a></h2>
+<p>What actually happens when Runvoid compiles <code>main.rv</code>?</p>
+<p>Unlike interpreted languages, Runvoid translates your code directly into <strong>x86_64 NASM assembly</strong>. You can inspect the exact assembly instructions emitted by the compiler at any time using the <code>emit-asm</code> command:</p>
+<pre><code class="language-bash">$ runvoid emit-asm main.rv
+</code></pre>
+<p>Let’s examine the emitted assembly:</p>
+<pre><code class="language-nasm">default rel
+global main
+extern printf
+
+section .rodata
+    str_0 db "Hello, world!", 0
+
+section .text
+main:
+    push rbp
+    mov rbp, rsp
+
+    ; say "Hello, world!"
+    lea rdi, [str_0]
+    call print_string
+
+    ; Clean exit with code 0
+    xor eax, eax
+    mov rsp, rbp
+    pop rbp
+    ret
+</code></pre>
+<p>Notice how clean and idiomatic the output is:</p>
 <ul>
-<li><code>say</code> is a built-in statement in Runvoid. It tells the computer to print whatever follows to the screen, followed by a new line.</li>
-<li><code>"Hello, world!"</code> is a string literal.</li>
-<li>When compiled, the Runvoid compiler transforms <code>say "Hello, world!"</code> into an optimized sequence of x86_64 assembly instructions that call the runtime write subroutine via Linux syscalls.</li>
+<li><code>section .rodata</code>: Allocates our string <code>"Hello, world!"</code> in immutable read-only memory.</li>
+<li><code>main:</code>: Establishes a standard 64-bit AMD64 stack frame (<code>push rbp; mov rbp, rsp</code>).</li>
+<li><code>lea rdi, [str_0]</code>: Loads the 64-bit effective address of our string into the <code>%rdi</code> register (the first argument register in the standard System V AMD64 calling convention).</li>
+<li><code>call print_string</code>: Calls the highly optimized runtime print routine.</li>
+<li><code>xor eax, eax</code>: Sets the return exit code to 0 (indicating success) and restores the stack frame before returning.</li>
 </ul>
+<hr />
+<h2 id="cross-compiling-for-windows"><a class="header" href="#cross-compiling-for-windows">Cross-Compiling for Windows</a></h2>
+<p>What if you want to share your new program with a colleague running Windows? Runvoid makes cross-compiling as easy as adding a single flag:</p>
+<pre><code class="language-bash">runvoid build --target windows main.rv -o hello.exe
+</code></pre>
+<p>The compiler will automatically:</p>
+<ol>
+<li>Target the Windows PE-COFF x86_64 binary format.</li>
+<li>Emit Windows-compliant read-only data sections (<code>section .rdata</code>).</li>
+<li>Link with the Windows C runtime (<code>ucrtbase</code>) and necessary subsystem libraries (<code>kernel32</code>, <code>user32</code>).</li>
+<li>Output a standalone <code>hello.exe</code> that runs natively on Windows 10 and 11!</li>
+</ol>
 
                     </main>
 

@@ -177,46 +177,99 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="102-pattern-matching--pipelines"><a class="header" href="#102-pattern-matching--pipelines">10.2 Pattern Matching &amp; Pipelines</a></h1>
-<p>Runvoid 0.3.0 introduces functional constructs that make data transformation and branch dispatch clean, readable, and lightning-fast.</p>
-<h2 id="pattern-matching-match"><a class="header" href="#pattern-matching-match">Pattern Matching (<code>match</code>)</a></h2>
-<p>Instead of cascading <code>if</code> / <code>otherwise</code> chains, use <code>match</code> blocks to test values against constant patterns:</p>
-<pre><code class="language-runvoid">remember status_code = 404
+<p>Modern systems and application programming heavily involve transforming structured data and dispatching actions based on dynamic values.</p>
+<p>Runvoid 0.3.0 introduces two expressive constructs:</p>
+<ol>
+<li><strong>Pattern Matching (<code>match</code>):</strong> High-speed multi-branch value matching that replaces cumbersome <code>if</code>/<code>otherwise</code> ladders.</li>
+<li><strong>The Function Pipeline Operator (<code>|&gt;</code>):</strong> Left-to-right data transformation chains that eliminate unreadable nested parentheses.</li>
+</ol>
+<hr />
+<h2 id="1-pattern-matching-with-match"><a class="header" href="#1-pattern-matching-with-match">1. Pattern Matching with <code>match</code></a></h2>
+<p>In many programming languages, testing a single variable against multiple potential values produces unwieldy nested conditional statements. In Runvoid, <code>match</code> tests a subject expression against patterns clearly and cleanly:</p>
+<pre><code class="language-runvoid">remember http_status = 404
 
-match status_code {
-    when 200 -&gt; say green "OK - Request successful"
-    when 400 -&gt; say yellow "Bad Request"
-    when 404 -&gt; say red "Not Found"
-    when 500 -&gt; say red "Internal Server Error"
-    otherwise -&gt; say "Unhandled status code: {status_code}"
+match http_status {
+    when 200 -&gt; say green "200 OK: Request succeeded."
+    when 201 -&gt; say green "201 Created: Resource provisioned."
+    when 400 -&gt; say yellow "400 Bad Request: Malformed syntax."
+    when 401 -&gt; say red "401 Unauthorized: Authentication required."
+    when 403 -&gt; say red "403 Forbidden: Access denied."
+    when 404 -&gt; say red "404 Not Found: Endpoint does not exist."
+    when 500 -&gt; say red "500 Internal Server Error."
+    otherwise -&gt; say yellow "Unhandled HTTP response code: {http_status}"
 }
 </code></pre>
-<p>Pattern matching also supports strings and booleans:</p>
-<pre><code class="language-runvoid">remember command = "start"
+<h3 id="matching-string-values"><a class="header" href="#matching-string-values">Matching String Values</a></h3>
+<p>Pattern matching works seamlessly with string literals:</p>
+<pre><code class="language-runvoid">remember user_action = ask "Choose action (start / restart / stop): "
 
-match command {
-    when "start" -&gt; say "System starting..."
-    when "stop"  -&gt; say "System stopping..."
-    otherwise    -&gt; say "Unknown command"
+match user_action {
+    when "start" -&gt; {
+        say green "Booting service cluster..."
+        beep 800 for 100
+    }
+    when "restart" -&gt; {
+        say yellow "Restarting daemons..."
+        beep 600 for 100
+    }
+    when "stop" -&gt; {
+        say red "Terminating all processes."
+        beep 400 for 200
+    }
+    otherwise -&gt; {
+        say "Invalid command: '{user_action}'. Type 'help' for options."
+    }
 }
 </code></pre>
-<h2 id="function-pipeline-operator-"><a class="header" href="#function-pipeline-operator-">Function Pipeline Operator (<code>|&gt;</code>)</a></h2>
-<p>The pipeline operator forwards the result of the left-hand expression as the first argument to the right-hand function call:</p>
-<pre><code class="language-runvoid">action double(x: Int): Int {
-    give x * 2
-}
-
-action add_five(x: Int): Int {
-    give x + 5
-}
-
-// Without pipeline:
-remember res1 = add_five(double(10))
-
-// With pipeline:
-remember res2 = 10 |&gt; double |&gt; add_five
-say "Result: {res2}" # Prints 25
+<h3 id="multi-line-branch-bodies"><a class="header" href="#multi-line-branch-bodies">Multi-Line Branch Bodies</a></h3>
+<p>When a match arm requires executing more than one statement, wrap the branch body in curly braces <code>{ ... }</code>, as demonstrated above.</p>
+<hr />
+<h2 id="2-under-the-hood-how-match-compiles"><a class="header" href="#2-under-the-hood-how-match-compiles">2. Under the Hood: How <code>match</code> Compiles</a></h2>
+<p>In naive compilers, <code>match</code> statements are simply translated into a chain of linear comparisons (<code>cmp rax, val; jne ...</code>).</p>
+<p>The Runvoid code generator employs compiler optimizations for <code>match</code>:</p>
+<ol>
+<li><strong>Dense Integer Jump Tables:</strong> When matching against contiguous or dense integer ranges (e.g., numbers 0 through 10), the compiler constructs an indirect <strong>jump table</strong> in the read-only data section (<code>section .rodata</code>). Dispatch executes in <strong>O(1) constant time</strong> with a single indirect jump:
+<pre><code class="language-nasm">cmp rax, 10
+ja .L_fallback
+jmp [rel .L_jump_table + rax * 8]
 </code></pre>
-<p>Pipelines eliminate deeply nested parentheses and allow code to be read in the exact chronological order of execution.</p>
+</li>
+<li><strong>Sparse Binary Comparison Trees:</strong> For scattered values, the compiler generates a balanced binary search comparison tree rather than a linear scan, reducing comparison operations from $O(N)$ to $O(\log N)$.</li>
+</ol>
+<hr />
+<h2 id="3-the-function-pipeline-operator-"><a class="header" href="#3-the-function-pipeline-operator-">3. The Function Pipeline Operator (<code>|&gt;</code>)</a></h2>
+<p>In traditional code, composing several functions requires wrapping them inside nested parentheses:</p>
+<pre><code class="language-runvoid">// Traditional nested function calls:
+remember final_output = save_to_disk(validate_token(sanitize_input(raw_user_input)))
+</code></pre>
+<p>Notice the cognitive dissonance: to understand what happens first, your eyes must start in the deepest, innermost parenthesis (<code>raw_user_input</code>), then read backwards from right to left (<code>sanitize_input</code>), then outwards again (<code>validate_token</code>), and finally to the outermost function (<code>save_to_disk</code>).</p>
+<p>The <strong>pipeline operator (<code>|&gt;</code>)</strong> reverses this clutter, routing data from left to right in chronological order:</p>
+<pre><code class="language-runvoid">remember final_output = raw_user_input |&gt; sanitize_input |&gt; validate_token |&gt; save_to_disk
+</code></pre>
+<h3 id="practical-pipeline-example"><a class="header" href="#practical-pipeline-example">Practical Pipeline Example</a></h3>
+<pre><code class="language-runvoid">action clean_string(s) {
+    give replace "\r" with "" in s
+}
+
+action wrap_xml(s) {
+    give "&lt;payload&gt;" + s + "&lt;/payload&gt;"
+}
+
+action print_banner(msg) {
+    say green "=== PROCESSED DATA ==="
+    say msg
+}
+
+remember raw_data = "System Payload Ready"
+
+// Stream the data through our transformation pipeline:
+raw_data |&gt; clean_string |&gt; wrap_xml |&gt; print_banner
+</code></pre>
+<p>Output:</p>
+<pre><code class="language-text">=== PROCESSED DATA ===
+&lt;payload&gt;System Payload Ready&lt;/payload&gt;
+</code></pre>
+<p>By chaining actions with <code>|&gt;</code>, your business logic mirrors a clear assembly line, making complex transformations trivial to inspect, refactor, and test.</p>
 
                     </main>
 

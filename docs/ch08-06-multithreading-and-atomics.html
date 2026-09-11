@@ -177,29 +177,92 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="86-multithreading--hardware-atomics"><a class="header" href="#86-multithreading--hardware-atomics">8.6 Multithreading &amp; Hardware Atomics</a></h1>
-<p>Runvoid provides native OS multithreading capabilities backed by POSIX threads (<code>pthread_create</code>), accompanied by hardware-locked atomic synchronization.</p>
-<h2 id="spawning-native-threads-thread"><a class="header" href="#spawning-native-threads-thread">Spawning Native Threads (<code>thread</code>)</a></h2>
+<p>Modern computers achieve high performance by distributing workloads across multiple CPU cores. In systems programming, taking advantage of symmetric multiprocessing (SMP) requires spawning operating system threads and carefully coordinating concurrent access to shared memory.</p>
+<p>Runvoid provides first-class, cross-platform multithreading backed by native OS threads (<code>pthread</code> on Linux, <code>CreateThread</code> on Windows), complemented by hardware-level bus-locked atomics.</p>
+<hr />
+<h2 id="1-spawning-native-os-threads"><a class="header" href="#1-spawning-native-os-threads">1. Spawning Native OS Threads</a></h2>
+<p>To spawn a concurrent thread of execution, import the <code>thread</code> module and use the <code>thread { ... }</code> block:</p>
 <pre><code class="language-runvoid">remove garbageC
 remove Basic
 add Advanced
+
 use ior
 use thread
 
-remember shared_counter: Int = 0
-
-# Spawn a concurrent thread:
-thread {
-    atomic add shared_counter, 10
+action background_worker(): Void {
+    say "Worker thread running in parallel on core..."
 }
 
-wait 1
-say shared_counter   // prints 10
+say "Main thread initializing worker..."
+thread {
+    background_worker()
+}
+
+say "Main thread continues non-blocking execution."
 </code></pre>
-<h2 id="hardware-atomic-operations-atomic-add"><a class="header" href="#hardware-atomic-operations-atomic-add">Hardware Atomic Operations (<code>atomic add</code>)</a></h2>
-<p>Multithreaded operations require memory synchronization to prevent race conditions. The <code>atomic add</code> statement emits a hardware bus-locked instruction directly onto the CPU:</p>
-<pre><code class="language-text">lock add [r12 + offset], rax
+<h3 id="cross-platform-threading-engine"><a class="header" href="#cross-platform-threading-engine">Cross-Platform Threading Engine</a></h3>
+<p>The Runvoid runtime automatically adapts to the host operating system:</p>
+<ul>
+<li><strong>On Linux:</strong> Calls <code>pthread_create(&amp;thread_id, NULL, thread_wrapper, arg)</code> and links with <code>-lpthread</code>.</li>
+<li><strong>On Windows:</strong> Calls the Win32 <code>CreateThread(NULL, 0, thread_wrapper, arg, 0, &amp;thread_id)</code> API, avoiding external POSIX translation layers.</li>
+</ul>
+<p>Each thread receives an independent 2MB hardware stack frame with full access to the CPU’s general-purpose registers.</p>
+<hr />
+<h2 id="2-data-races-and-hardware-atomics"><a class="header" href="#2-data-races-and-hardware-atomics">2. Data Races and Hardware Atomics</a></h2>
+<p>When multiple threads read and write to the same memory location concurrently without synchronization, a <strong>data race</strong> occurs. This results in lost updates, corrupted data, and undefined behavior.</p>
+<p>Traditional programming languages solve this by acquiring heavyweight operating system mutex locks. While correct, mutexes introduce system call overhead, kernel transitions, and thread context switches.</p>
+<p>Runvoid provides hardware-level atomics via the <code>atomic add</code> statement:</p>
+<pre><code class="language-runvoid">remove garbageC
+remove Basic
+add Advanced
+
+use ior
+use thread
+
+remember global_counter: Int = 0
+
+// Spawn 4 concurrent worker threads:
+repeat 4 times {
+    thread {
+        repeat 100000 times {
+            atomic add global_counter, 1
+        }
+    }
+}
+
+// Wait for workers to complete:
+wait 500  // 500ms
+
+say "Final synchronized counter: {global_counter}"
 </code></pre>
-<p>This guarantees atomic read-modify-write semantics across multi-core CPU architectures without the performance penalty of heavyweight mutex locks.</p>
+<hr />
+<h2 id="3-how-atomics-work-on-the-hardware-bus"><a class="header" href="#3-how-atomics-work-on-the-hardware-bus">3. How Atomics Work on the Hardware Bus</a></h2>
+<p>When the Runvoid code generator encounters <code>atomic add target, value</code>, it emits the x86_64 hardware bus-lock prefix:</p>
+<pre><code class="language-nasm">    ; atomic add global_counter, 1
+    mov rax, 1
+    lock add qword [rbp - 8], rax
+</code></pre>
+<h3 id="what-happens-inside-the-silicon"><a class="header" href="#what-happens-inside-the-silicon">What Happens Inside the Silicon?</a></h3>
+<ol>
+<li><strong>The <code>lock</code> Prefix:</strong> When the CPU decodes the <code>lock</code> prefix, it directs the memory controller and L1/L2 cache coherency hardware (the MESI protocol) to acquire exclusive ownership of the cache line containing <code>[rbp - 8]</code>.</li>
+<li><strong>Atomic Read-Modify-Write:</strong> The CPU performs the memory read, arithmetic addition, and memory write-back in an indivisible transaction.</li>
+<li><strong>Zero Kernel Overhead:</strong> No operating system thread is suspended, no context switch occurs, and no kernel spinlock is allocated. The synchronization completes in single-digit nanoseconds directly in silicon!</li>
+</ol>
+<hr />
+<h2 id="4-mutex-synchronization-for-complex-critical-sections"><a class="header" href="#4-mutex-synchronization-for-complex-critical-sections">4. Mutex Synchronization for Complex Critical Sections</a></h2>
+<p>When a critical section requires executing multiple non-atomic operations together (such as modifying several variables or updating a linked list), use a mutex:</p>
+<pre><code class="language-runvoid">remember lock_handle: Int = 0
+
+action critical_section(): Void {
+    mutex_lock(lock_handle)
+    
+    // Protected multi-step logic:
+    say "Performing protected critical section work..."
+    
+    mutex_unlock(lock_handle)
+}
+</code></pre>
+<p>By combining hardware atomics for counters with OS mutexes for complex critical sections, Runvoid gives you the exact concurrency tools needed for high-performance systems engineering.</p>
 
                     </main>
 

@@ -177,27 +177,93 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="31-variables-and-mutability"><a class="header" href="#31-variables-and-mutability">3.1 Variables and Mutability</a></h1>
-<p>In Runvoid, you declare new variables using the <code>remember</code> keyword. This conversational keyword reflects the intuitive idea of asking the computer to keep a value in mind for future use:</p>
+<p>In Runvoid, you declare new variables using the conversational keyword <code>remember</code>. This reflects the intuitive idea of asking the runtime to hold a value in memory for future access:</p>
 <pre><code class="language-runvoid">remember count = 5
 say "The count is: {count}"
 </code></pre>
-<h2 id="changing-variable-values"><a class="header" href="#changing-variable-values">Changing Variable Values</a></h2>
-<p>Once a variable has been declared with <code>remember</code>, you can update its value by simply assigning to it:</p>
-<pre><code class="language-runvoid">remember health = 100
-say "Initial health: {health}"
+<hr />
+<h2 id="declaring-and-initializing-variables"><a class="header" href="#declaring-and-initializing-variables">Declaring and Initializing Variables</a></h2>
+<p>Every variable in Runvoid is bound to an initial value at declaration time:</p>
+<pre><code class="language-runvoid">remember player_name = "Aria"
+remember current_level = 1
+remember is_online = true
+</code></pre>
+<p>The Runvoid compiler automatically infers the variable’s type from the right-hand expression. Behind the scenes in the compiler’s code generator, each local variable is assigned an 8-byte aligned slot on the active stack frame (<code>[rbp - 8]</code>, <code>[rbp - 16]</code>, etc.).</p>
+<hr />
+<h2 id="mutating-existing-variables"><a class="header" href="#mutating-existing-variables">Mutating Existing Variables</a></h2>
+<p>Once a variable has been declared with <code>remember</code>, you can reassign its value without repeating the <code>remember</code> keyword:</p>
+<pre><code class="language-runvoid">remember score = 100
+say "Initial score: {score}"
 
-health = health - 20
-say "Health after taking damage: {health}"
+score = score + 25
+say "After bonus: {score}"
+
+score = score * 2
+say "After combo multiplier: {score}"
 </code></pre>
 <blockquote>
-<p><strong>Note:</strong> You only use <code>remember</code> when first introducing a variable. When modifying an existing variable, write <code>name = new_value</code>.</p>
+<p><strong>Important Rule:</strong> Use <code>remember</code> <strong>only</strong> when introducing a variable into the current scope for the first time. Re-assigning an already declared variable requires only the variable name and an assignment operator (<code>name = new_value</code>). Attempting to re-declare the same variable with <code>remember</code> within the same scope is flagged by the compiler.</p>
 </blockquote>
-<h2 id="comments"><a class="header" href="#comments">Comments</a></h2>
-<p>Runvoid supports both C-style <code>//</code> comments and scripting-style <code>#</code> comments:</p>
-<pre><code class="language-runvoid">// This is a line comment
-# This is also a line comment
+<hr />
+<h2 id="variable-scoping--shadowing"><a class="header" href="#variable-scoping--shadowing">Variable Scoping &amp; Shadowing</a></h2>
+<p>Variables in Runvoid are lexically scoped to the block in which they are declared. A block is delimited by curly braces <code>{ ... }</code>, such as those in <code>if</code> statements, loops, or functions:</p>
+<pre><code class="language-runvoid">remember total = 10
 
-remember speed = 60 // kilometers per hour
+if total &gt; 5 {
+    // This variable exists only inside this if-block
+    remember bonus = 50
+    say "Total with bonus: {total + bonus}"
+}
+
+// Accessing bonus here would produce a compile-time error:
+// say bonus
+</code></pre>
+<h3 id="shadowing"><a class="header" href="#shadowing">Shadowing</a></h3>
+<p>If you declare a variable with <code>remember</code> inside an inner block with the same name as an outer variable, the inner variable <strong>shadows</strong> the outer one until the block terminates:</p>
+<pre><code class="language-runvoid">remember count = 10
+
+if true {
+    remember count = 99
+    say "Inner count: {count}" // Prints 99
+}
+
+say "Outer count: {count}" // Prints 10
+</code></pre>
+<hr />
+<h2 id="how-variables-work-under-the-hood"><a class="header" href="#how-variables-work-under-the-hood">How Variables Work Under the Hood</a></h2>
+<p>When you run <code>runvoid emit-asm</code>, you can see exactly how the compiler manages your variables on the hardware stack:</p>
+<pre><code class="language-runvoid">remember x = 42
+remember y = 10
+remember z = x + y
+</code></pre>
+<p>Emitted assembly:</p>
+<pre><code class="language-nasm">; remember x = 42
+mov rax, 42
+mov [rbp - 8], rax
+
+; remember y = 10
+mov rax, 10
+mov [rbp - 16], rax
+
+; remember z = x + y
+mov rax, [rbp - 8]
+add rax, [rbp - 16]
+mov [rbp - 24], rax
+</code></pre>
+<p>Because variables are mapped directly to native CPU stack offsets (<code>rbp - offset</code>), variable access and arithmetic execute at full native microprocessor speed, with zero virtual machine dispatch overhead!</p>
+<hr />
+<h2 id="comments"><a class="header" href="#comments">Comments</a></h2>
+<p>Runvoid provides flexible comment styles to annotate your code:</p>
+<ol>
+<li><strong>Double slash (<code>//</code>):</strong> Traditional C/Rust-style single line comments.</li>
+<li><strong>Hash symbol (<code>#</code>):</strong> Scripting/Python-style single line comments.</li>
+<li><strong>Semicolon (<code>;</code>):</strong> Assembly-style single line comments.</li>
+</ol>
+<pre><code class="language-runvoid">// Standard single-line comment
+# Unix shell-style comment
+; Assembly-style comment
+
+remember timeout_seconds = 30 // Wait up to 30 seconds for connection
 </code></pre>
 
                     </main>

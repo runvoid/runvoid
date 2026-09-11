@@ -177,59 +177,109 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="104-test-runner-assertions--hot-reloading-watch"><a class="header" href="#104-test-runner-assertions--hot-reloading-watch">10.4 Test Runner, Assertions &amp; Hot-Reloading Watch</a></h1>
-<p>Developing robust software requires automated verification and frictionless iteration cycles. Runvoid 0.3.0 provides native unit testing syntax and CLI tooling out of the box.</p>
-<h2 id="writing-tests"><a class="header" href="#writing-tests">Writing Tests</a></h2>
-<p>Use <code>test "name" { ... }</code> blocks to define test suites, and <code>verify that &lt;condition&gt;</code> to assert expectations:</p>
-<pre><code class="language-runvoid">test "player initialization" {
-    remember player = name: "Hero", hp: 100, gold: 50
-    verify that player["hp"] is 100
+<p>Writing reliable software demands rapid iteration cycles and automated regression testing. In many programming ecosystems, setting up testing requires installing third-party frameworks, configuring complex runners, and writing brittle build scripts.</p>
+<p>Runvoid 0.3.0 ships with <strong>native unit testing syntax</strong>, a <strong>built-in test runner CLI</strong>, an <strong>interactive REPL</strong>, and a <strong>hot-reloading file watcher</strong> directly out of the box.</p>
+<hr />
+<h2 id="1-writing-unit-tests-test-and-verify-that"><a class="header" href="#1-writing-unit-tests-test-and-verify-that">1. Writing Unit Tests: <code>test</code> and <code>verify that</code></a></h2>
+<p>Runvoid introduces dedicated syntax for automated tests. You define test cases using <code>test "description" { ... }</code> blocks and check conditions with <code>verify that</code>:</p>
+<pre><code class="language-runvoid">// tests/math_test.rv
+
+action multiply(a, b) {
+    give a * b
+}
+
+action divide(a, b) {
+    if b == 0 { give 0 }
+    give a / b
+}
+
+test "integer multiplication" {
+    verify that multiply(6, 7) is 42
+    verify that multiply(-3, 5) is -15
+    verify that multiply(0, 100) is 0
+}
+
+test "safe division" {
+    verify that divide(100, 4) is 25
+    verify that divide(50, 0) is 0
+}
+</code></pre>
+<h3 id="testing-collections-and-dictionaries"><a class="header" href="#testing-collections-and-dictionaries">Testing Collections and Dictionaries</a></h3>
+<p>You can verify complex state structures:</p>
+<pre><code class="language-runvoid">test "dictionary mutations" {
+    remember player = name: "Hero", hp: 100
+    add "gold": 50 to player
+
+    verify that player's name is "Hero"
     verify that player's gold is 50
-    verify that player has "name"
-}
-
-test "inventory capacity" {
-    remember backpack = "sword", "potion"
-    add "shield" to backpack
-    verify that {count backpack} is 3
+    verify that player has "hp"
+    verify that {count player} is 3
 }
 </code></pre>
-<p>If any <code>verify</code> assertion fails, Runvoid aborts execution with the exact line number, actual value, and expected value in bright red terminal text.</p>
-<h2 id="running-tests-via-cli"><a class="header" href="#running-tests-via-cli">Running Tests via CLI</a></h2>
-<p>Run all tests in <code>tests/</code> or current directory with a single command:</p>
+<hr />
+<h2 id="2-running-test-suites-with-runvoid-test"><a class="header" href="#2-running-test-suites-with-runvoid-test">2. Running Test Suites with <code>runvoid test</code></a></h2>
+<p>To execute your test suite, invoke the <code>test</code> subcommand from the root of your project:</p>
 <pre><code class="language-bash">$ runvoid test
-Running 3 test file(s)...
-
-▶️ Running test file: "tests/01_maps_test.rv"
-🧪 test map creation and indexing ... ok
-🧪 test map mutation ... ok
-✅ Passed: "tests/01_maps_test.rv"
-
-==========================================
-Test suite passed! (3 passed, 0 failed)
 </code></pre>
-<h2 id="interactive-repl-runvoid-repl"><a class="header" href="#interactive-repl-runvoid-repl">Interactive REPL (<code>runvoid repl</code>)</a></h2>
-<p>Experiment with expressions and statements interactively without creating files:</p>
+<h3 id="automatic-test-discovery"><a class="header" href="#automatic-test-discovery">Automatic Test Discovery</a></h3>
+<p>The test runner scans:</p>
+<ol>
+<li>Any file matching the pattern <code>*_test.rv</code> in your project tree.</li>
+<li>All <code>.rv</code> files located inside the <code>tests/</code> directory.</li>
+</ol>
+<h3 id="test-output-and-ci-exit-codes"><a class="header" href="#test-output-and-ci-exit-codes">Test Output and CI Exit Codes</a></h3>
+<p>When tests run, the runner outputs clean colorized results:</p>
+<pre><code class="language-text">[runvoid test] Discovering test files in tests/ ...
+[PASS] tests/math_test.rv (5 assertions passed)
+[PASS] tests/dictionary_test.rv (4 assertions passed)
+[PASS] tests/collections_test.rv (8 assertions passed)
+------------------------------------------------------
+Result: 3 test suites, 17 assertions passed, 0 failures (14ms)
+</code></pre>
+<p>If an assertion fails:</p>
+<ul>
+<li>The runner prints the exact file path and line number of the failure.</li>
+<li>It displays the failed condition along with the expected versus actual values.</li>
+<li>The process exits with code <code>1</code>, making it immediately compatible with GitHub Actions and automated CI/CD pipelines.</li>
+</ul>
+<hr />
+<h2 id="3-the-interactive-repl-runvoid-repl"><a class="header" href="#3-the-interactive-repl-runvoid-repl">3. The Interactive REPL (<code>runvoid repl</code>)</a></h2>
+<p>The Read-Eval-Print Loop lets you prototype ideas, experiment with expressions, and test library functions without creating temporary files:</p>
 <pre><code class="language-bash">$ runvoid repl
-╔══════════════════════════════════════════════════════════════╗
-║           Runvoid Interactive REPL v0.3.0                   ║
-║   Type :help for help, :clear to reset, :exit to quit        ║
-╚══════════════════════════════════════════════════════════════╝
-runvoid&gt; remember hero = name: "Alex", hp: 100
-runvoid&gt; hero's hp
-100
-runvoid&gt; hero has "name"
-true
-runvoid&gt; 12 bit and 10
-8
+Runvoid v0.3.0 Interactive Shell
+Type :help for help, :clear to reset, :exit to quit
+
+runvoid&gt; remember user = name: "Aria", score: 950
+runvoid&gt; user's name
+"Aria"
+runvoid&gt; 1 shift left 4
+16
+runvoid&gt; [1, 2, 3, 4].length
+4
 runvoid&gt; :exit
 Goodbye!
 </code></pre>
-<h2 id="hot-reloading-watcher-runvoid-watch"><a class="header" href="#hot-reloading-watcher-runvoid-watch">Hot-Reloading Watcher (<code>runvoid watch</code>)</a></h2>
-<p>Automatically recompile and re-execute your script whenever you save changes:</p>
-<pre><code class="language-bash">$ runvoid watch game.rv
-👀 Watching "game.rv" for changes... (Press Ctrl+C to stop)
+<h3 id="repl-meta-commands"><a class="header" href="#repl-meta-commands">REPL Meta-Commands:</a></h3>
+<ul>
+<li><code>:help</code>: Displays interactive commands.</li>
+<li><code>:clear</code>: Resets active variables and functions in the current session.</li>
+<li><code>:exit</code>: Gracefully terminates the REPL.</li>
+</ul>
+<hr />
+<h2 id="4-hot-reloading-watcher-runvoid-watch"><a class="header" href="#4-hot-reloading-watcher-runvoid-watch">4. Hot-Reloading Watcher (<code>runvoid watch</code>)</a></h2>
+<p>During active feature development or game prototyping, restarting the compiler on every small edit breaks your flow state. The <code>watch</code> subcommand provides frictionless continuous execution:</p>
+<pre><code class="language-bash">$ runvoid watch src/game.rv
 </code></pre>
-<p>Whenever you edit and save <code>game.rv</code>, Runvoid recompiles in milliseconds and runs the updated executable immediately.</p>
+<h3 id="how-watch-mode-operates"><a class="header" href="#how-watch-mode-operates">How Watch Mode Operates:</a></h3>
+<ol>
+<li>Monitors <code>src/game.rv</code> and imported modules for filesystem change events.</li>
+<li>Incorporates intelligent debouncing (150ms) to ensure saving multiple buffers doesn’t trigger rapid recompile thrashing.</li>
+<li>Automatically clears the terminal window, recompiles the source code into native machine code, and launches the updated binary immediately.</li>
+</ol>
+<p>You can combine <code>watch</code> with cross-compilation:</p>
+<pre><code class="language-bash">$ runvoid watch --target windows src/game.rv
+</code></pre>
+<p>Whenever you edit code on Linux, Runvoid recompiles the Windows PE executable and launches it inside Wine instantly!</p>
 
                     </main>
 

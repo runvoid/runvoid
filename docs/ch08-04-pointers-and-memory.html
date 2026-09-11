@@ -177,40 +177,110 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="84-raw-pointers--manual-memory"><a class="header" href="#84-raw-pointers--manual-memory">8.4 Raw Pointers &amp; Manual Memory</a></h1>
-<p>In systems programming, direct memory manipulation is essential for interfacing with hardware, building custom data structures, and optimizing caches.</p>
-<h2 id="taking-memory-addresses-addr"><a class="header" href="#taking-memory-addresses-addr">Taking Memory Addresses (<code>addr</code>)</a></h2>
-<p>The <code>addr</code> keyword obtains the raw 64-bit stack address of any variable:</p>
+<p>In high-level application code, variables and collections abstract away the physical addresses where bytes reside. But in systems software—such as memory allocators, network device drivers, packet serializers, and game engines—direct access to raw memory addresses is indispensable.</p>
+<p>Runvoid Pro Systems Mode provides full, unconstrained access to 64-bit hardware pointers, address-of operators, memory dereferencing, and manual heap allocation.</p>
+<hr />
+<h2 id="1-the-pointer-type-ptr-and-virtual-memory"><a class="header" href="#1-the-pointer-type-ptr-and-virtual-memory">1. The Pointer Type (<code>Ptr</code>) and Virtual Memory</a></h2>
+<p>A pointer in Runvoid has the type <code>Ptr</code>. Under x86_64 architecture, a <code>Ptr</code> is a 64-bit numerical value representing a byte address within the operating system process’s virtual memory space.</p>
+<p>A pointer can reference:</p>
+<ul>
+<li>Memory on the hardware stack (local variables).</li>
+<li>Memory in the data sections (<code>.rodata</code>, <code>.data</code>, <code>.bss</code>).</li>
+<li>Memory allocated dynamically on the heap.</li>
+<li>Memory-mapped hardware I/O registers or memory-mapped files (<code>mmap</code>).</li>
+</ul>
+<hr />
+<h2 id="2-taking-memory-addresses-with-addr"><a class="header" href="#2-taking-memory-addresses-with-addr">2. Taking Memory Addresses with <code>addr</code></a></h2>
+<p>To obtain the memory address of an existing variable, use the <code>addr</code> operator:</p>
 <pre><code class="language-runvoid">remove garbageC
 remove Basic
 add Advanced
+
+use ior
+
+remember counter: Int = 100
+remember ptr_to_counter: Ptr = addr counter
+
+say "Counter value: {counter}"
+say "Stack memory address: {ptr_to_counter}"
+</code></pre>
+<h3 id="under-the-hood"><a class="header" href="#under-the-hood">Under the Hood</a></h3>
+<p>In x86_64 NASM assembly, <code>addr counter</code> translates directly to the single-cycle Load Effective Address instruction:</p>
+<pre><code class="language-nasm">lea rax, [rbp - 8]
+mov [rbp - 16], rax
+</code></pre>
+<hr />
+<h2 id="3-dereferencing-memory-with-"><a class="header" href="#3-dereferencing-memory-with-">3. Dereferencing Memory with <code>@</code></a></h2>
+<p>The <code>@</code> operator dereferences a pointer, allowing you to read or write the value at the target memory location:</p>
+<h3 id="reading-memory-via-ptr"><a class="header" href="#reading-memory-via-ptr">Reading Memory via <code>@ptr</code></a></h3>
+<pre><code class="language-runvoid">remember value_read: Int = @ptr_to_counter
+say "Read via pointer: {value_read}" // Prints: 100
+</code></pre>
+<p>Translates to:</p>
+<pre><code class="language-nasm">mov rax, [rbp - 16]   ; Load pointer address into rax
+mov rbx, [rax]        ; Dereference 64-bit value at address
+</code></pre>
+<h3 id="writing-memory-via-ptr--value"><a class="header" href="#writing-memory-via-ptr--value">Writing Memory via <code>@ptr = value</code></a></h3>
+<pre><code class="language-runvoid">@ptr_to_counter = 500
+
+say "Updated via pointer: {counter}" // Prints: 500
+say "Dereferenced again: {@ptr_to_counter}" // Prints: 500
+</code></pre>
+<p>Translates to:</p>
+<pre><code class="language-nasm">mov rax, [rbp - 16]   ; Load pointer address
+mov qword [rax], 500  ; Store 64-bit value directly into address
+</code></pre>
+<hr />
+<h2 id="4-pointer-arithmetic"><a class="header" href="#4-pointer-arithmetic">4. Pointer Arithmetic</a></h2>
+<p>You can navigate contiguous memory blocks by applying integer arithmetic to pointers. Because addresses are byte-indexed, stepping to the next 64-bit (<code>Int</code>) element requires adding 8 bytes:</p>
+<pre><code class="language-runvoid">action read_element(base_ptr: Ptr, index: Int): Int {
+    remember offset: Int = index * 8
+    remember element_ptr: Ptr = base_ptr + offset
+    give @element_ptr
+}
+</code></pre>
+<hr />
+<h2 id="5-manual-heap-allocation-alloc-and-free"><a class="header" href="#5-manual-heap-allocation-alloc-and-free">5. Manual Heap Allocation: <code>alloc</code> and <code>free</code></a></h2>
+<p>When you remove the garbage collector (<code>remove garbageC</code>), dynamic memory must be explicitly allocated and freed using <code>alloc</code> and <code>free</code> from the <code>mem</code> module:</p>
+<pre><code class="language-runvoid">remove garbageC
+remove Basic
+add Advanced
+
 use ior
 use mem
 
-remember val: Int = 100
-remember ptr: Ptr = addr val
-</code></pre>
-<h2 id="dereferencing-read--write-"><a class="header" href="#dereferencing-read--write-">Dereferencing Read &amp; Write (<code>@</code>)</a></h2>
-<p>Use the <code>@</code> symbol to read or write the value pointed to by a pointer:</p>
-<pre><code class="language-runvoid"># Read value at memory location:
-say @ptr       // prints 100
+// Allocate a buffer of 256 contiguous bytes on the heap:
+remember buffer_size: Int = 256
+remember buffer: Ptr = alloc buffer_size
 
-# Write value to memory location:
-@ptr = 250
-say val        // prints 250
-say @ptr       // prints 250
-</code></pre>
-<h2 id="direct-heap-allocation-alloc-and-free"><a class="header" href="#direct-heap-allocation-alloc-and-free">Direct Heap Allocation (<code>alloc</code> and <code>free</code>)</a></h2>
-<p>Allocate and deallocate unmanaged heap memory with byte-level precision:</p>
-<pre><code class="language-runvoid"># Allocate 64 bytes of memory on the heap:
-remember buffer: Ptr = alloc 64
+if buffer == 0 {
+    say red "Fatal error: Out of memory!"
+    exit(1)
+}
 
-# Write a 64-bit integer into the allocated block:
-@buffer = 9999
-say @buffer    // prints 9999
+// Write integers into the first two slots (8 bytes each):
+@buffer = 1337
+@(buffer + 8) = 2026
 
-# Deallocate the memory:
+say "Slot 0: {@buffer}"        // 1337
+say "Slot 1: {@(buffer + 8)}"  // 2026
+
+// Explicitly free the allocated memory block back to the OS:
 free buffer
+
+// Hygiene: Null out the pointer to prevent accidental use-after-free:
+buffer = 0
+say green "Memory deallocated cleanly."
 </code></pre>
+<hr />
+<h2 id="6-systems-memory-safety-best-practices"><a class="header" href="#6-systems-memory-safety-best-practices">6. Systems Memory Safety Best Practices</a></h2>
+<p>Working with raw pointers grants absolute power, but requires engineering discipline:</p>
+<ol>
+<li><strong>Always Check for Null:</strong> <code>alloc</code> returns <code>0</code> (null) if the operating system runs out of virtual address space. Always verify <code>if ptr != 0</code> before dereferencing.</li>
+<li><strong>One Owner per Allocation:</strong> Clearly designate which function is responsible for calling <code>free</code> on dynamically allocated blocks.</li>
+<li><strong>Null After Free:</strong> Immediately assign <code>ptr = 0</code> after calling <code>free ptr</code> to prevent dangling pointer bugs.</li>
+<li><strong>Bounds Discipline:</strong> Ensure pointer offsets never exceed the allocated byte boundary.</li>
+</ol>
 
                     </main>
 

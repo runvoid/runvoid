@@ -1,8 +1,10 @@
 use crate::ast::*;
+use crate::compiler::TargetOs;
 use std::collections::{HashMap, HashSet};
 
 pub struct CodeGenerator {
     directives: Directives,
+    pub target: TargetOs,
     asm_rodata: Vec<String>,
     string_literals: HashMap<String, String>,
     label_counter: usize,
@@ -20,9 +22,10 @@ pub struct CodeGenerator {
 }
 
 impl CodeGenerator {
-    pub fn new(directives: Directives) -> Self {
+    pub fn new(directives: Directives, target: TargetOs) -> Self {
         Self {
             directives,
+            target,
             asm_rodata: Vec::new(),
             string_literals: HashMap::new(),
             label_counter: 0,
@@ -222,8 +225,12 @@ impl CodeGenerator {
         output.push_str("extern rv_tcp_close\n");
         output.push_str("extern rv_exit\n\n");
 
-        // .rodata section
-        output.push_str("section .rodata\n");
+        // Read-only data section
+        if self.target == TargetOs::Windows {
+            output.push_str("section .rdata\n");
+        } else {
+            output.push_str("section .rodata\n");
+        }
         for line in &self.asm_rodata {
             output.push_str(line);
             output.push('\n');
@@ -701,10 +708,12 @@ impl CodeGenerator {
             }
             Stmt::WriteFile { data, target } => {
                 code.extend(self.generate_expr(data));
+                code.push("    sub rsp, 8".to_string());
                 code.push("    push rax".to_string());
                 code.extend(self.generate_expr(target));
                 code.push("    mov rsi, rax".to_string());
                 code.push("    pop rdi".to_string());
+                code.push("    add rsp, 8".to_string());
                 code.push("    call rv_write_file".to_string());
             }
             Stmt::Wait(sec) => {
@@ -1368,9 +1377,11 @@ impl CodeGenerator {
             }
             Expr::Binary { left, op, right } => {
                 code.extend(self.generate_expr(left));
+                code.push("    sub rsp, 8".to_string());
                 code.push("    push rax".to_string());
                 code.extend(self.generate_expr(right));
                 code.push("    pop rbx".to_string()); // rbx = left, rax = right
+                code.push("    add rsp, 8".to_string());
 
                 match op {
                     BinaryOp::Add => {
@@ -1597,10 +1608,12 @@ impl CodeGenerator {
 
                 // Concat subsequent parts
                 for p in parts.iter().skip(1) {
+                    code.push("    sub rsp, 8".to_string());
                     code.push("    push rax".to_string());
                     code.extend(self.generate_stringified_expr(p));
                     code.push("    mov rsi, rax".to_string()); // new part
                     code.push("    pop rdi".to_string()); // accumulated
+                    code.push("    add rsp, 8".to_string());
                     code.push("    call rv_str_concat".to_string());
                 }
             }
@@ -1621,10 +1634,12 @@ impl CodeGenerator {
             }
             Expr::Random { min, max } => {
                 code.extend(self.generate_expr(min));
+                code.push("    sub rsp, 8".to_string());
                 code.push("    push rax".to_string());
                 code.extend(self.generate_expr(max));
                 code.push("    mov rsi, rax".to_string());
                 code.push("    pop rdi".to_string());
+                code.push("    add rsp, 8".to_string());
                 code.push("    call rv_random".to_string());
             }
             Expr::ImrvDraw {
@@ -1896,7 +1911,7 @@ mod tests {
         let mut parser = Parser::new(tokens);
         let prog = parser.parse().unwrap();
 
-        let codegen = CodeGenerator::new(prog.directives.clone());
+        let codegen = CodeGenerator::new(prog.directives.clone(), TargetOs::Linux);
         let (asm, _, _) = codegen.generate(&prog);
 
         assert!(asm.contains("main:"));
@@ -1919,7 +1934,7 @@ mod tests {
         let mut parser = Parser::new(tokens);
         let prog = parser.parse().unwrap();
 
-        let codegen = CodeGenerator::new(prog.directives.clone());
+        let codegen = CodeGenerator::new(prog.directives.clone(), TargetOs::Linux);
         let (asm, _, _) = codegen.generate(&prog);
 
         assert!(asm.contains("xor eax, eax"));

@@ -177,29 +177,95 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="88-bare-metal-freestanding-binaries"><a class="header" href="#88-bare-metal-freestanding-binaries">8.8 Bare-Metal Freestanding Binaries</a></h1>
-<p>For operating system kernels, bootloaders, micro-containers, or embedded targets where <strong>neither libc nor any runtime library is permissible</strong>, Runvoid provides Freestanding Mode.</p>
-<h2 id="directives-for-freestanding-mode"><a class="header" href="#directives-for-freestanding-mode">Directives for Freestanding Mode</a></h2>
-<p>Combine <code>remove Linux</code> and <code>add Freestanding</code>:</p>
+<p>In systems software engineering, there is a fundamental distinction between two execution environments:</p>
+<ol>
+<li><strong>Hosted Environment:</strong> The application runs on top of a fully booted operating system (Linux or Windows). The OS loader allocates virtual memory, loads dynamic shared libraries (<code>libc.so</code>, <code>ntdll.dll</code>), initializes thread-local storage, and calls <code>main</code>.</li>
+<li><strong>Freestanding Environment:</strong> The software executes on the raw physical hardware or within an early boot environment where <strong>no operating system exists</strong>. There is no <code>libc</code>, no heap allocator, no standard I/O streams, and no dynamic linker.</li>
+</ol>
+<p>Runvoid provides first-class support for freestanding compilation via <code>add Freestanding</code>.</p>
+<hr />
+<h2 id="1-directives-for-freestanding-mode"><a class="header" href="#1-directives-for-freestanding-mode">1. Directives for Freestanding Mode</a></h2>
+<p>To compile a pure, dependency-free freestanding binary, configure the top-level directives:</p>
 <pre><code class="language-runvoid">remove garbageC
 remove Basic
 remove Linux
 add Advanced
 add Freestanding
 
-# Entry point 'global _start' is emitted automatically by the compiler.
-# Linux sys_exit syscall: rax = 60, rdi = status code
+// Entry point: The compiler emits `global _start`
 asm {
+    ; Direct Linux sys_write (syscall 1):
+    ; stdout = fd 1, message string, length 14
+    mov rax, 1
+    mov rdi, 1
+    lea rsi, [rel msg]
+    mov rdx, 14
+    syscall
+
+    ; Direct Linux sys_exit (syscall 60):
     mov rax, 60
     xor rdi, rdi
     syscall
+
+msg:
+    db "Raw Metal OK!", 10
 }
 </code></pre>
-<h2 id="how-it-compiles"><a class="header" href="#how-it-compiles">How It Compiles</a></h2>
-<ul>
-<li>The compiler emits <code>global _start</code> instead of <code>main</code>.</li>
-<li>All references to C runtime initialization (<code>rv_init</code>), memory allocators, and standard libraries are omitted.</li>
-<li>The binary is linked directly with GNU <code>ld -s</code> (not GCC), producing an ultra-lean standalone ELF executable containing pure machine instructions and zero external dependencies.</li>
-</ul>
+<hr />
+<h2 id="2-compilation-and-linkage"><a class="header" href="#2-compilation-and-linkage">2. Compilation and Linkage</a></h2>
+<p>When <code>add Freestanding</code> is declared, the Runvoid compiler radically reconfigures its code generator and linker flags:</p>
+<ol>
+<li><strong>Entry Point Substitution:</strong> Rather than generating a standard <code>main</code> symbol that expects C runtime initialization (<code>__libc_start_main</code>), the compiler emits the raw ELF entry symbol: <code>global _start</code>.</li>
+<li><strong>Elimination of CRT Objects:</strong> The linker completely bypasses C runtime initialization objects (<code>crt1.o</code>, <code>crti.o</code>, <code>crtbegin.o</code>, <code>crtend.o</code>, <code>crtn.o</code>).</li>
+<li><strong>Pure Static Linkage:</strong> The linker invocation switches from <code>gcc</code> to direct GNU <code>ld</code>:
+<pre><code class="language-bash">ld -m elf_x86_64 -nostdlib -static -s entry.o -o kernel.bin
+</code></pre>
+</li>
+</ol>
+<p>The resulting executable contains <strong>zero dynamic dependencies</strong> (<code>ldd binary</code> reports <code>not a dynamic executable</code>) and can be as small as <strong>400 bytes</strong>!</p>
+<hr />
+<h2 id="3-direct-linux-syscall-reference-x86_64"><a class="header" href="#3-direct-linux-syscall-reference-x86_64">3. Direct Linux Syscall Reference (x86_64)</a></h2>
+<p>In a freestanding Linux binary, you invoke operating system services directly through the CPU’s <code>syscall</code> instruction:</p>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Syscall Name</th><th style="text-align: left"><code>%rax</code> Number</th><th style="text-align: left"><code>%rdi</code> (Arg 1)</th><th style="text-align: left"><code>%rsi</code> (Arg 2)</th><th style="text-align: left"><code>%rdx</code> (Arg 3)</th></tr></thead><tbody>
+<tr><td style="text-align: left"><strong><code>sys_read</code></strong></td><td style="text-align: left"><code>0</code></td><td style="text-align: left">File Descriptor (<code>fd</code>)</td><td style="text-align: left">Buffer Pointer (<code>char*</code>)</td><td style="text-align: left">Byte Count (<code>size_t</code>)</td></tr>
+<tr><td style="text-align: left"><strong><code>sys_write</code></strong></td><td style="text-align: left"><code>1</code></td><td style="text-align: left">File Descriptor (<code>fd</code>)</td><td style="text-align: left">Buffer Pointer (<code>char*</code>)</td><td style="text-align: left">Byte Count (<code>size_t</code>)</td></tr>
+<tr><td style="text-align: left"><strong><code>sys_open</code></strong></td><td style="text-align: left"><code>2</code></td><td style="text-align: left">Filename Pointer</td><td style="text-align: left">Open Flags (<code>O_RDONLY</code>, etc.)</td><td style="text-align: left">Mode / Permissions</td></tr>
+<tr><td style="text-align: left"><strong><code>sys_close</code></strong></td><td style="text-align: left"><code>3</code></td><td style="text-align: left">File Descriptor (<code>fd</code>)</td><td style="text-align: left">-</td><td style="text-align: left">-</td></tr>
+<tr><td style="text-align: left"><strong><code>sys_mmap</code></strong></td><td style="text-align: left"><code>9</code></td><td style="text-align: left">Preferred Address</td><td style="text-align: left">Allocation Length</td><td style="text-align: left">Memory Protection</td></tr>
+<tr><td style="text-align: left"><strong><code>sys_exit</code></strong></td><td style="text-align: left"><code>60</code></td><td style="text-align: left">Exit Status Code</td><td style="text-align: left">-</td><td style="text-align: left">-</td></tr>
+</tbody></table>
+</div>
+<hr />
+<h2 id="4-writing-an-x86_64-bare-metal-os-kernel"><a class="header" href="#4-writing-an-x86_64-bare-metal-os-kernel">4. Writing an x86_64 Bare-Metal OS Kernel</a></h2>
+<p>Beyond raw Linux binaries, Runvoid can be used to write standalone OS kernels running directly under QEMU or physical hardware.</p>
+<p>In protected 32-bit or long 64-bit mode, the PC hardware maps text-mode video memory directly to physical address <code>0xB8000</code>. You can write text directly to the screen by storing character-attribute byte pairs into that address:</p>
+<pre><code class="language-runvoid">remove garbageC
+remove Basic
+remove Linux
+add Advanced
+add Freestanding
+
+action kernel_main(): Void {
+    // Pointer to VGA video memory:
+    remember vga_buffer: Ptr = 0xB8000
+
+    // Write 'R' with green-on-black attribute (0x02):
+    @(vga_buffer + 0) = 0x0252  // 0x52 = 'R', 0x02 = Green
+    @(vga_buffer + 2) = 0x0255  // 'U'
+    @(vga_buffer + 4) = 0x024E  // 'N'
+    @(vga_buffer + 6) = 0x0256  // 'V'
+    @(vga_buffer + 8) = 0x024F  // 'O'
+
+    // Halt the CPU indefinitely:
+    asm {
+    .halt_loop:
+        cli
+        hlt
+        jmp .halt_loop
+    }
+}
+</code></pre>
+<p>This demonstrates the ultimate reach of Runvoid: from high-level conversational scripts down to writing your own operating system from scratch!</p>
 
                     </main>
 

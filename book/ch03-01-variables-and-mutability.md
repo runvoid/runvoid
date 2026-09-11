@@ -1,33 +1,123 @@
 # 3.1 Variables and Mutability
 
-In Runvoid, you declare new variables using the `remember` keyword. This conversational keyword reflects the intuitive idea of asking the computer to keep a value in mind for future use:
+In Runvoid, you declare new variables using the conversational keyword `remember`. This reflects the intuitive idea of asking the runtime to hold a value in memory for future access:
 
 ```runvoid
 remember count = 5
 say "The count is: {count}"
 ```
 
-## Changing Variable Values
+---
 
-Once a variable has been declared with `remember`, you can update its value by simply assigning to it:
+## Declaring and Initializing Variables
+
+Every variable in Runvoid is bound to an initial value at declaration time:
 
 ```runvoid
-remember health = 100
-say "Initial health: {health}"
-
-health = health - 20
-say "Health after taking damage: {health}"
+remember player_name = "Aria"
+remember current_level = 1
+remember is_online = true
 ```
 
-> **Note:** You only use `remember` when first introducing a variable. When modifying an existing variable, write `name = new_value`.
+The Runvoid compiler automatically infers the variable's type from the right-hand expression. Behind the scenes in the compiler's code generator, each local variable is assigned an 8-byte aligned slot on the active stack frame (`[rbp - 8]`, `[rbp - 16]`, etc.).
+
+---
+
+## Mutating Existing Variables
+
+Once a variable has been declared with `remember`, you can reassign its value without repeating the `remember` keyword:
+
+```runvoid
+remember score = 100
+say "Initial score: {score}"
+
+score = score + 25
+say "After bonus: {score}"
+
+score = score * 2
+say "After combo multiplier: {score}"
+```
+
+> **Important Rule:** Use `remember` **only** when introducing a variable into the current scope for the first time. Re-assigning an already declared variable requires only the variable name and an assignment operator (`name = new_value`). Attempting to re-declare the same variable with `remember` within the same scope is flagged by the compiler.
+
+---
+
+## Variable Scoping & Shadowing
+
+Variables in Runvoid are lexically scoped to the block in which they are declared. A block is delimited by curly braces `{ ... }`, such as those in `if` statements, loops, or functions:
+
+```runvoid
+remember total = 10
+
+if total > 5 {
+    // This variable exists only inside this if-block
+    remember bonus = 50
+    say "Total with bonus: {total + bonus}"
+}
+
+// Accessing bonus here would produce a compile-time error:
+// say bonus
+```
+
+### Shadowing
+If you declare a variable with `remember` inside an inner block with the same name as an outer variable, the inner variable **shadows** the outer one until the block terminates:
+
+```runvoid
+remember count = 10
+
+if true {
+    remember count = 99
+    say "Inner count: {count}" // Prints 99
+}
+
+say "Outer count: {count}" // Prints 10
+```
+
+---
+
+## How Variables Work Under the Hood
+
+When you run `runvoid emit-asm`, you can see exactly how the compiler manages your variables on the hardware stack:
+
+```runvoid
+remember x = 42
+remember y = 10
+remember z = x + y
+```
+
+Emitted assembly:
+```nasm
+; remember x = 42
+mov rax, 42
+mov [rbp - 8], rax
+
+; remember y = 10
+mov rax, 10
+mov [rbp - 16], rax
+
+; remember z = x + y
+mov rax, [rbp - 8]
+add rax, [rbp - 16]
+mov [rbp - 24], rax
+```
+
+Because variables are mapped directly to native CPU stack offsets (`rbp - offset`), variable access and arithmetic execute at full native microprocessor speed, with zero virtual machine dispatch overhead!
+
+---
 
 ## Comments
 
-Runvoid supports both C-style `//` comments and scripting-style `#` comments:
+Runvoid provides flexible comment styles to annotate your code:
+
+1. **Double slash (`//`):** Traditional C/Rust-style single line comments.
+2. **Hash symbol (`#`):** Scripting/Python-style single line comments.
+3. **Semicolon (`;`):** Assembly-style single line comments.
 
 ```runvoid
-// This is a line comment
-# This is also a line comment
+// Standard single-line comment
+# Unix shell-style comment
+; Assembly-style comment
 
-remember speed = 60 // kilometers per hour
+remember timeout_seconds = 30 // Wait up to 30 seconds for connection
 ```
+

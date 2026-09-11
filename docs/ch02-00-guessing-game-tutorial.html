@@ -177,50 +177,204 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="2-programming-a-guessing-game"><a class="header" href="#2-programming-a-guessing-game">2. Programming a Guessing Game</a></h1>
-<p>Let’s jump into Runvoid by working through a hands-on project together! This chapter introduces you to a few common Runvoid concepts by showing you how to use them in a real program. You’ll learn about <code>remember</code>, <code>ask</code>, <code>say</code>, string interpolation <code>{...}</code>, <code>random ... to ...</code>, and control flow with <code>while</code>, <code>if</code>, and <code>stop</code>.</p>
-<h2 id="what-were-building"><a class="header" href="#what-were-building">What We’re Building</a></h2>
-<p>We will implement a classic beginner programming problem: a guessing game. Here’s how it works: the program will generate a random integer between 1 and 100. It will then prompt the player to enter a guess. Upon a guess being entered, the program will indicate whether the guess is too low or too high. If the guess is correct, the game will print a congratulatory message and exit.</p>
-<h2 id="setting-up-the-game"><a class="header" href="#setting-up-the-game">Setting Up the Game</a></h2>
-<p>Create a new file named <code>guessing_game.rv</code>:</p>
-<pre><code class="language-runvoid">say "=== Guess the Number! ==="
+<p>Let’s jump into Runvoid by building a complete, interactive project together!</p>
+<p>This chapter introduces you to practical Runvoid programming by walking through a real-world program step by step. You will learn about:</p>
+<ul>
+<li>Declaring and mutating variables with <code>remember</code>.</li>
+<li>Prompting for user input with <code>ask</code>.</li>
+<li>Generating secure pseudo-random numbers with <code>random ... to ...</code>.</li>
+<li>String interpolation with <code>{expression}</code>.</li>
+<li>Conditional branching with <code>if</code>, <code>otherwise if</code>, and <code>otherwise</code>.</li>
+<li>Loop control with <code>while</code> and <code>stop</code>.</li>
+<li>Adding polish with colored terminal output and audio feedback.</li>
+<li>Cross-compiling the finished game into native executables for Linux and Windows.</li>
+</ul>
+<hr />
+<h2 id="what-we-are-building"><a class="header" href="#what-we-are-building">What We Are Building</a></h2>
+<p>We will implement a classic beginner programming challenge: a <strong>number guessing game</strong>.</p>
+<p>Here is how the game behaves:</p>
+<ol>
+<li>The game chooses a secret random integer between 1 and 100.</li>
+<li>It prompts the player to enter a guess.</li>
+<li>If the guess is too low, the game outputs a warning in yellow: <code>"Too small! Try higher."</code></li>
+<li>If the guess is too high, it outputs: <code>"Too big! Try lower."</code></li>
+<li>When the player guesses the exact number, the game plays a celebratory victory beep, prints a victory message in green with the total number of attempts, and exits.</li>
+</ol>
+<hr />
+<h2 id="step-1-setting-up-the-project"><a class="header" href="#step-1-setting-up-the-project">Step 1: Setting Up the Project</a></h2>
+<p>Create a new directory for your game and create a source file named <code>guessing_game.rv</code>:</p>
+<pre><code class="language-bash">mkdir -p ~/projects/guessing_game
+cd ~/projects/guessing_game
+touch guessing_game.rv
+</code></pre>
+<p>Let’s write the first draft of our program to welcome the player and prompt for an initial guess. Open <code>guessing_game.rv</code> in your editor:</p>
+<pre><code class="language-runvoid">say cyan "=== Welcome to the Runvoid Guessing Game! ==="
+say "I have chosen a secret number between 1 and 100."
+
+remember guess = ask "Please input your guess: "
+say "You guessed: {guess}"
+</code></pre>
+<h3 id="testing-the-first-draft"><a class="header" href="#testing-the-first-draft">Testing the First Draft</a></h3>
+<p>Run the program using the <code>runvoid run</code> command:</p>
+<pre><code class="language-bash">$ runvoid run guessing_game.rv
+=== Welcome to the Runvoid Guessing Game! ===
+I have chosen a secret number between 1 and 100.
+Please input your guess: 42
+You guessed: 42
+</code></pre>
+<p>The game printed our header, waited for keyboard input, captured our typed value into the variable <code>guess</code>, and echoed it back using string interpolation <code>{guess}</code>.</p>
+<hr />
+<h2 id="step-2-processing-input-and-variables"><a class="header" href="#step-2-processing-input-and-variables">Step 2: Processing Input and Variables</a></h2>
+<p>Let’s dissect the new code we just wrote:</p>
+<pre><code class="language-runvoid">remember guess = ask "Please input your guess: "
+</code></pre>
+<h3 id="the-remember-statement"><a class="header" href="#the-remember-statement">The <code>remember</code> Statement</a></h3>
+<p>In Runvoid, variables are declared using the conversational keyword <code>remember</code>.</p>
+<ul>
+<li>By default in scripting mode, variables are dynamically typed and mutable.</li>
+<li>You can reassign a variable later in the code simply by referencing its name: <code>guess = 50</code>.</li>
+</ul>
+<h3 id="the-ask-statement"><a class="header" href="#the-ask-statement">The <code>ask</code> Statement</a></h3>
+<p>The <code>ask</code> keyword combines printing a prompt with reading a line of text from standard input (<code>stdin</code>).</p>
+<ul>
+<li>It prints the prompt message without an automatic trailing newline, keeping the user’s cursor on the same line.</li>
+<li>It captures the text entered by the user up to the return key (<code>\n</code>), strips trailing newline characters, and returns the result.</li>
+</ul>
+<h3 id="string-interpolation"><a class="header" href="#string-interpolation">String Interpolation</a></h3>
+<pre><code class="language-runvoid">say "You guessed: {guess}"
+</code></pre>
+<p>Any expression wrapped in curly braces <code>{...}</code> inside a string literal is evaluated at runtime and converted into human-readable text.</p>
+<hr />
+<h2 id="step-3-generating-a-secret-number"><a class="header" href="#step-3-generating-a-secret-number">Step 3: Generating a Secret Number</a></h2>
+<p>Next, we need to generate a secret number between 1 and 100 that the player will try to guess. Runvoid provides a built-in random range operator:</p>
+<pre><code class="language-runvoid">remember secret_number = random 1 to 100
+</code></pre>
+<p>Under the hood, <code>random A to B</code> queries the underlying operating system’s cryptographic entropy source (<code>/dev/urandom</code> or <code>getrandom</code> syscall on Linux, <code>CryptGenRandom</code> / <code>BCryptGenRandom</code> on Windows) and scales the value to the inclusive range <code>[A, B]</code>.</p>
+<p>Let’s update <code>guessing_game.rv</code>:</p>
+<pre><code class="language-runvoid">say cyan "=== Welcome to the Runvoid Guessing Game! ==="
+say "I have chosen a secret number between 1 and 100."
+
+remember secret_number = random 1 to 100
+remember guess = ask "Please input your guess: "
+
+if guess &lt; secret_number {
+    say yellow "Too small! The secret was {secret_number}."
+} otherwise if guess &gt; secret_number {
+    say yellow "Too big! The secret was {secret_number}."
+} otherwise {
+    say green "Incredible! You guessed it on your first try!"
+}
+</code></pre>
+<p>Try running it a few times to observe how the program responds to different inputs.</p>
+<hr />
+<h2 id="step-4-allowing-multiple-guesses-with-looping"><a class="header" href="#step-4-allowing-multiple-guesses-with-looping">Step 4: Allowing Multiple Guesses with Looping</a></h2>
+<p>Currently, the game exits after a single guess. To make the game playable, we want to loop until the player successfully guesses the number. We also want to count how many attempts the player took.</p>
+<p>In Runvoid, you can create a loop using <code>while condition { ... }</code>. You can also break out of any loop immediately using the <code>stop</code> statement.</p>
+<p>Let’s modify <code>guessing_game.rv</code>:</p>
+<pre><code class="language-runvoid">say cyan "=== Welcome to the Runvoid Guessing Game! ==="
+say "I have chosen a secret number between 1 and 100."
 
 remember secret_number = random 1 to 100
 remember attempts = 0
-remember guessed = false
 
-while not guessed {
-    remember guess = ask "Please input your guess: "
+while true {
+    remember guess = ask "Enter your guess (or 'quit'): "
+    
+    if guess == "quit" {
+        say "Thanks for playing! The secret number was {secret_number}."
+        stop
+    }
+    
     attempts = attempts + 1
 
     if guess &lt; secret_number {
-        say yellow "Too small! Try higher."
+        say yellow "Too small! Try a higher number."
     } otherwise if guess &gt; secret_number {
-        say yellow "Too big! Try lower."
+        say yellow "Too big! Try a lower number."
     } otherwise {
-        say green "You win! You guessed the number in {attempts} attempts!"
-        guessed = true
+        say green "You win! You guessed the secret number {secret_number} in {attempts} attempts!"
+        stop
     }
 }
 </code></pre>
-<h2 id="running-the-guessing-game"><a class="header" href="#running-the-guessing-game">Running the Guessing Game</a></h2>
-<p>Run your game from the terminal:</p>
-<pre><code class="language-bash">$ runvoid run guessing_game.rv
-=== Guess the Number! ===
-Please input your guess: 50
-Too small! Try higher.
-Please input your guess: 75
-Too big! Try lower.
-Please input your guess: 63
-You win! You guessed the number in 3 attempts!
-</code></pre>
-<h2 id="how-it-works"><a class="header" href="#how-it-works">How It Works</a></h2>
+<h3 id="how-the-loop-operates"><a class="header" href="#how-the-loop-operates">How the Loop Operates:</a></h3>
 <ol>
-<li><strong><code>remember secret_number = random 1 to 100</code></strong>: Generates a random 64-bit integer between 1 and 100 using the Linux kernel’s high-entropy random source.</li>
-<li><strong><code>remember guess = ask "..."</code></strong>: Prompts the user and reads their input from standard input.</li>
-<li><strong><code>while not guessed</code></strong>: Runs the loop until <code>guessed</code> becomes <code>true</code>.</li>
-<li><strong><code>if / otherwise if / otherwise</code></strong>: Compares the player’s guess to the secret number and outputs colored terminal feedback (<code>say yellow</code>, <code>say green</code>).</li>
-<li><strong><code>{attempts}</code></strong>: String interpolation dynamically inserts the current attempt counter directly into the victory message.</li>
+<li><code>while true</code>: Creates an infinite loop that continues until an explicit <code>stop</code> is reached.</li>
+<li><code>if guess == "quit"</code>: Allows the player to gracefully forfeit at any time.</li>
+<li><code>attempts = attempts + 1</code>: Increments our counter on each valid guess.</li>
+<li><code>stop</code>: Terminates the loop when the guess matches <code>secret_number</code>.</li>
 </ol>
+<hr />
+<h2 id="step-5-adding-audio-and-visual-polish"><a class="header" href="#step-5-adding-audio-and-visual-polish">Step 5: Adding Audio and Visual Polish</a></h2>
+<p>Let’s make the game feel like a classic arcade experience! Runvoid includes built-in hardware audio and terminal styling:</p>
+<ul>
+<li><code>beep frequency for duration_ms</code>: Triggers a native system tone (PC speaker frequency in Hertz, duration in milliseconds).</li>
+<li>Colored text: <code>say green</code>, <code>say yellow</code>, <code>say red</code>, <code>say cyan</code>.</li>
+</ul>
+<p>Let’s add sound effects to our game:</p>
+<pre><code class="language-runvoid">say cyan "=== Welcome to the Runvoid Guessing Game! ==="
+say "I have chosen a secret number between 1 and 100."
+
+remember secret_number = random 1 to 100
+remember attempts = 0
+
+while true {
+    remember guess = ask "Enter your guess (or 'quit'): "
+    
+    if guess == "quit" {
+        say "Goodbye!"
+        stop
+    }
+    
+    attempts = attempts + 1
+
+    if guess &lt; secret_number {
+        beep 400 for 100
+        say yellow "Too small! Try higher."
+    } otherwise if guess &gt; secret_number {
+        beep 400 for 100
+        say yellow "Too big! Try lower."
+    } otherwise {
+        ; Play an ascending victory arpeggio!
+        beep 523 for 120   ; C5
+        beep 659 for 120   ; E5
+        beep 784 for 150   ; G5
+        beep 1046 for 300  ; C6
+        
+        say green "=================================================="
+        say green "CONGRATULATIONS! You won in {attempts} attempts!"
+        say green "=================================================="
+        stop
+    }
+}
+</code></pre>
+<hr />
+<h2 id="step-6-building-native-binaries-for-linux--windows"><a class="header" href="#step-6-building-native-binaries-for-linux--windows">Step 6: Building Native Binaries for Linux &amp; Windows</a></h2>
+<p>Now that your game is finished, compile it into a standalone distribution binary.</p>
+<h3 id="building-for-linux"><a class="header" href="#building-for-linux">Building for Linux:</a></h3>
+<pre><code class="language-bash">$ runvoid build guessing_game.rv -o guessing_game
+[runvoid] Compiling guessing_game.rv -&gt; guessing_game (target: linux)...
+[runvoid] Build completed successfully: guessing_game
+</code></pre>
+<p>You can now run <code>./guessing_game</code> on any 64-bit Linux distribution without needing Runvoid or Rust installed!</p>
+<h3 id="cross-building-for-windows"><a class="header" href="#cross-building-for-windows">Cross-Building for Windows:</a></h3>
+<pre><code class="language-bash">$ runvoid build --target windows guessing_game.rv -o guessing_game.exe
+[runvoid] Compiling guessing_game.rv -&gt; guessing_game.exe (target: windows)...
+[runvoid] Build completed successfully: guessing_game.exe
+</code></pre>
+<p>The resulting <code>guessing_game.exe</code> will run natively on Windows 10 and 11, utilizing the Windows <code>Beep</code> API from <code>kernel32.dll</code> for the arcade audio effects!</p>
+<hr />
+<h2 id="summary"><a class="header" href="#summary">Summary</a></h2>
+<p>In this tutorial, you built a complete, interactive, cross-platform terminal game with Runvoid. You learned:</p>
+<ul>
+<li>How to declare and update variables using <code>remember</code>.</li>
+<li>How to handle user input with <code>ask</code>.</li>
+<li>How to generate random numbers with <code>random A to B</code>.</li>
+<li>How to control program execution with <code>if</code>, <code>otherwise</code>, and <code>while</code>.</li>
+<li>How to enrich CLI applications with native audio (<code>beep</code>) and colors.</li>
+<li>How to compile standalone release binaries for both Linux and Windows.</li>
+</ul>
+<p>In the next chapter, we will explore Runvoid’s common programming concepts in deeper detail!</p>
 
                     </main>
 

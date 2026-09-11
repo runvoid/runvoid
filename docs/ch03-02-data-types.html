@@ -177,33 +177,99 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="32-data-types--expressions"><a class="header" href="#32-data-types--expressions">3.2 Data Types &amp; Expressions</a></h1>
-<p>Runvoid is a statically compiled language with automatic type inference in beginner mode. You do not need to annotate types; the compiler determines them for you.</p>
-<h2 id="scalar-types"><a class="header" href="#scalar-types">Scalar Types</a></h2>
-<p>Runvoid includes three primary scalar types:</p>
-<ol>
-<li><strong>Integers (<code>Int</code>):</strong> 64-bit signed integers (<code>-9223372036854775808</code> to <code>9223372036854775807</code>).</li>
-<li><strong>Booleans (<code>Bool</code>):</strong> <code>true</code> or <code>false</code>.</li>
-<li><strong>Strings (<code>String</code>):</strong> UTF-8 compatible null-terminated strings with an 8-byte length prefix.</li>
-</ol>
+<p>Runvoid is a statically compiled language with powerful automatic type inference. In standard mode, you do not need to decorate your code with noisy type annotations—the compiler infers the exact hardware representation of each variable and expression at compile time.</p>
+<p>Every value in Runvoid has a concrete type. Let’s explore the primary data types and expressions supported by the language.</p>
+<hr />
+<h2 id="1-scalar-types"><a class="header" href="#1-scalar-types">1. Scalar Types</a></h2>
+<p>A scalar type represents a single value. Runvoid provides three foundational scalar types:</p>
+<h3 id="64-bit-signed-integers-int"><a class="header" href="#64-bit-signed-integers-int">64-bit Signed Integers (<code>Int</code>)</a></h3>
+<p>All numerical integer literals in Runvoid default to <strong>64-bit two’s complement signed integers</strong> (<code>int64_t</code>), capable of storing numbers from <code>-9,223,372,036,854,775,808</code> to <code>9,223,372,036,854,775,807</code>:</p>
 <pre><code class="language-runvoid">remember count = 42
-remember title = "Engine Core"
-remember is_active = true
+remember negative_val = -1500
+remember large_number = 1000000000
 </code></pre>
-<h2 id="string-interpolation"><a class="header" href="#string-interpolation">String Interpolation</a></h2>
-<p>Embed any valid expression within double quotes using curly braces <code>{...}</code>:</p>
-<pre><code class="language-runvoid">remember a = 10
-remember b = 25
-say "The sum of {a} and {b} is {a + b}!"
+<p>All arithmetic operations (<code>+</code>, <code>-</code>, <code>*</code>, <code>/</code>, <code>%</code>) compile directly to single-cycle x86_64 ALU instructions (<code>add</code>, <code>sub</code>, <code>imul</code>, <code>idiv</code>).</p>
+<h3 id="booleans-bool"><a class="header" href="#booleans-bool">Booleans (<code>Bool</code>)</a></h3>
+<p>Runvoid booleans have two possible values: <code>true</code> and <code>false</code>:</p>
+<pre><code class="language-runvoid">remember is_running = true
+remember game_over = false
 </code></pre>
-<h2 id="conversational-comparisons--logic"><a class="header" href="#conversational-comparisons--logic">Conversational Comparisons &amp; Logic</a></h2>
-<p>Runvoid accepts both natural English words and traditional programming symbols:</p>
+<p>In the compiled binary, booleans occupy 64-bit register space for optimal CPU cache alignment, where <code>1</code> represents <code>true</code> and <code>0</code> represents <code>false</code>.</p>
+<h3 id="strings-string"><a class="header" href="#strings-string">Strings (<code>String</code>)</a></h3>
+<p>Strings in Runvoid represent UTF-8 encoded text:</p>
+<pre><code class="language-runvoid">remember greeting = "Welcome to Runvoid!"
+</code></pre>
+<p>In compiled machine code, string literals are placed in the read-only data section (<code>.rodata</code> on Linux, <code>.rdata</code> on Windows) and null-terminated. Dynamic strings allocated at runtime are stored in heap memory and automatically managed.</p>
+<hr />
+<h2 id="2-string-interpolation--manipulation"><a class="header" href="#2-string-interpolation--manipulation">2. String Interpolation &amp; Manipulation</a></h2>
+<p>Runvoid provides first-class string interpolation. Any valid expression placed inside curly braces <code>{...}</code> within a double-quoted string is evaluated and converted to text:</p>
+<pre><code class="language-runvoid">remember width = 20
+remember height = 10
+say "A rectangle of {width}x{height} has an area of {width * height}."
+</code></pre>
+<h3 id="string-concatenation"><a class="header" href="#string-concatenation">String Concatenation</a></h3>
+<p>You can concatenate strings using the standard <code>+</code> operator:</p>
+<pre><code class="language-runvoid">remember first = "Super"
+remember second = "sonic"
+remember combined = first + " " + second
+say combined // Prints: Super sonic
+</code></pre>
+<h3 id="string-length"><a class="header" href="#string-length">String Length</a></h3>
+<p>You can measure the length of any string using either the conversational prefix or property syntax:</p>
+<pre><code class="language-runvoid">remember message = "Runvoid"
+say "Length: {message.length}" // Prints: 7
+</code></pre>
+<hr />
+<h2 id="3-arithmetic--comparison-expressions"><a class="header" href="#3-arithmetic--comparison-expressions">3. Arithmetic &amp; Comparison Expressions</a></h2>
+<p>Runvoid supports all standard arithmetic and comparison operations, with both symbolic and natural conversational keywords:</p>
+<h3 id="arithmetic-operators"><a class="header" href="#arithmetic-operators">Arithmetic Operators</a></h3>
+<div class="table-wrapper"><table><thead><tr><th style="text-align: left">Operation</th><th style="text-align: left">Operator</th><th style="text-align: left">Example</th><th style="text-align: left">Emitted x86_64 Instruction</th></tr></thead><tbody>
+<tr><td style="text-align: left">Addition</td><td style="text-align: left"><code>+</code></td><td style="text-align: left"><code>a + b</code></td><td style="text-align: left"><code>add rax, rbx</code></td></tr>
+<tr><td style="text-align: left">Subtraction</td><td style="text-align: left"><code>-</code></td><td style="text-align: left"><code>a - b</code></td><td style="text-align: left"><code>sub rax, rbx</code></td></tr>
+<tr><td style="text-align: left">Multiplication</td><td style="text-align: left"><code>*</code></td><td style="text-align: left"><code>a * b</code></td><td style="text-align: left"><code>imul rax, rbx</code></td></tr>
+<tr><td style="text-align: left">Division</td><td style="text-align: left"><code>/</code></td><td style="text-align: left"><code>a / b</code></td><td style="text-align: left"><code>cqo; idiv rbx</code></td></tr>
+<tr><td style="text-align: left">Modulo</td><td style="text-align: left"><code>%</code></td><td style="text-align: left"><code>a % b</code></td><td style="text-align: left"><code>cqo; idiv rbx; mov rax, rdx</code></td></tr>
+</tbody></table>
+</div>
+<h3 id="comparison-operators"><a class="header" href="#comparison-operators">Comparison Operators</a></h3>
+<p>Runvoid allows you to write either traditional mathematical symbols or natural English words:</p>
+<pre><code class="language-runvoid">remember score = 100
+
+// Symbolic comparisons:
+if score == 100 { say "Perfect!" }
+if score != 0   { say "Not zero" }
+if score &gt; 50   { say "High score" }
+
+// Conversational equivalents:
+if score is 100     { say "Perfect!" }
+if score is not 0 { say "Not zero" }
+</code></pre>
+<h3 id="logical-operators"><a class="header" href="#logical-operators">Logical Operators</a></h3>
+<p>Compose complex conditions using <code>and</code>, <code>or</code>, and <code>not</code>:</p>
+<pre><code class="language-runvoid">remember health = 85
+remember has_shield = true
+remember is_poisoned = false
+
+if health &gt; 50 and has_shield {
+    say green "Ready for combat!"
+}
+
+if is_poisoned or health &lt; 20 {
+    say red "Danger: Seek medical attention!"
+}
+
+if not is_poisoned {
+    say "Player is healthy."
+}
+</code></pre>
+<hr />
+<h2 id="4-compound-types-lists-and-dictionaries"><a class="header" href="#4-compound-types-lists-and-dictionaries">4. Compound Types: Lists and Dictionaries</a></h2>
+<p>Beyond scalar values, Runvoid provides powerful compound data structures:</p>
 <ul>
-<li><code>is</code> or <code>==</code>: Checks equality (<code>if score is 100</code>)</li>
-<li><code>is not</code> or <code>!=</code>: Checks inequality (<code>if health is not 0</code>)</li>
-<li><code>and</code>: Logical conjunction (<code>if ready and valid</code>)</li>
-<li><code>or</code>: Logical disjunction (<code>if admin or owner</code>)</li>
-<li><code>not</code>: Logical negation (<code>if not completed</code>)</li>
+<li><strong>Lists:</strong> Ordered sequences of values (<code>[1, 2, 3, 4]</code>).</li>
+<li><strong>Dictionaries:</strong> Key-value mappings (<code>{ "name": "Aria", "score": 950 }</code>).</li>
 </ul>
+<p>We will explore lists and collections in Chapter 4, and dictionaries in Chapter 10!</p>
 
                     </main>
 

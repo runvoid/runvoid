@@ -177,40 +177,97 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="87-inline-assembly--cpu-cycle-profiling"><a class="header" href="#87-inline-assembly--cpu-cycle-profiling">8.7 Inline Assembly &amp; CPU Cycle Profiling</a></h1>
-<p>For ultimate performance tuning and hardware interaction, Runvoid allows inline x86_64 assembly code and direct cycle counting via the CPU’s <code>RDTSC</code> instruction.</p>
-<h2 id="hardware-inline-assembly-asm"><a class="header" href="#hardware-inline-assembly-asm">Hardware Inline Assembly (<code>asm</code>)</a></h2>
-<p>Execute raw assembly instructions directly inside your Runvoid codebase:</p>
+<p>High-performance systems programming sometimes requires instructions that cannot be expressed in high-level languages: specialized vector intrinsics (AVX2 / AVX-512), hardware AES acceleration, memory fences, or raw CPU model-specific registers.</p>
+<p>Runvoid Pro Systems Mode gives you direct access to the CPU silicon through <strong>Hardware Inline Assembly (<code>asm</code>)</strong> and cycle-accurate performance benchmarking with the <strong><code>measure cycles</code></strong> block.</p>
+<hr />
+<h2 id="1-hardware-inline-assembly-asm"><a class="header" href="#1-hardware-inline-assembly-asm">1. Hardware Inline Assembly (<code>asm</code>)</a></h2>
+<p>The <code>asm { ... }</code> construct allows you to write raw x86_64 NASM instructions directly inside your Runvoid actions:</p>
 <pre><code class="language-runvoid">remove garbageC
 remove Basic
 add Advanced
 use ior
 
-asm {
-    mov rax, 42
-    imul rax, 10
+action fast_multiply_by_10(val: Int): Int {
+    remember result: Int = 0
+
+    asm {
+        mov rax, [rbp - 8]   ; Load parameter val
+        lea rax, [rax + rax * 4] ; Multiply by 5 in one cycle
+        shl rax, 1           ; Shift left by 1 to multiply by 2 (total 10x)
+        mov [rbp - 16], rax  ; Store into result
+    }
+
+    give result
 }
 
-say 420
+say "7 * 10 = {fast_multiply_by_10(7)}" // Prints: 70
 </code></pre>
-<p>The assembly statements are injected verbatim into the NASM code stream.</p>
-<h2 id="cpu-clock-cycle-benchmarking-measure-cycles"><a class="header" href="#cpu-clock-cycle-benchmarking-measure-cycles">CPU Clock Cycle Benchmarking (<code>measure cycles</code>)</a></h2>
-<p>While <code>measure time</code> measures wall-clock elapsed time in milliseconds, <code>measure cycles</code> uses the x86 <code>RDTSC</code> (Read Time-Stamp Counter) instruction to count the exact number of CPU clock cycles consumed:</p>
+<h3 id="how-the-compiler-handles-inline-assembly"><a class="header" href="#how-the-compiler-handles-inline-assembly">How the Compiler Handles Inline Assembly</a></h3>
+<ul>
+<li>The contents of the <code>asm</code> block are injected <strong>verbatim</strong> into the NASM translation unit at that exact instruction position.</li>
+<li>No abstraction penalty or function wrapper is generated.</li>
+<li>The assembler validates your instructions against the x86_64 instruction set during the build phase.</li>
+</ul>
+<h3 id="register-preservation-rules"><a class="header" href="#register-preservation-rules">Register Preservation Rules</a></h3>
+<p>To avoid corrupting the calling stack frame or local variables, adhere to the standard AMD64 ABI register preservation rules:</p>
+<ul>
+<li><strong>Scratch / Volatile Registers:</strong> You may freely use <code>%rax</code>, <code>%rcx</code>, <code>%rdx</code>, <code>%rsi</code>, <code>%rdi</code>, <code>%r8</code>, <code>%r9</code>, <code>%r10</code>, <code>%r11</code>.</li>
+<li><strong>Callee-Saved Registers:</strong> If your assembly modifies <code>%rbx</code>, <code>%r12</code>, <code>%r13</code>, <code>%r14</code>, or <code>%r15</code>, you must <code>push</code> them before modification and <code>pop</code> them before exiting the block. Never modify <code>%rsp</code> or <code>%rbp</code> directly!</li>
+</ul>
+<hr />
+<h2 id="2-hardware-memory-fences"><a class="header" href="#2-hardware-memory-fences">2. Hardware Memory Fences</a></h2>
+<p>When coordinating lock-free data structures across multiple CPU cores, you can emit hardware memory barriers:</p>
+<pre><code class="language-runvoid">asm {
+    mfence  ; Serialize all memory loads and stores
+}
+</code></pre>
+<p>This prevents the out-of-order execution pipeline of modern superscalar processors from reordering memory accesses across the barrier.</p>
+<hr />
+<h2 id="3-high-precision-cycle-profiling-measure-cycles"><a class="header" href="#3-high-precision-cycle-profiling-measure-cycles">3. High-Precision Cycle Profiling: <code>measure cycles</code></a></h2>
+<p>While standard profiling tools measure wall-clock milliseconds via operating system timers, micro-optimizations—such as comparing two sorting algorithms or auditing cache misses—demand cycle-accurate hardware measurements.</p>
+<p>Runvoid provides the <code>measure cycles</code> block, powered by the CPU’s native <code>RDTSC</code> (Read Time-Stamp Counter) instruction:</p>
 <pre><code class="language-runvoid">remove garbageC
 remove Basic
 add Advanced
 use ior
 
 measure cycles {
-    remember a: Int = 10
-    remember b: Int = 20
-    remember c: Int = a + b
-    say c
+    remember sum: Int = 0
+    remember i: Int = 0
+
+    while i &lt; 1000 {
+        sum = sum + i
+        i = i + 1
+    }
 }
 </code></pre>
-<p>Sample output:</p>
-<pre><code class="language-text">30
-⏱️  Executed in 130 CPU cycles
+<p>When run, the program reports the exact elapsed CPU clock cycles:</p>
+<pre><code class="language-text">⏱️  Executed in 1,240 CPU cycles
 </code></pre>
+<h3 id="how-measure-cycles-works-in-assembly"><a class="header" href="#how-measure-cycles-works-in-assembly">How <code>measure cycles</code> Works in Assembly</a></h3>
+<p>Behind the scenes, the compiler generates a serialized hardware benchmark sandwich:</p>
+<pre><code class="language-nasm">    ; Serialize pipeline and read starting TSC
+    cpuid
+    rdtsc
+    shl rdx, 32
+    or rax, rdx
+    mov r12, rax         ; Store start cycles in callee-saved r12
+
+    ; --- Your Runvoid code executes here ---
+
+    ; Read ending TSC and serialize pipeline
+    rdtscp
+    shl rdx, 32
+    or rax, rdx
+    mov r13, rax         ; Store end cycles
+
+    ; Calculate delta
+    sub r13, r12
+</code></pre>
+<ol>
+<li><strong>Pipeline Serialization (<code>cpuid</code> / <code>rdtscp</code>):</strong> Prevents the CPU from executing instructions outside the measured block ahead of time.</li>
+<li><strong>Nanosecond Resolution:</strong> On a modern 4.0 GHz processor, 1 CPU cycle corresponds to <strong>0.25 nanoseconds</strong>! This gives you unmatched precision when fine-tuning high-performance routines.</li>
+</ol>
 
                     </main>
 
