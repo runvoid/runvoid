@@ -1,0 +1,98 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Release tag name (e.g. v0.3.0)'
+        required: true
+        default: 'v0.3.0'
+
+permissions:
+  contents: write
+
+jobs:
+  build_release:
+    name: Build & Package Cross-Platform Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install Build Prerequisites
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y nasm gcc gcc-mingw-w64-x86-64 mingw-w64-tools libx11-dev zip
+
+      - name: Set up Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-unknown-linux-gnu, x86_64-pc-windows-gnu
+
+      - name: Build Linux Runvoid Compiler
+        run: cargo build --release --target x86_64-unknown-linux-gnu
+
+      - name: Build Windows Runvoid Compiler
+        run: cargo build --release --target x86_64-pc-windows-gnu
+
+      - name: Generate Payloads and Build GUI Installers
+        run: |
+          chmod +x scripts/generate_payloads.py scripts/build_installers.sh
+          ./scripts/build_installers.sh
+
+      - name: Package Release Archives
+        run: |
+          TAG="${{ github.ref_name }}"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TAG="${{ github.event.inputs.tag_name }}"
+          fi
+
+          mkdir -p release_assets
+          mkdir -p staging_linux staging_windows
+
+          # Prepare Linux Package
+          cp target/x86_64-unknown-linux-gnu/release/runvoid staging_linux/
+          cp -r runtime staging_linux/
+          cp install.sh staging_linux/
+          cp README.md LICENSE staging_linux/
+          tar -czvf "release_assets/runvoid-${TAG}-linux-x86_64.tar.gz" -C staging_linux .
+
+          # Prepare Windows Package
+          cp target/x86_64-pc-windows-gnu/release/runvoid.exe staging_windows/
+          cp -r runtime staging_windows/
+          cp install.ps1 install.bat staging_windows/
+          cp README.md LICENSE staging_windows/
+          (cd staging_windows && zip -r "../release_assets/runvoid-${TAG}-windows-x86_64.zip" .)
+
+          # Copy Standalone GUI Installers
+          cp runvoid-installer-linux release_assets/
+          cp runvoid-setup.exe release_assets/
+
+          # Copy Standalone CLI Installer Scripts
+          cp install.sh release_assets/runvoid-install.sh
+          cp install.ps1 release_assets/runvoid-install.ps1
+          cp install.bat release_assets/runvoid-install.bat
+
+          # Generate SHA256 Checksums
+          cd release_assets
+          sha256sum * > SHA256SUMS.txt
+          echo "=== Generated Checksums ==="
+          cat SHA256SUMS.txt
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+        with:
+          tag_name: ${{ github.ref_name || github.event.inputs.tag_name }}
+          name: Runvoid ${{ github.ref_name || github.event.inputs.tag_name }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          files: |
+            release_assets/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -13,3 +13,12 @@ gui_demo
 *.swp
 .idea/
 .vscode/
+
+# Installer & Release artifacts
+runvoid-installer-linux
+runvoid-setup.exe
+installer/payload_*.h
+dist/
+release/
+SHA256SUMS.txt
+

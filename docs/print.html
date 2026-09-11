@@ -280,38 +280,54 @@ if response_time &lt; 50 {
 <p>Runvoid compiles high-level conversational code into native machine code for <strong>Linux x86_64</strong> (ELF64) and <strong>Windows x86_64</strong> (PE32+). To use Runvoid, you need the compiler itself along with the underlying assembler (<code>nasm</code>) and linker (<code>gcc</code>).</p>
 <p>This section guides you through installing Runvoid on Linux and Windows, configuring cross-compilation toolchains, and verifying your environment.</p>
 <hr />
-<h2 id="quick-start-native-installers"><a class="header" href="#quick-start-native-installers">Quick Start: Native Installers</a></h2>
-<p>Runvoid provides native, one-step installer scripts for both major operating systems.</p>
-<h3 id="installing-on-linux"><a class="header" href="#installing-on-linux">Installing on Linux</a></h3>
-<p>You can install Runvoid automatically using our shell installer:</p>
+<h2 id="quick-start-graphical--script-installers"><a class="header" href="#quick-start-graphical--script-installers">Quick Start: Graphical &amp; Script Installers</a></h2>
+<p>Runvoid provides both standalone <strong>GUI setup wizards</strong> (ideal for end-users downloading official releases) and <strong>automated terminal scripts</strong> (ideal for CI/CD and developer workstations).</p>
+<h3 id="1-windows-graphical-setup-wizard-runvoid-setupexe"><a class="header" href="#1-windows-graphical-setup-wizard-runvoid-setupexe">1. Windows Graphical Setup Wizard (<code>runvoid-setup.exe</code>)</a></h3>
+<p>For Windows 10/11 x86_64, official releases include <code>runvoid-setup.exe</code>:</p>
+<ol>
+<li>Download <code>runvoid-setup.exe</code> from the latest <a href="https://github.com/runvoid/runvoid/releases">GitHub Release</a>.</li>
+<li>Double-click <code>runvoid-setup.exe</code> to launch the native Win32 setup wizard.</li>
+<li>Choose your destination directory (defaults to <code>%LOCALAPPDATA%\Programs\Runvoid\bin</code>).</li>
+<li>Keep the <strong>“Add Runvoid to User PATH”</strong> option checked.</li>
+<li>Click <strong>Install</strong>. The wizard extracts the native compiler and standard C runtime components, configures your system environment variables, and verifies the installation.</li>
+</ol>
+<h3 id="2-linux-graphical-installer-app-runvoid-installer-linux"><a class="header" href="#2-linux-graphical-installer-app-runvoid-installer-linux">2. Linux Graphical Installer App (<code>runvoid-installer-linux</code>)</a></h3>
+<p>For 64-bit Linux distributions, official releases provide a self-contained GUI installer:</p>
+<ol>
+<li>Download <code>runvoid-installer-linux</code> from <a href="https://github.com/runvoid/runvoid/releases">GitHub Releases</a>.</li>
+<li>Make the installer executable:
+<pre><code class="language-bash">chmod +x runvoid-installer-linux
+</code></pre>
+</li>
+<li>Run the installer:
+<pre><code class="language-bash">./runvoid-installer-linux
+</code></pre>
+</li>
+<li>A native setup window will appear, allowing you to configure the destination (<code>/usr/local/bin</code> or <code>~/.local/bin</code>), update your shell PATH (<code>~/.bashrc</code>, <code>~/.profile</code>), and install with a single click!
+<em>(Note: If running on a headless server without a graphical display, <code>runvoid-installer-linux --cli</code> automatically runs in terminal mode).</em></li>
+</ol>
+<h3 id="3-automated-terminal-scripts"><a class="header" href="#3-automated-terminal-scripts">3. Automated Terminal Scripts</a></h3>
+<p>If you prefer building from source or running headless shell scripts:</p>
+<h4 id="linux-installsh"><a class="header" href="#linux-installsh">Linux (<code>install.sh</code>)</a></h4>
 <pre><code class="language-bash">git clone https://github.com/runvoid/runvoid.git
 cd runvoid
 chmod +x install.sh
 ./install.sh
 </code></pre>
-<p>The installer will:</p>
-<ol>
-<li>Detect your Linux distribution package manager (<code>pacman</code>, <code>apt</code>, <code>dnf</code>, <code>zypper</code>, <code>apk</code>).</li>
-<li>Offer to install missing prerequisites (<code>nasm</code>, <code>gcc</code>, <code>rust/cargo</code>).</li>
-<li>Compile the release binary using <code>cargo build --release</code>.</li>
-<li>Install <code>runvoid</code> to <code>/usr/local/bin</code> (or <code>~/.local/bin</code> if root access is not available).</li>
-<li>Verify that <code>runvoid</code> is accessible in your current shell <code>PATH</code>.</li>
-</ol>
-<h3 id="installing-on-windows"><a class="header" href="#installing-on-windows">Installing on Windows</a></h3>
-<p>On Windows 10 or 11 (64-bit), open <strong>PowerShell</strong> (or Windows Terminal) and run:</p>
-<pre><code class="language-powershell">git clone https://github.com/runvoid/runvoid.git
-cd runvoid
-powershell -ExecutionPolicy Bypass -File .\install.ps1
+<h4 id="windows-powershell-installps1--cmd-installbat"><a class="header" href="#windows-powershell-installps1--cmd-installbat">Windows PowerShell (<code>install.ps1</code>) &amp; CMD (<code>install.bat</code>)</a></h4>
+<pre><code class="language-powershell">powershell -ExecutionPolicy Bypass -File .\install.ps1
 </code></pre>
-<p>Alternatively, you can double-click <strong><code>install.bat</code></strong> from Windows Explorer to launch the automated installer in a classic Command Prompt window.</p>
-<p>The Windows installer will:</p>
-<ol>
-<li>Check for <code>cargo</code>, <code>nasm</code>, and <code>gcc</code> (MinGW-w64).</li>
-<li>Build the optimized native <code>runvoid.exe</code> binary.</li>
-<li>Install the executable to <code>%LOCALAPPDATA%\Programs\Runvoid\bin</code>.</li>
-<li>Add the installation directory to your User <code>PATH</code> environment variable permanently.</li>
-<li>Verify the installation.</li>
-</ol>
+<p>Or double-click <code>install.bat</code> from Windows Explorer.</p>
+<hr />
+<h2 id="verifying-release-integrity-with-checksums"><a class="header" href="#verifying-release-integrity-with-checksums">Verifying Release Integrity with Checksums</a></h2>
+<p>Every official release includes a cryptographic <code>SHA256SUMS.txt</code> file containing SHA-256 hashes of all release packages and installer executables.</p>
+<p>To verify the integrity and authenticity of your downloaded files on Linux:</p>
+<pre><code class="language-bash">sha256sum -c SHA256SUMS.txt
+</code></pre>
+<p>On Windows (PowerShell):</p>
+<pre><code class="language-powershell">Get-FileHash .\runvoid-setup.exe -Algorithm SHA256
+</code></pre>
+<p>Compare the output against the hash listed in <code>SHA256SUMS.txt</code>.</p>
 <hr />
 <h2 id="manual-installation--prerequisites"><a class="header" href="#manual-installation--prerequisites">Manual Installation &amp; Prerequisites</a></h2>
 <p>If you prefer full control over your environment, you can install the individual prerequisites manually.</p>

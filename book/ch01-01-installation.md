@@ -6,14 +6,39 @@ This section guides you through installing Runvoid on Linux and Windows, configu
 
 ---
 
-## Quick Start: Native Installers
+## Quick Start: Graphical & Script Installers
 
-Runvoid provides native, one-step installer scripts for both major operating systems.
+Runvoid provides both standalone **GUI setup wizards** (ideal for end-users downloading official releases) and **automated terminal scripts** (ideal for CI/CD and developer workstations).
 
-### Installing on Linux
+### 1. Windows Graphical Setup Wizard (`runvoid-setup.exe`)
 
-You can install Runvoid automatically using our shell installer:
+For Windows 10/11 x86_64, official releases include `runvoid-setup.exe`:
+1. Download `runvoid-setup.exe` from the latest [GitHub Release](https://github.com/runvoid/runvoid/releases).
+2. Double-click `runvoid-setup.exe` to launch the native Win32 setup wizard.
+3. Choose your destination directory (defaults to `%LOCALAPPDATA%\Programs\Runvoid\bin`).
+4. Keep the **"Add Runvoid to User PATH"** option checked.
+5. Click **Install**. The wizard extracts the native compiler and standard C runtime components, configures your system environment variables, and verifies the installation.
 
+### 2. Linux Graphical Installer App (`runvoid-installer-linux`)
+
+For 64-bit Linux distributions, official releases provide a self-contained GUI installer:
+1. Download `runvoid-installer-linux` from [GitHub Releases](https://github.com/runvoid/runvoid/releases).
+2. Make the installer executable:
+   ```bash
+   chmod +x runvoid-installer-linux
+   ```
+3. Run the installer:
+   ```bash
+   ./runvoid-installer-linux
+   ```
+4. A native setup window will appear, allowing you to configure the destination (`/usr/local/bin` or `~/.local/bin`), update your shell PATH (`~/.bashrc`, `~/.profile`), and install with a single click!
+   *(Note: If running on a headless server without a graphical display, `runvoid-installer-linux --cli` automatically runs in terminal mode).*
+
+### 3. Automated Terminal Scripts
+
+If you prefer building from source or running headless shell scripts:
+
+#### Linux (`install.sh`)
 ```bash
 git clone https://github.com/runvoid/runvoid.git
 cd runvoid
@@ -21,31 +46,30 @@ chmod +x install.sh
 ./install.sh
 ```
 
-The installer will:
-1. Detect your Linux distribution package manager (`pacman`, `apt`, `dnf`, `zypper`, `apk`).
-2. Offer to install missing prerequisites (`nasm`, `gcc`, `rust/cargo`).
-3. Compile the release binary using `cargo build --release`.
-4. Install `runvoid` to `/usr/local/bin` (or `~/.local/bin` if root access is not available).
-5. Verify that `runvoid` is accessible in your current shell `PATH`.
-
-### Installing on Windows
-
-On Windows 10 or 11 (64-bit), open **PowerShell** (or Windows Terminal) and run:
-
+#### Windows PowerShell (`install.ps1`) & CMD (`install.bat`)
 ```powershell
-git clone https://github.com/runvoid/runvoid.git
-cd runvoid
 powershell -ExecutionPolicy Bypass -File .\install.ps1
 ```
+Or double-click `install.bat` from Windows Explorer.
 
-Alternatively, you can double-click **`install.bat`** from Windows Explorer to launch the automated installer in a classic Command Prompt window.
+---
 
-The Windows installer will:
-1. Check for `cargo`, `nasm`, and `gcc` (MinGW-w64).
-2. Build the optimized native `runvoid.exe` binary.
-3. Install the executable to `%LOCALAPPDATA%\Programs\Runvoid\bin`.
-4. Add the installation directory to your User `PATH` environment variable permanently.
-5. Verify the installation.
+## Verifying Release Integrity with Checksums
+
+Every official release includes a cryptographic `SHA256SUMS.txt` file containing SHA-256 hashes of all release packages and installer executables.
+
+To verify the integrity and authenticity of your downloaded files on Linux:
+
+```bash
+sha256sum -c SHA256SUMS.txt
+```
+
+On Windows (PowerShell):
+```powershell
+Get-FileHash .\runvoid-setup.exe -Algorithm SHA256
+```
+Compare the output against the hash listed in `SHA256SUMS.txt`.
+
 
 ---
 
