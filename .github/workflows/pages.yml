@@ -6,6 +6,8 @@ on:
       - main
     paths:
       - 'docs/**'
+      - 'book/**'
+      - 'book.toml'
       - '.github/workflows/pages.yml'
   workflow_dispatch:
 
@@ -27,6 +29,15 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Install mdBook
+        run: |
+          curl -sSL https://github.com/rust-lang/mdBook/releases/download/v0.4.40/mdbook-v0.4.40-x86_64-unknown-linux-gnu.tar.gz | tar -xz -C /usr/local/bin
+
+      - name: Build Book
+        run: |
+          mdbook build
+          cp book/DOCUMENTATION*.md docs/
 
       - name: Setup Pages
         uses: actions/configure-pages@v5

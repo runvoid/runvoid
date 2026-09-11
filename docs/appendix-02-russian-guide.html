@@ -1,0 +1,323 @@
+<!DOCTYPE HTML>
+<html lang="en" class="navy" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Приложение Б: Полное руководство на русском языке - The Runvoid Programming Language</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body class="sidebar-visible no-js">
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "navy";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('navy')
+            html.classList.add(theme);
+            var body = document.querySelector('body');
+            body.classList.remove('no-js')
+            body.classList.add('js');
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var body = document.querySelector('body');
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            body.classList.remove('sidebar-visible');
+            body.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="intro.html">Introduction</a></li><li class="chapter-item expanded "><a href="ch01-00-getting-started.html"><strong aria-hidden="true">1.</strong> 1. Getting Started</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch01-01-installation.html"><strong aria-hidden="true">1.1.</strong> 1.1 Installation & System Requirements</a></li><li class="chapter-item expanded "><a href="ch01-02-hello-world.html"><strong aria-hidden="true">1.2.</strong> 1.2 Hello, World!</a></li><li class="chapter-item expanded "><a href="ch01-03-cli-tooling.html"><strong aria-hidden="true">1.3.</strong> 1.3 The Compiler & CLI Tooling</a></li></ol></li><li class="chapter-item expanded "><a href="ch02-00-guessing-game-tutorial.html"><strong aria-hidden="true">2.</strong> 2. Programming a Guessing Game</a></li><li class="chapter-item expanded "><a href="ch03-00-common-programming-concepts.html"><strong aria-hidden="true">3.</strong> 3. Common Programming Concepts</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch03-01-variables-and-mutability.html"><strong aria-hidden="true">3.1.</strong> 3.1 Variables and Mutability</a></li><li class="chapter-item expanded "><a href="ch03-02-data-types.html"><strong aria-hidden="true">3.2.</strong> 3.2 Data Types & Expressions</a></li><li class="chapter-item expanded "><a href="ch03-03-functions.html"><strong aria-hidden="true">3.3.</strong> 3.3 Functions & Actions</a></li><li class="chapter-item expanded "><a href="ch03-04-control-flow.html"><strong aria-hidden="true">3.4.</strong> 3.4 Control Flow: if, otherwise, while, repeat</a></li></ol></li><li class="chapter-item expanded "><a href="ch04-00-collections-and-lists.html"><strong aria-hidden="true">4.</strong> 4. Natural Word Lists & Collections</a></li><li class="chapter-item expanded "><a href="ch05-00-dialogs-media-and-os.html"><strong aria-hidden="true">5.</strong> 5. Console Dialogs, Audio & System Utilities</a></li><li class="chapter-item expanded "><a href="ch06-00-graphics-and-gui.html"><strong aria-hidden="true">6.</strong> 6. Graphics & Windowing: 2D Canvas & GUI</a></li><li class="chapter-item expanded "><a href="ch07-00-managing-memory-and-gc.html"><strong aria-hidden="true">7.</strong> 7. Managing Memory & The Garbage Collector</a></li><li class="chapter-item expanded "><a href="ch08-00-pro-systems-mode.html"><strong aria-hidden="true">8.</strong> 8. Pro Systems Mode</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch08-01-directives.html"><strong aria-hidden="true">8.1.</strong> 8.1 Systems Philosophy & Directives</a></li><li class="chapter-item expanded "><a href="ch08-02-strict-typing.html"><strong aria-hidden="true">8.2.</strong> 8.2 Strict Static Typing</a></li><li class="chapter-item expanded "><a href="ch08-03-modular-stdlib.html"><strong aria-hidden="true">8.3.</strong> 8.3 The Modular Standard Library</a></li><li class="chapter-item expanded "><a href="ch08-04-pointers-and-memory.html"><strong aria-hidden="true">8.4.</strong> 8.4 Raw Pointers & Manual Memory</a></li><li class="chapter-item expanded "><a href="ch08-05-structs-and-ffi.html"><strong aria-hidden="true">8.5.</strong> 8.5 C-Compatible Structs & C FFI</a></li><li class="chapter-item expanded "><a href="ch08-06-multithreading-and-atomics.html"><strong aria-hidden="true">8.6.</strong> 8.6 Multithreading & Hardware Atomics</a></li><li class="chapter-item expanded "><a href="ch08-07-inline-asm-and-cycles.html"><strong aria-hidden="true">8.7.</strong> 8.7 Inline Assembly & CPU Cycle Profiling</a></li><li class="chapter-item expanded "><a href="ch08-08-bare-metal-freestanding.html"><strong aria-hidden="true">8.8.</strong> 8.8 Bare-Metal Freestanding Binaries</a></li></ol></li><li class="chapter-item expanded "><a href="ch09-00-compiler-architecture.html"><strong aria-hidden="true">9.</strong> 9. Compiler Architecture & Ecosystem</a></li><li class="chapter-item expanded "><a href="appendix-01-keywords-reference.html"><strong aria-hidden="true">10.</strong> Appendix A: Complete Keywords & Directives Reference</a></li><li class="chapter-item expanded "><a href="appendix-02-russian-guide.html" class="active"><strong aria-hidden="true">11.</strong> Приложение Б: Полное руководство на русском языке</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <!-- Track and set sidebar scroll position -->
+        <script>
+            var sidebarScrollbox = document.querySelector('#sidebar .sidebar-scrollbox');
+            sidebarScrollbox.addEventListener('click', function(e) {
+                if (e.target.tagName === 'A') {
+                    sessionStorage.setItem('sidebar-scroll', sidebarScrollbox.scrollTop);
+                }
+            }, { passive: true });
+            var sidebarScrollTop = sessionStorage.getItem('sidebar-scroll');
+            sessionStorage.removeItem('sidebar-scroll');
+            if (sidebarScrollTop) {
+                // preserve sidebar scroll position when navigating via links within sidebar
+                sidebarScrollbox.scrollTop = sidebarScrollTop;
+            } else {
+                // scroll sidebar to current active section when navigating via "next/previous chapter" buttons
+                var activeSection = document.querySelector('#sidebar .active');
+                if (activeSection) {
+                    activeSection.scrollIntoView({ block: 'center' });
+                }
+            }
+        </script>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">The Runvoid Programming Language</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/runvoid/runvoid" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="Приложение-Б-Полное-руководство-на-русском-языке"><a class="header" href="#Приложение-Б-Полное-руководство-на-русском-языке">Приложение Б: Полное руководство на русском языке</a></h1>
+<p>Добро пожаловать в официальную документацию языка <strong>Runvoid</strong>!
+Runvoid создан так, чтобы программирование было понятным, невероятно быстрым и приносящим удовольствие.</p>
+<hr />
+<h2 id="1-Быстрый-старт-за-5-минут"><a class="header" href="#1-Быстрый-старт-за-5-минут">1. Быстрый старт за 5 минут</a></h2>
+<h3 id="Первая-программа"><a class="header" href="#Первая-программа">Первая программа</a></h3>
+<p>Создайте файл <code>hello.rv</code>:</p>
+<pre><code class="language-runvoid">say "Привет, прекрасный мир Runvoid!"
+</code></pre>
+<p>Запустите прямо из консоли:</p>
+<pre><code class="language-bash">runvoid run hello.rv
+</code></pre>
+<h3 id="Переменные-Запомни"><a class="header" href="#Переменные-Запомни">Переменные («Запомни»)</a></h3>
+<p>В Runvoid переменные объявляются понятным словом <code>remember</code>:</p>
+<pre><code class="language-runvoid">remember player = "Алекс"
+remember score = 100
+
+say "Игрок: {player}, Очки: {score}"
+
+score = score + 50
+say "Новый счет: {score}"
+</code></pre>
+<h3 id="Ввод-пользователя-Спроси"><a class="header" href="#Ввод-пользователя-Спроси">Ввод пользователя («Спроси»)</a></h3>
+<pre><code class="language-runvoid">remember name = ask "Как зовут твоего героя? "
+say "Добро пожаловать в игру, {name}!"
+</code></pre>
+<h3 id="Условия-и-ветвления"><a class="header" href="#Условия-и-ветвления">Условия и ветвления</a></h3>
+<pre><code class="language-runvoid">remember gold = 75
+
+if gold &gt;= 100 {
+    say "Ты можешь купить легендарный меч!"
+} otherwise if gold &gt;= 50 {
+    say "Золота хватает на прочный щит."
+} otherwise {
+    say "Копи монеты, искатель приключений."
+}
+</code></pre>
+<hr />
+<h2 id="2-Разговорные-списки"><a class="header" href="#2-Разговорные-списки">2. Разговорные списки</a></h2>
+<p>Списки работают так же просто, как список покупок в блокноте:</p>
+<pre><code class="language-runvoid">remember inventory = "Факел", "Щит", "Зелье здоровья"
+
+add "Магическое кольцо" to inventory
+remove "Щит" from inventory
+
+if inventory has "Факел" {
+    say "В подземелье будет светло!"
+}
+
+say "Всего предметов: {count inventory}"
+
+for every item in inventory {
+    say " - {item}"
+}
+</code></pre>
+<hr />
+<h2 id="3-Системный-pro-режим-add-advanced"><a class="header" href="#3-Системный-pro-режим-add-advanced">3. Системный Pro-режим (<code>add Advanced</code>)</a></h2>
+<p>Для максимальной производительности, прямого доступа к регистрам процессора и ручного управления памятью:</p>
+<pre><code class="language-runvoid">remove garbageC   # Отключает сборщик мусора
+remove Basic      # Включает строгую статическую типизацию
+add Advanced      # Включает системные возможности
+use ior
+use mem
+
+# Сырые указатели:
+remember val: Int = 500
+remember ptr: Ptr = addr val
+
+say @ptr       // 500
+@ptr = 750     // запись по адресу
+say val        // 750
+
+# Ручное выделение в куче:
+remember heap: Ptr = alloc 64
+@heap = 9999
+free heap
+
+# Встроенный ассемблер:
+asm {
+    mov rax, 42
+    imul rax, 10
+}
+</code></pre>
+<hr />
+<h2 id="4-bare-metal-режим-без-ОС"><a class="header" href="#4-bare-metal-режим-без-ОС">4. Bare-Metal режим без ОС</a></h2>
+<p>Сборка бинарника без libc и без сторонних рантаймов:</p>
+<pre><code class="language-runvoid">remove garbageC
+remove Basic
+remove Linux
+add Advanced
+add Freestanding
+
+asm {
+    mov rax, 60    ; Linux exit syscall
+    xor rdi, rdi   ; code 0
+    syscall
+}
+</code></pre>
+<p>Компилятор генерирует точку входа <code>_start</code> и компонует автономный ELF напрямую через <code>ld -s</code>.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="appendix-01-keywords-reference.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="appendix-01-keywords-reference.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>

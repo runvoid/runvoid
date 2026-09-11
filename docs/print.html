@@ -1,0 +1,1081 @@
+<!DOCTYPE HTML>
+<html lang="en" class="navy" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>The Runvoid Programming Language</title>
+        <meta name="robots" content="noindex">
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body class="sidebar-visible no-js">
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "navy";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('navy')
+            html.classList.add(theme);
+            var body = document.querySelector('body');
+            body.classList.remove('no-js')
+            body.classList.add('js');
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var body = document.querySelector('body');
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            body.classList.remove('sidebar-visible');
+            body.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="intro.html">Introduction</a></li><li class="chapter-item expanded "><a href="ch01-00-getting-started.html"><strong aria-hidden="true">1.</strong> 1. Getting Started</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch01-01-installation.html"><strong aria-hidden="true">1.1.</strong> 1.1 Installation & System Requirements</a></li><li class="chapter-item expanded "><a href="ch01-02-hello-world.html"><strong aria-hidden="true">1.2.</strong> 1.2 Hello, World!</a></li><li class="chapter-item expanded "><a href="ch01-03-cli-tooling.html"><strong aria-hidden="true">1.3.</strong> 1.3 The Compiler & CLI Tooling</a></li></ol></li><li class="chapter-item expanded "><a href="ch02-00-guessing-game-tutorial.html"><strong aria-hidden="true">2.</strong> 2. Programming a Guessing Game</a></li><li class="chapter-item expanded "><a href="ch03-00-common-programming-concepts.html"><strong aria-hidden="true">3.</strong> 3. Common Programming Concepts</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch03-01-variables-and-mutability.html"><strong aria-hidden="true">3.1.</strong> 3.1 Variables and Mutability</a></li><li class="chapter-item expanded "><a href="ch03-02-data-types.html"><strong aria-hidden="true">3.2.</strong> 3.2 Data Types & Expressions</a></li><li class="chapter-item expanded "><a href="ch03-03-functions.html"><strong aria-hidden="true">3.3.</strong> 3.3 Functions & Actions</a></li><li class="chapter-item expanded "><a href="ch03-04-control-flow.html"><strong aria-hidden="true">3.4.</strong> 3.4 Control Flow: if, otherwise, while, repeat</a></li></ol></li><li class="chapter-item expanded "><a href="ch04-00-collections-and-lists.html"><strong aria-hidden="true">4.</strong> 4. Natural Word Lists & Collections</a></li><li class="chapter-item expanded "><a href="ch05-00-dialogs-media-and-os.html"><strong aria-hidden="true">5.</strong> 5. Console Dialogs, Audio & System Utilities</a></li><li class="chapter-item expanded "><a href="ch06-00-graphics-and-gui.html"><strong aria-hidden="true">6.</strong> 6. Graphics & Windowing: 2D Canvas & GUI</a></li><li class="chapter-item expanded "><a href="ch07-00-managing-memory-and-gc.html"><strong aria-hidden="true">7.</strong> 7. Managing Memory & The Garbage Collector</a></li><li class="chapter-item expanded "><a href="ch08-00-pro-systems-mode.html"><strong aria-hidden="true">8.</strong> 8. Pro Systems Mode</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch08-01-directives.html"><strong aria-hidden="true">8.1.</strong> 8.1 Systems Philosophy & Directives</a></li><li class="chapter-item expanded "><a href="ch08-02-strict-typing.html"><strong aria-hidden="true">8.2.</strong> 8.2 Strict Static Typing</a></li><li class="chapter-item expanded "><a href="ch08-03-modular-stdlib.html"><strong aria-hidden="true">8.3.</strong> 8.3 The Modular Standard Library</a></li><li class="chapter-item expanded "><a href="ch08-04-pointers-and-memory.html"><strong aria-hidden="true">8.4.</strong> 8.4 Raw Pointers & Manual Memory</a></li><li class="chapter-item expanded "><a href="ch08-05-structs-and-ffi.html"><strong aria-hidden="true">8.5.</strong> 8.5 C-Compatible Structs & C FFI</a></li><li class="chapter-item expanded "><a href="ch08-06-multithreading-and-atomics.html"><strong aria-hidden="true">8.6.</strong> 8.6 Multithreading & Hardware Atomics</a></li><li class="chapter-item expanded "><a href="ch08-07-inline-asm-and-cycles.html"><strong aria-hidden="true">8.7.</strong> 8.7 Inline Assembly & CPU Cycle Profiling</a></li><li class="chapter-item expanded "><a href="ch08-08-bare-metal-freestanding.html"><strong aria-hidden="true">8.8.</strong> 8.8 Bare-Metal Freestanding Binaries</a></li></ol></li><li class="chapter-item expanded "><a href="ch09-00-compiler-architecture.html"><strong aria-hidden="true">9.</strong> 9. Compiler Architecture & Ecosystem</a></li><li class="chapter-item expanded "><a href="appendix-01-keywords-reference.html"><strong aria-hidden="true">10.</strong> Appendix A: Complete Keywords & Directives Reference</a></li><li class="chapter-item expanded "><a href="appendix-02-russian-guide.html"><strong aria-hidden="true">11.</strong> Приложение Б: Полное руководство на русском языке</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <!-- Track and set sidebar scroll position -->
+        <script>
+            var sidebarScrollbox = document.querySelector('#sidebar .sidebar-scrollbox');
+            sidebarScrollbox.addEventListener('click', function(e) {
+                if (e.target.tagName === 'A') {
+                    sessionStorage.setItem('sidebar-scroll', sidebarScrollbox.scrollTop);
+                }
+            }, { passive: true });
+            var sidebarScrollTop = sessionStorage.getItem('sidebar-scroll');
+            sessionStorage.removeItem('sidebar-scroll');
+            if (sidebarScrollTop) {
+                // preserve sidebar scroll position when navigating via links within sidebar
+                sidebarScrollbox.scrollTop = sidebarScrollTop;
+            } else {
+                // scroll sidebar to current active section when navigating via "next/previous chapter" buttons
+                var activeSection = document.querySelector('#sidebar .active');
+                if (activeSection) {
+                    activeSection.scrollIntoView({ block: 'center' });
+                }
+            }
+        </script>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">The Runvoid Programming Language</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/runvoid/runvoid" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="introduction"><a class="header" href="#introduction">Introduction</a></h1>
+<blockquote>
+<p>Note: This book covers <strong>Runvoid 0.2.0</strong>.</p>
+</blockquote>
+<p>Welcome to <strong>The Runvoid Programming Language</strong>, an official book on Runvoid. Runvoid is an innovative compiled programming language designed to unite the conversational readability of natural English with the raw performance and micro-footprint of pure x86_64 machine code.</p>
+<h2 id="why-runvoid"><a class="header" href="#why-runvoid">Why Runvoid?</a></h2>
+<p>For decades, the programming world has been divided into two camps:</p>
+<ol>
+<li><strong>High-Level Interpreted Languages (Python, Ruby, JavaScript):</strong> They offer readable syntax and rapid prototyping, but rely on heavy runtimes, consume hundreds of megabytes of RAM, and crawl through slow virtual machines.</li>
+<li><strong>Low-Level Systems Languages (C, C++, Rust):</strong> They produce blazing-fast machine code and 15 KB binaries, but feature steep learning curves, complex type systems, and dense syntax that intimidates newcomers.</li>
+</ol>
+<p><strong>Runvoid bridges this divide.</strong></p>
+<ul>
+<li>Its code reads like plain English sentences: <code>say "Hello"</code>, <code>remember score = 100</code>, <code>repeat 5 times</code>, <code>for every item in backpack</code>, <code>if file "save.dat" exists</code>.</li>
+<li>Yet Runvoid is <strong>not</strong> an interpreted script: its native compiler, written in <strong>Rust</strong>, translates code directly into <strong>pure x86_64 NASM assembly</strong>, compiling into standalone, dependency-free Linux ELF executables as small as <strong>15 KB</strong>.</li>
+<li>When you require low-level systems control, simple compiler directives disable the garbage collector (<code>remove garbageC</code>), enforce strict static typing (<code>remove Basic</code>), and unlock raw pointers, hardware inline assembly, CPU cycle benchmarking, and bare-metal freestanding binaries (<code>add Advanced</code>, <code>add Freestanding</code>).</li>
+</ul>
+<h2 id="who-this-book-is-for"><a class="header" href="#who-this-book-is-for">Who This Book Is For</a></h2>
+<ul>
+<li><strong>Novices and Beginners:</strong> Anyone learning to program can immediately express ideas without struggling with obscure punctuation, compiler quirks, or environment setup nightmares.</li>
+<li><strong>Educators:</strong> Teach real programming concepts—variables, control flow, functions, memory, threads—in an intuitive language that produces real native machine code.</li>
+<li><strong>Systems Developers:</strong> Build ultra-fast, dependency-free CLI utilities, microservices, or bare-metal operating system modules with direct hardware control.</li>
+</ul>
+<p>Let’s dive in!</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="1-getting-started"><a class="header" href="#1-getting-started">1. Getting Started</a></h1>
+<p>Let’s start our journey with Runvoid! In this chapter, we’ll discuss:</p>
+<ul>
+<li>Installing Runvoid on Linux x86_64 systems</li>
+<li>Writing a program that prints <code>Hello, world!</code></li>
+<li>Using <code>runvoid run</code> and <code>runvoid build</code> to execute and compile programs</li>
+<li>Exploring the developer tooling, code formatter, and cheat sheet</li>
+</ul>
+<p>Let’s get started!</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="11-installation--system-requirements"><a class="header" href="#11-installation--system-requirements">1.1 Installation &amp; System Requirements</a></h1>
+<p>Runvoid compiles code down to native Linux x86_64 ELF binaries. To run the compiler, ensure you have the standard build toolchain installed on your Linux system.</p>
+<h2 id="system-prerequisites"><a class="header" href="#system-prerequisites">System Prerequisites</a></h2>
+<p>Runvoid requires:</p>
+<ul>
+<li>A Linux operating system on x86_64 architecture</li>
+<li><strong>Rust Toolchain:</strong> <code>rustc</code> and <code>cargo</code> (&gt;= 1.80)</li>
+<li><strong>Assembler:</strong> <code>nasm</code> (&gt;= 2.15)</li>
+<li><strong>Linker:</strong> <code>gcc</code> or GNU <code>ld</code></li>
+<li><strong>X11 Libraries:</strong> <code>libX11</code> (only needed if building GUI / Screen canvas applications)</li>
+</ul>
+<h3 id="installing-prerequisites-by-distribution"><a class="header" href="#installing-prerequisites-by-distribution">Installing Prerequisites by Distribution:</a></h3>
+<h4 id="arch-linux"><a class="header" href="#arch-linux">Arch Linux:</a></h4>
+<pre><code class="language-bash">sudo pacman -S rust cargo nasm gcc libx11
+</code></pre>
+<h4 id="ubuntu--debian--linux-mint"><a class="header" href="#ubuntu--debian--linux-mint">Ubuntu / Debian / Linux Mint:</a></h4>
+<pre><code class="language-bash">sudo apt update &amp;&amp; sudo apt install -y rustc cargo nasm gcc libx11-dev
+</code></pre>
+<h4 id="fedora"><a class="header" href="#fedora">Fedora:</a></h4>
+<pre><code class="language-bash">sudo dnf install -y rust cargo nasm gcc libX11-devel
+</code></pre>
+<h2 id="installing-runvoid"><a class="header" href="#installing-runvoid">Installing Runvoid</a></h2>
+<p>Clone the repository and build the release binary:</p>
+<pre><code class="language-bash">git clone https://github.com/runvoid/runvoid.git
+cd runvoid
+cargo build --release
+</code></pre>
+<p>Once compilation completes, copy the executable to your path:</p>
+<pre><code class="language-bash">sudo cp target/release/runvoid /usr/local/bin/
+</code></pre>
+<p>Verify your installation:</p>
+<pre><code class="language-bash">runvoid --version
+</code></pre>
+<p>You should see output similar to:</p>
+<pre><code class="language-text">runvoid 0.2.0
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="12-hello-world"><a class="header" href="#12-hello-world">1.2 Hello, World!</a></h1>
+<p>Now that you’ve installed Runvoid, let’s write your first program. It’s traditional when learning a new language to write a little program that prints the text <code>Hello, world!</code> to the screen, so we’ll do the same here!</p>
+<h2 id="writing-the-program"><a class="header" href="#writing-the-program">Writing the Program</a></h2>
+<p>Create a new file named <code>main.rv</code>:</p>
+<pre><code class="language-runvoid">say "Hello, world!"
+</code></pre>
+<p>Save the file. That’s the entire program! No <code>fn main()</code>, no headers, no class wrappers.</p>
+<h2 id="running-the-program"><a class="header" href="#running-the-program">Running the Program</a></h2>
+<p>To run your program immediately without generating lingering binary files, use the <code>run</code> command:</p>
+<pre><code class="language-bash">$ runvoid run main.rv
+Hello, world!
+</code></pre>
+<p>If <code>Hello, world!</code> printed to your terminal, congratulations! You have officially written and run your first Runvoid program.</p>
+<h2 id="anatomy-of-a-runvoid-program"><a class="header" href="#anatomy-of-a-runvoid-program">Anatomy of a Runvoid Program</a></h2>
+<p>Let’s review the <code>Hello, world!</code> program in detail.</p>
+<pre><code class="language-runvoid">say "Hello, world!"
+</code></pre>
+<ul>
+<li><code>say</code> is a built-in statement in Runvoid. It tells the computer to print whatever follows to the screen, followed by a new line.</li>
+<li><code>"Hello, world!"</code> is a string literal.</li>
+<li>When compiled, the Runvoid compiler transforms <code>say "Hello, world!"</code> into an optimized sequence of x86_64 assembly instructions that call the runtime write subroutine via Linux syscalls.</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="13-the-compiler--cli-tooling"><a class="header" href="#13-the-compiler--cli-tooling">1.3 The Compiler &amp; CLI Tooling</a></h1>
+<p>The <code>runvoid</code> command-line tool provides everything you need to develop, format, benchmark, and deploy native applications.</p>
+<h2 id="key-subcommands"><a class="header" href="#key-subcommands">Key Subcommands</a></h2>
+<h3 id="1-runvoid-run-filerv"><a class="header" href="#1-runvoid-run-filerv">1. <code>runvoid run &lt;file.rv&gt;</code></a></h3>
+<p>Compiles your code directly into memory and executes it immediately:</p>
+<pre><code class="language-bash">$ runvoid run hello.rv
+</code></pre>
+<h3 id="2-runvoid-build-filerv--o-name"><a class="header" href="#2-runvoid-build-filerv--o-name">2. <code>runvoid build &lt;file.rv&gt; [-o &lt;name&gt;]</code></a></h3>
+<p>Builds an optimized standalone Linux ELF executable:</p>
+<pre><code class="language-bash">$ runvoid build hello.rv -o my_app
+$ ./my_app
+</code></pre>
+<p>Add <code>--verbose</code> to inspect the compilation stages:</p>
+<pre><code class="language-bash">$ runvoid build hello.rv -o my_app --verbose
+</code></pre>
+<h3 id="3-runvoid-emit-asm-filerv"><a class="header" href="#3-runvoid-emit-asm-filerv">3. <code>runvoid emit-asm &lt;file.rv&gt;</code></a></h3>
+<p>Inspect the generated x86_64 NASM assembly code directly:</p>
+<pre><code class="language-bash">$ runvoid emit-asm hello.rv
+</code></pre>
+<h3 id="4-runvoid-fmt--w-filerv"><a class="header" href="#4-runvoid-fmt--w-filerv">4. <code>runvoid fmt [-w] &lt;file.rv&gt;</code></a></h3>
+<p>Automatically format and indent your code:</p>
+<pre><code class="language-bash">$ runvoid fmt hello.rv        # Print formatted code
+$ runvoid fmt -w hello.rv     # Overwrite file in-place
+</code></pre>
+<h3 id="5-runvoid-new-gameguiscript-namerv"><a class="header" href="#5-runvoid-new-gameguiscript-namerv">5. <code>runvoid new &lt;game|gui|script&gt; &lt;name.rv&gt;</code></a></h3>
+<p>Scaffold beginner-friendly starter projects:</p>
+<pre><code class="language-bash">$ runvoid new game arcade.rv    # 2D screen game template
+$ runvoid new gui dashboard.rv  # Desktop GUI template
+$ runvoid new script tool.rv    # Conversational script template
+</code></pre>
+<h3 id="6-runvoid-cheat"><a class="header" href="#6-runvoid-cheat">6. <code>runvoid cheat</code></a></h3>
+<p>Displays an interactive color-coded terminal cheat sheet anytime you need a quick syntax reminder.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="2-programming-a-guessing-game"><a class="header" href="#2-programming-a-guessing-game">2. Programming a Guessing Game</a></h1>
+<p>Let’s jump into Runvoid by working through a hands-on project together! This chapter introduces you to a few common Runvoid concepts by showing you how to use them in a real program. You’ll learn about <code>remember</code>, <code>ask</code>, <code>say</code>, string interpolation <code>{...}</code>, <code>random ... to ...</code>, and control flow with <code>while</code>, <code>if</code>, and <code>stop</code>.</p>
+<h2 id="what-were-building"><a class="header" href="#what-were-building">What We’re Building</a></h2>
+<p>We will implement a classic beginner programming problem: a guessing game. Here’s how it works: the program will generate a random integer between 1 and 100. It will then prompt the player to enter a guess. Upon a guess being entered, the program will indicate whether the guess is too low or too high. If the guess is correct, the game will print a congratulatory message and exit.</p>
+<h2 id="setting-up-the-game"><a class="header" href="#setting-up-the-game">Setting Up the Game</a></h2>
+<p>Create a new file named <code>guessing_game.rv</code>:</p>
+<pre><code class="language-runvoid">say "=== Guess the Number! ==="
+
+remember secret_number = random 1 to 100
+remember attempts = 0
+remember guessed = false
+
+while not guessed {
+    remember guess = ask "Please input your guess: "
+    attempts = attempts + 1
+
+    if guess &lt; secret_number {
+        say yellow "Too small! Try higher."
+    } otherwise if guess &gt; secret_number {
+        say yellow "Too big! Try lower."
+    } otherwise {
+        say green "You win! You guessed the number in {attempts} attempts!"
+        guessed = true
+    }
+}
+</code></pre>
+<h2 id="running-the-guessing-game"><a class="header" href="#running-the-guessing-game">Running the Guessing Game</a></h2>
+<p>Run your game from the terminal:</p>
+<pre><code class="language-bash">$ runvoid run guessing_game.rv
+=== Guess the Number! ===
+Please input your guess: 50
+Too small! Try higher.
+Please input your guess: 75
+Too big! Try lower.
+Please input your guess: 63
+You win! You guessed the number in 3 attempts!
+</code></pre>
+<h2 id="how-it-works"><a class="header" href="#how-it-works">How It Works</a></h2>
+<ol>
+<li><strong><code>remember secret_number = random 1 to 100</code></strong>: Generates a random 64-bit integer between 1 and 100 using the Linux kernel’s high-entropy random source.</li>
+<li><strong><code>remember guess = ask "..."</code></strong>: Prompts the user and reads their input from standard input.</li>
+<li><strong><code>while not guessed</code></strong>: Runs the loop until <code>guessed</code> becomes <code>true</code>.</li>
+<li><strong><code>if / otherwise if / otherwise</code></strong>: Compares the player’s guess to the secret number and outputs colored terminal feedback (<code>say yellow</code>, <code>say green</code>).</li>
+<li><strong><code>{attempts}</code></strong>: String interpolation dynamically inserts the current attempt counter directly into the victory message.</li>
+</ol>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="3-common-programming-concepts"><a class="header" href="#3-common-programming-concepts">3. Common Programming Concepts</a></h1>
+<p>This chapter covers concepts that appear in almost every programming language and how they work in Runvoid. Many programming languages have much in common at their core. None of the concepts presented in this chapter are unique to Runvoid, but we’ll discuss them in the context of Runvoid’s conversational English philosophy.</p>
+<p>Specifically, you’ll learn about:</p>
+<ul>
+<li>Variables and mutability (<code>remember</code>, reassignment)</li>
+<li>Data types (Integers, Strings, Booleans)</li>
+<li>Functions and actions (<code>action</code>, <code>give</code>)</li>
+<li>Control flow (<code>if</code>, <code>otherwise</code>, <code>while</code>, <code>repeat</code>)</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="31-variables-and-mutability"><a class="header" href="#31-variables-and-mutability">3.1 Variables and Mutability</a></h1>
+<p>In Runvoid, you declare new variables using the <code>remember</code> keyword. This conversational keyword reflects the intuitive idea of asking the computer to keep a value in mind for future use:</p>
+<pre><code class="language-runvoid">remember count = 5
+say "The count is: {count}"
+</code></pre>
+<h2 id="changing-variable-values"><a class="header" href="#changing-variable-values">Changing Variable Values</a></h2>
+<p>Once a variable has been declared with <code>remember</code>, you can update its value by simply assigning to it:</p>
+<pre><code class="language-runvoid">remember health = 100
+say "Initial health: {health}"
+
+health = health - 20
+say "Health after taking damage: {health}"
+</code></pre>
+<blockquote>
+<p><strong>Note:</strong> You only use <code>remember</code> when first introducing a variable. When modifying an existing variable, write <code>name = new_value</code>.</p>
+</blockquote>
+<h2 id="comments"><a class="header" href="#comments">Comments</a></h2>
+<p>Runvoid supports both C-style <code>//</code> comments and scripting-style <code>#</code> comments:</p>
+<pre><code class="language-runvoid">// This is a line comment
+# This is also a line comment
+
+remember speed = 60 // kilometers per hour
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="32-data-types--expressions"><a class="header" href="#32-data-types--expressions">3.2 Data Types &amp; Expressions</a></h1>
+<p>Runvoid is a statically compiled language with automatic type inference in beginner mode. You do not need to annotate types; the compiler determines them for you.</p>
+<h2 id="scalar-types"><a class="header" href="#scalar-types">Scalar Types</a></h2>
+<p>Runvoid includes three primary scalar types:</p>
+<ol>
+<li><strong>Integers (<code>Int</code>):</strong> 64-bit signed integers (<code>-9223372036854775808</code> to <code>9223372036854775807</code>).</li>
+<li><strong>Booleans (<code>Bool</code>):</strong> <code>true</code> or <code>false</code>.</li>
+<li><strong>Strings (<code>String</code>):</strong> UTF-8 compatible null-terminated strings with an 8-byte length prefix.</li>
+</ol>
+<pre><code class="language-runvoid">remember count = 42
+remember title = "Engine Core"
+remember is_active = true
+</code></pre>
+<h2 id="string-interpolation"><a class="header" href="#string-interpolation">String Interpolation</a></h2>
+<p>Embed any valid expression within double quotes using curly braces <code>{...}</code>:</p>
+<pre><code class="language-runvoid">remember a = 10
+remember b = 25
+say "The sum of {a} and {b} is {a + b}!"
+</code></pre>
+<h2 id="conversational-comparisons--logic"><a class="header" href="#conversational-comparisons--logic">Conversational Comparisons &amp; Logic</a></h2>
+<p>Runvoid accepts both natural English words and traditional programming symbols:</p>
+<ul>
+<li><code>is</code> or <code>==</code>: Checks equality (<code>if score is 100</code>)</li>
+<li><code>is not</code> or <code>!=</code>: Checks inequality (<code>if health is not 0</code>)</li>
+<li><code>and</code>: Logical conjunction (<code>if ready and valid</code>)</li>
+<li><code>or</code>: Logical disjunction (<code>if admin or owner</code>)</li>
+<li><code>not</code>: Logical negation (<code>if not completed</code>)</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="33-functions--actions"><a class="header" href="#33-functions--actions">3.3 Functions &amp; Actions</a></h1>
+<p>Functions are prevalent in Runvoid code. You’ve already seen one of the most important built-in actions in the language: <code>say</code>.</p>
+<h2 id="defining-functions"><a class="header" href="#defining-functions">Defining Functions</a></h2>
+<p>In Runvoid, you define functions using the <code>action</code> keyword. Values are returned using <code>give</code>:</p>
+<pre><code class="language-runvoid">action add_numbers(x, y) {
+    give x + y
+}
+
+remember total = add_numbers(15, 30)
+say "15 + 30 = {total}"
+</code></pre>
+<h2 id="functions-with-parameters"><a class="header" href="#functions-with-parameters">Functions with Parameters</a></h2>
+<p>Parameters allow you to pass values into functions. When a function executes, its arguments are passed using standard x86_64 System V AMD64 ABI registers (<code>rdi</code>, <code>rsi</code>, <code>rdx</code>, etc.), ensuring zero overhead:</p>
+<pre><code class="language-runvoid">action greet(user) {
+    say "Hello, {user}! Welcome back."
+}
+
+greet("Alex")
+greet("Sarah")
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="34-control-flow-if-otherwise-while-repeat"><a class="header" href="#34-control-flow-if-otherwise-while-repeat">3.4 Control Flow: if, otherwise, while, repeat</a></h1>
+<p>The ability to run some code depending on whether a condition is true and to run some code repeatedly while a condition is true are basic building blocks in most programming languages. The most common constructs that let you control the flow of execution of Runvoid code are <code>if</code> expressions and loops.</p>
+<h2 id="branching-if-and-otherwise"><a class="header" href="#branching-if-and-otherwise">Branching: <code>if</code> and <code>otherwise</code></a></h2>
+<p>An <code>if</code> block allows you to branch your code depending on conditions:</p>
+<pre><code class="language-runvoid">remember number = 6
+
+if number % 4 is 0 {
+    say "number is divisible by 4"
+} otherwise if number % 3 is 0 {
+    say "number is divisible by 3"
+} otherwise if number % 2 is 0 {
+    say "number is divisible by 2"
+} otherwise {
+    say "number is not divisible by 4, 3, or 2"
+}
+</code></pre>
+<h2 id="fixed-repetition-repeat"><a class="header" href="#fixed-repetition-repeat">Fixed Repetition: <code>repeat</code></a></h2>
+<p>To run a block of code a set number of times:</p>
+<pre><code class="language-runvoid">repeat 3 times {
+    say "Processing..."
+}
+</code></pre>
+<p>You can optionally bind the current iteration index (0-indexed):</p>
+<pre><code class="language-runvoid">repeat 5 as index {
+    say "Step {index}"
+}
+</code></pre>
+<h2 id="conditional-loops-while"><a class="header" href="#conditional-loops-while">Conditional Loops: <code>while</code></a></h2>
+<pre><code class="language-runvoid">remember count = 3
+while count &gt; 0 {
+    say "{count}..."
+    count = count - 1
+}
+say "LIFTOFF!"
+</code></pre>
+<h2 id="loop-controls-stop-and-skip"><a class="header" href="#loop-controls-stop-and-skip">Loop Controls: <code>stop</code> and <code>skip</code></a></h2>
+<ul>
+<li><code>stop</code>: Breaks out of the current loop immediately.</li>
+<li><code>skip</code>: Skips the rest of the current iteration and begins the next.</li>
+</ul>
+<pre><code class="language-runvoid">repeat 10 as step {
+    if step is 2 {
+        skip
+    }
+    if step is 5 {
+        stop
+    }
+    say "Step: {step}"
+}
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="4-natural-word-lists--collections"><a class="header" href="#4-natural-word-lists--collections">4. Natural Word Lists &amp; Collections</a></h1>
+<p>Most programming languages feature arrays, vectors, or lists. In Runvoid, collections are designed to read like conversational English phrases.</p>
+<h2 id="creating-word-lists"><a class="header" href="#creating-word-lists">Creating Word Lists</a></h2>
+<p>Create a collection simply by separating elements with commas:</p>
+<pre><code class="language-runvoid">remember backpack = "Torch", "Shield", "Health Potion"
+</code></pre>
+<h2 id="adding-and-removing-elements"><a class="header" href="#adding-and-removing-elements">Adding and Removing Elements</a></h2>
+<pre><code class="language-runvoid"># Appending to a list:
+add "Magic Ring" to backpack
+
+# Removing from a list:
+remove "Shield" from backpack
+</code></pre>
+<h2 id="checking-membership-has"><a class="header" href="#checking-membership-has">Checking Membership: <code>has</code></a></h2>
+<pre><code class="language-runvoid">if backpack has "Torch" {
+    say "You have light in dark caverns!"
+}
+</code></pre>
+<h2 id="counting-elements"><a class="header" href="#counting-elements">Counting Elements</a></h2>
+<pre><code class="language-runvoid">say "Total gear items: {count backpack}"
+</code></pre>
+<h2 id="iterating-with-for-every--in"><a class="header" href="#iterating-with-for-every--in">Iterating with <code>for every ... in</code></a></h2>
+<p>Iterate through every element without managing indices or boundaries:</p>
+<pre><code class="language-runvoid">for every item in backpack {
+    say " - {item}"
+}
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="5-console-dialogs-audio--system-utilities"><a class="header" href="#5-console-dialogs-audio--system-utilities">5. Console Dialogs, Audio &amp; System Utilities</a></h1>
+<p>Runvoid includes batteries-included primitives for interacting with the user, playing sounds, querying the web, and manipulating files.</p>
+<h2 id="interactive-menus-choose"><a class="header" href="#interactive-menus-choose">Interactive Menus: <code>choose</code></a></h2>
+<p>Present an interactive arrow-key selection menu directly inside the terminal:</p>
+<pre><code class="language-runvoid">remember weapon = choose "Select your primary weapon:", "Iron Sword", "Elven Bow", "Fire Staff"
+say "Equipped weapon: {weapon}"
+</code></pre>
+<h2 id="hidden-passwords-ask-hidden"><a class="header" href="#hidden-passwords-ask-hidden">Hidden Passwords: <code>ask hidden</code></a></h2>
+<p>Read sensitive credentials without echoing keystrokes to the terminal:</p>
+<pre><code class="language-runvoid">remember token = ask hidden "Enter access key: "
+</code></pre>
+<h2 id="dialog-boxes--confirmations"><a class="header" href="#dialog-boxes--confirmations">Dialog Boxes &amp; Confirmations</a></h2>
+<pre><code class="language-runvoid">remember proceed = ask user "Would you like to overwrite existing files?"
+if proceed {
+    say "Proceeding with write..."
+}
+
+alert "Operation completed successfully!"
+</code></pre>
+<h2 id="terminal-bell--text-to-speech"><a class="header" href="#terminal-bell--text-to-speech">Terminal Bell &amp; Text-to-Speech</a></h2>
+<pre><code class="language-runvoid">beep                      # Terminal bell chime
+speak "Mission completed" # System text-to-speech
+</code></pre>
+<h2 id="file-io--filesystem-operations"><a class="header" href="#file-io--filesystem-operations">File I/O &amp; Filesystem Operations</a></h2>
+<pre><code class="language-runvoid"># Direct file reading and writing:
+write "Runvoid v0.2.0 data" into "log.txt"
+remember content = read "log.txt"
+say content
+
+# Directories and files:
+create folder "backups"
+copy file "log.txt" to "backups/log.txt"
+delete file "log.txt"
+
+if file "backups/log.txt" exists {
+    say "Backup exists on disk."
+}
+</code></pre>
+<h2 id="web-networking"><a class="header" href="#web-networking">Web Networking</a></h2>
+<pre><code class="language-runvoid">download "https://runvoid.org/logo.png" into "logo.png"
+remember api_response = read web "https://api.github.com"
+</code></pre>
+<h2 id="text-transforms--performance-timers"><a class="header" href="#text-transforms--performance-timers">Text Transforms &amp; Performance Timers</a></h2>
+<pre><code class="language-runvoid">remember title = "   The Great Kingdom   "
+make title uppercase    # "   THE GREAT KINGDOM   "
+make title lowercase    # "   the great kingdom   "
+make title trim         # "The Great Kingdom"
+
+remember replaced = replace "Kingdom" with "Empire" in title
+
+# Benchmarking in milliseconds:
+measure time {
+    remember count = 0
+    repeat 1000000 as i {
+        count = count + 1
+    }
+}
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="6-graphics--windowing-2d-canvas--gui"><a class="header" href="#6-graphics--windowing-2d-canvas--gui">6. Graphics &amp; Windowing: 2D Canvas &amp; GUI</a></h1>
+<p>Runvoid features built-in graphics windowing, enabling developers to build arcade games and native desktop panels without installing heavyweight third-party frameworks.</p>
+<h2 id="hardware-2d-screen-canvas"><a class="header" href="#hardware-2d-screen-canvas">Hardware 2D Screen Canvas</a></h2>
+<p>Open an accelerated 2D graphics window powered by the native X11 engine:</p>
+<pre><code class="language-runvoid">screen "Arcade 2D", 640, 480 {
+    draw box at 0, 0, size 640, 480, color "black"
+    draw circle at 320, 240, size 50, color "cyan"
+    draw line from 0, 0 to 640, 480, color "red"
+    draw text "Player 1 Ready", at 240, 50, color "yellow"
+}
+</code></pre>
+<p>Primitive drawing commands include:</p>
+<ul>
+<li><code>draw box at &lt;x&gt;, &lt;y&gt;, size &lt;w&gt;, &lt;h&gt;, color &lt;name&gt;</code></li>
+<li><code>draw circle at &lt;x&gt;, &lt;y&gt;, size &lt;radius&gt;, color &lt;name&gt;</code></li>
+<li><code>draw line from &lt;x1&gt;, &lt;y1&gt; to &lt;x2&gt;, &lt;y2&gt;, color &lt;name&gt;</code></li>
+<li><code>draw text &lt;str&gt;, at &lt;x&gt;, &lt;y&gt;, color &lt;name&gt;</code></li>
+</ul>
+<h2 id="declarative-desktop-windows-gui"><a class="header" href="#declarative-desktop-windows-gui">Declarative Desktop Windows (GUI)</a></h2>
+<p>Create desktop utility windows with interactive widgets:</p>
+<pre><code class="language-runvoid">window "Preferences Panel", 450, 300 {
+    label "Engine Configuration:"
+    checkbox "Enable Sound Effects", 1
+    checkbox "Fullscreen Display", 0
+
+    button "Apply Settings" {
+        say "Settings updated!"
+    }
+}
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="7-managing-memory--the-garbage-collector"><a class="header" href="#7-managing-memory--the-garbage-collector">7. Managing Memory &amp; The Garbage Collector</a></h1>
+<p>Understanding memory management is vital for systems programming. Runvoid offers two distinct memory paradigms: an automatic Garbage Collector for beginners, and a zero-runtime manual model for systems engineers.</p>
+<h2 id="automatic-mark-and-sweep-garbage-collector"><a class="header" href="#automatic-mark-and-sweep-garbage-collector">Automatic Mark-and-Sweep Garbage Collector</a></h2>
+<p>By default, all dynamically allocated strings and word lists in Runvoid are managed by a conservative <strong>Mark-and-Sweep Garbage Collector</strong> built directly into the native runtime:</p>
+<ul>
+<li>Allocations are tracked in a lightweight pool.</li>
+<li>When memory pressure increases, the GC traverses the call stack and data references to free unused allocations.</li>
+<li>Beginners never need to worry about memory leaks, double-frees, or segmentation faults.</li>
+</ul>
+<h2 id="disabling-the-garbage-collector-remove-garbagec"><a class="header" href="#disabling-the-garbage-collector-remove-garbagec">Disabling the Garbage Collector: <code>remove garbageC</code></a></h2>
+<p>For programs requiring deterministic zero-pause execution, you can completely remove the garbage collection runtime:</p>
+<pre><code class="language-runvoid">remove garbageC
+</code></pre>
+<p>When <code>remove garbageC</code> is declared at the top of your program:</p>
+<ul>
+<li>The entire GC tracking subsystem is stripped from the compiled binary.</li>
+<li>Allocations bypass GC tracking and use a fast direct heap allocator.</li>
+<li>Binaries become smaller and exhibit predictable execution latency.</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="8-pro-systems-mode"><a class="header" href="#8-pro-systems-mode">8. Pro Systems Mode</a></h1>
+<p>When your project outgrows high-level conveniences and demands direct hardware manipulation, strict static typing, and microsecond-level determinism, Runvoid transforms into an uncompromising systems programming language.</p>
+<p>In this chapter, we explore the capabilities unlocked by <strong>Pro Systems Mode</strong>:</p>
+<ul>
+<li>Compiler directives and activation</li>
+<li>Strict static typing (<code>: Int</code>, <code>: String</code>, <code>: Bool</code>, <code>: Ptr</code>)</li>
+<li>The modular standard library (<code>use ior</code>, <code>math</code>, <code>sys</code>, <code>mem</code>, <code>fs</code>, <code>net</code>, <code>thread</code>)</li>
+<li>Raw pointers and manual heap management (<code>addr</code>, <code>@</code>, <code>alloc</code>, <code>free</code>)</li>
+<li>C-compatible POD structs and native C FFI (<code>extern "C"</code>)</li>
+<li>Native POSIX multithreading and hardware atomics (<code>atomic add</code>)</li>
+<li>Hardware inline assembly and CPU clock cycle profiling (<code>measure cycles</code>)</li>
+<li>Bare-metal freestanding binaries without libc (<code>add Freestanding</code>)</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="81-systems-philosophy--directives"><a class="header" href="#81-systems-philosophy--directives">8.1 Systems Philosophy &amp; Directives</a></h1>
+<p>Activating Pro Systems Mode requires explicitly stating your intention to opt out of beginner-level runtime conveniences.</p>
+<h2 id="the-three-core-directives"><a class="header" href="#the-three-core-directives">The Three Core Directives</a></h2>
+<p>Place these directives at the very top of your source file:</p>
+<pre><code class="language-runvoid">remove garbageC
+remove Basic
+add Advanced
+</code></pre>
+<p>What each directive means:</p>
+<ol>
+<li><strong><code>remove garbageC</code></strong>: Completely strips the Garbage Collection runtime and GC tracking metadata from the compiled executable.</li>
+<li><strong><code>remove Basic</code></strong>: Turns off permissive type inference. Requires all variables and functions to declare explicit, static types.</li>
+<li><strong><code>add Advanced</code></strong>: Enables systems-level intrinsics, raw memory pointers, C FFI, inline assembly, and aggressive compiler optimizations (Constant Folding, Dead Code Elimination, Peephole, LTO).</li>
+</ol>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="82-strict-static-typing"><a class="header" href="#82-strict-static-typing">8.2 Strict Static Typing</a></h1>
+<p>In Pro Systems Mode, all variable bindings, function arguments, and return types must explicitly state their concrete data type.</p>
+<h2 id="explicit-type-annotations"><a class="header" href="#explicit-type-annotations">Explicit Type Annotations</a></h2>
+<pre><code class="language-runvoid">remove garbageC
+remove Basic
+add Advanced
+use ior
+
+remember count: Int = 42
+remember name: String = "Kernel Core"
+remember is_ready: Bool = true
+remember buffer: Ptr = 0
+
+action compute_hash(seed: Int, salt: Int): Int {
+    give seed * 31 + salt
+}
+
+say compute_hash(count, 7)
+</code></pre>
+<h2 id="available-types"><a class="header" href="#available-types">Available Types</a></h2>
+<ul>
+<li><strong><code>Int</code></strong>: 64-bit signed integer.</li>
+<li><strong><code>String</code></strong>: UTF-8 string with length prefix.</li>
+<li><strong><code>Bool</code></strong>: Boolean flag.</li>
+<li><strong><code>Ptr</code></strong>: 64-bit raw memory pointer.</li>
+<li><strong><code>Void</code></strong>: Empty return type for procedures.</li>
+<li><strong>Custom Struct Names</strong>: Defined using <code>struct</code>.</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="83-the-modular-standard-library"><a class="header" href="#83-the-modular-standard-library">8.3 The Modular Standard Library</a></h1>
+<p>To ensure minimal binary size and zero unneeded code, Pro Mode does not link a monolithic runtime. Instead, you explicitly import only the modules your program requires.</p>
+<h2 id="available-modules"><a class="header" href="#available-modules">Available Modules</a></h2>
+<div class="table-wrapper"><table><thead><tr><th>Module</th><th>Purpose</th><th>Linked Libraries</th></tr></thead><tbody>
+<tr><td><code>use ior</code></td><td>Console input/output: <code>say</code>, <code>ask</code></td><td>Built-in</td></tr>
+<tr><td><code>use math</code></td><td>High-performance math: <code>sqrt</code>, <code>sin</code>, <code>cos</code>, <code>pow</code>, <code>abs</code></td><td><code>-lm</code></td></tr>
+<tr><td><code>use sys</code></td><td>System primitives: <code>exit</code>, <code>getpid</code></td><td>Built-in</td></tr>
+<tr><td><code>use mem</code></td><td>Raw heap allocations: <code>alloc</code>, <code>free</code></td><td>Built-in</td></tr>
+<tr><td><code>use fs</code></td><td>Direct file operations: <code>read</code>, <code>write</code>, <code>copy</code>, <code>delete</code></td><td>Built-in</td></tr>
+<tr><td><code>use net</code></td><td>Low-level TCP sockets: <code>tcp_listen</code>, <code>tcp_send</code>, etc.</td><td>Built-in</td></tr>
+<tr><td><code>use thread</code></td><td>Native POSIX threads: <code>thread { ... }</code></td><td><code>-lpthread</code></td></tr>
+</tbody></table>
+</div>
+<h2 id="linking-external-c-libraries-use-lib"><a class="header" href="#linking-external-c-libraries-use-lib">Linking External C Libraries (<code>use lib</code>)</a></h2>
+<p>Link third-party C dynamic libraries directly into your executable:</p>
+<pre><code class="language-runvoid">use lib "raylib"
+use lib "sqlite3"
+</code></pre>
+<p>The compiler passes these as <code>-lraylib</code> and <code>-lsqlite3</code> to the linker.</p>
+<h2 id="multi-file-modular-code-use-filerv"><a class="header" href="#multi-file-modular-code-use-filerv">Multi-File Modular Code (<code>use “file.rv”</code>)</a></h2>
+<p>Split large codebases across multiple files:</p>
+<pre><code class="language-runvoid">use "engine/physics.rv"
+use "engine/renderer.rv"
+</code></pre>
+<p>The compiler recursively parses imported files and merges their Abstract Syntax Tree definitions at compile time.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="84-raw-pointers--manual-memory"><a class="header" href="#84-raw-pointers--manual-memory">8.4 Raw Pointers &amp; Manual Memory</a></h1>
+<p>In systems programming, direct memory manipulation is essential for interfacing with hardware, building custom data structures, and optimizing caches.</p>
+<h2 id="taking-memory-addresses-addr"><a class="header" href="#taking-memory-addresses-addr">Taking Memory Addresses (<code>addr</code>)</a></h2>
+<p>The <code>addr</code> keyword obtains the raw 64-bit stack address of any variable:</p>
+<pre><code class="language-runvoid">remove garbageC
+remove Basic
+add Advanced
+use ior
+use mem
+
+remember val: Int = 100
+remember ptr: Ptr = addr val
+</code></pre>
+<h2 id="dereferencing-read--write-"><a class="header" href="#dereferencing-read--write-">Dereferencing Read &amp; Write (<code>@</code>)</a></h2>
+<p>Use the <code>@</code> symbol to read or write the value pointed to by a pointer:</p>
+<pre><code class="language-runvoid"># Read value at memory location:
+say @ptr       // prints 100
+
+# Write value to memory location:
+@ptr = 250
+say val        // prints 250
+say @ptr       // prints 250
+</code></pre>
+<h2 id="direct-heap-allocation-alloc-and-free"><a class="header" href="#direct-heap-allocation-alloc-and-free">Direct Heap Allocation (<code>alloc</code> and <code>free</code>)</a></h2>
+<p>Allocate and deallocate unmanaged heap memory with byte-level precision:</p>
+<pre><code class="language-runvoid"># Allocate 64 bytes of memory on the heap:
+remember buffer: Ptr = alloc 64
+
+# Write a 64-bit integer into the allocated block:
+@buffer = 9999
+say @buffer    // prints 9999
+
+# Deallocate the memory:
+free buffer
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="85-c-compatible-structs--c-ffi"><a class="header" href="#85-c-compatible-structs--c-ffi">8.5 C-Compatible Structs &amp; C FFI</a></h1>
+<p>Pro Systems Mode allows defining C-compatible composite data types and calling native C libraries with zero overhead.</p>
+<h2 id="c-compatible-pod-structs"><a class="header" href="#c-compatible-pod-structs">C-Compatible POD Structs</a></h2>
+<p>Define 8-byte aligned Plain Old Data (POD) structures matching standard C struct memory layouts:</p>
+<pre><code class="language-runvoid">remove garbageC
+remove Basic
+add Advanced
+use ior
+
+struct Vector3D {
+    x,
+    y,
+    z
+}
+
+# Instantiate struct:
+remember vec: Vector3D = Vector3D(10, 20, 30)
+
+# Field access:
+say vec.x   // 10
+say vec.y   // 20
+say vec.z   // 30
+
+# Field mutation:
+vec.x = 99
+say vec.x   // 99
+</code></pre>
+<h2 id="native-c-foreign-function-interface-ffi"><a class="header" href="#native-c-foreign-function-interface-ffi">Native C Foreign Function Interface (FFI)</a></h2>
+<p>Call external C functions directly from libc or linked libraries using <code>extern "C"</code> blocks:</p>
+<pre><code class="language-runvoid">remove garbageC
+remove Basic
+add Advanced
+use ior
+
+extern "C" {
+    action puts(s: String) -&gt; Int
+    action abs(n: Int) -&gt; Int
+}
+
+puts("Hello from native C puts via FFI!")
+
+remember diff: Int = 0 - 55
+remember positive: Int = abs(diff)
+say positive   // 55
+</code></pre>
+<blockquote>
+<p><strong>Note on Strings:</strong> Runvoid strings automatically pass their internal null-terminated C string pointer (<code>char*</code>) to extern functions.</p>
+</blockquote>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="86-multithreading--hardware-atomics"><a class="header" href="#86-multithreading--hardware-atomics">8.6 Multithreading &amp; Hardware Atomics</a></h1>
+<p>Runvoid provides native OS multithreading capabilities backed by POSIX threads (<code>pthread_create</code>), accompanied by hardware-locked atomic synchronization.</p>
+<h2 id="spawning-native-threads-thread"><a class="header" href="#spawning-native-threads-thread">Spawning Native Threads (<code>thread</code>)</a></h2>
+<pre><code class="language-runvoid">remove garbageC
+remove Basic
+add Advanced
+use ior
+use thread
+
+remember shared_counter: Int = 0
+
+# Spawn a concurrent thread:
+thread {
+    atomic add shared_counter, 10
+}
+
+wait 1
+say shared_counter   // prints 10
+</code></pre>
+<h2 id="hardware-atomic-operations-atomic-add"><a class="header" href="#hardware-atomic-operations-atomic-add">Hardware Atomic Operations (<code>atomic add</code>)</a></h2>
+<p>Multithreaded operations require memory synchronization to prevent race conditions. The <code>atomic add</code> statement emits a hardware bus-locked instruction directly onto the CPU:</p>
+<pre><code class="language-text">lock add [r12 + offset], rax
+</code></pre>
+<p>This guarantees atomic read-modify-write semantics across multi-core CPU architectures without the performance penalty of heavyweight mutex locks.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="87-inline-assembly--cpu-cycle-profiling"><a class="header" href="#87-inline-assembly--cpu-cycle-profiling">8.7 Inline Assembly &amp; CPU Cycle Profiling</a></h1>
+<p>For ultimate performance tuning and hardware interaction, Runvoid allows inline x86_64 assembly code and direct cycle counting via the CPU’s <code>RDTSC</code> instruction.</p>
+<h2 id="hardware-inline-assembly-asm"><a class="header" href="#hardware-inline-assembly-asm">Hardware Inline Assembly (<code>asm</code>)</a></h2>
+<p>Execute raw assembly instructions directly inside your Runvoid codebase:</p>
+<pre><code class="language-runvoid">remove garbageC
+remove Basic
+add Advanced
+use ior
+
+asm {
+    mov rax, 42
+    imul rax, 10
+}
+
+say 420
+</code></pre>
+<p>The assembly statements are injected verbatim into the NASM code stream.</p>
+<h2 id="cpu-clock-cycle-benchmarking-measure-cycles"><a class="header" href="#cpu-clock-cycle-benchmarking-measure-cycles">CPU Clock Cycle Benchmarking (<code>measure cycles</code>)</a></h2>
+<p>While <code>measure time</code> measures wall-clock elapsed time in milliseconds, <code>measure cycles</code> uses the x86 <code>RDTSC</code> (Read Time-Stamp Counter) instruction to count the exact number of CPU clock cycles consumed:</p>
+<pre><code class="language-runvoid">remove garbageC
+remove Basic
+add Advanced
+use ior
+
+measure cycles {
+    remember a: Int = 10
+    remember b: Int = 20
+    remember c: Int = a + b
+    say c
+}
+</code></pre>
+<p>Sample output:</p>
+<pre><code class="language-text">30
+⏱️  Executed in 130 CPU cycles
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="88-bare-metal-freestanding-binaries"><a class="header" href="#88-bare-metal-freestanding-binaries">8.8 Bare-Metal Freestanding Binaries</a></h1>
+<p>For operating system kernels, bootloaders, micro-containers, or embedded targets where <strong>neither libc nor any runtime library is permissible</strong>, Runvoid provides Freestanding Mode.</p>
+<h2 id="directives-for-freestanding-mode"><a class="header" href="#directives-for-freestanding-mode">Directives for Freestanding Mode</a></h2>
+<p>Combine <code>remove Linux</code> and <code>add Freestanding</code>:</p>
+<pre><code class="language-runvoid">remove garbageC
+remove Basic
+remove Linux
+add Advanced
+add Freestanding
+
+# Entry point 'global _start' is emitted automatically by the compiler.
+# Linux sys_exit syscall: rax = 60, rdi = status code
+asm {
+    mov rax, 60
+    xor rdi, rdi
+    syscall
+}
+</code></pre>
+<h2 id="how-it-compiles"><a class="header" href="#how-it-compiles">How It Compiles</a></h2>
+<ul>
+<li>The compiler emits <code>global _start</code> instead of <code>main</code>.</li>
+<li>All references to C runtime initialization (<code>rv_init</code>), memory allocators, and standard libraries are omitted.</li>
+<li>The binary is linked directly with GNU <code>ld -s</code> (not GCC), producing an ultra-lean standalone ELF executable containing pure machine instructions and zero external dependencies.</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="9-compiler-architecture--ecosystem"><a class="header" href="#9-compiler-architecture--ecosystem">9. Compiler Architecture &amp; Ecosystem</a></h1>
+<p>The Runvoid compiler is written in <strong>Rust</strong> and targets <strong>NASM x86_64 Linux</strong> following the System V AMD64 ABI.</p>
+<h2 id="compiler-internal-pipeline"><a class="header" href="#compiler-internal-pipeline">Compiler Internal Pipeline</a></h2>
+<ol>
+<li><strong><code>src/lexer.rs</code></strong>: Tokenizes source text, scanning identifiers, numbers, keywords, and interpolated strings (<code>"Hello {user}"</code>).</li>
+<li><strong><code>src/parser.rs</code></strong>: Builds the Abstract Syntax Tree (AST) using a recursive descent parser. Handles recursive multi-file imports (<code>use "other.rv"</code>).</li>
+<li><strong><code>src/typechecker.rs</code></strong>: Verifies directive constraints, checks module requirements, verifies type annotations in Pro Mode, and validates struct schemas.</li>
+<li><strong><code>src/optimizer.rs</code></strong>: Implements AST optimization passes including compile-time Constant Folding and Dead Code Elimination (DCE).</li>
+<li><strong><code>src/codegen.rs</code></strong>: Emits high-performance x86_64 NASM assembly code.</li>
+<li><strong><code>runtime/runtime.asm</code> &amp; <code>runtime/gui.c</code></strong>: Native Linux syscall implementations and minimal X11 windowing backend.</li>
+<li><strong><code>src/compiler.rs</code></strong>: Orchestrates assembler (<code>nasm</code>) and linker (<code>gcc</code> / <code>ld</code>) invocations in isolated temporary workspaces.</li>
+</ol>
+<h2 id="tooling--ecosystem"><a class="header" href="#tooling--ecosystem">Tooling &amp; Ecosystem</a></h2>
+<ul>
+<li><strong><code>src/formatter.rs</code></strong>: The built-in formatter powering <code>runvoid fmt [-w]</code>.</li>
+<li><strong>VS Code Extension (<code>editors/vscode/</code>)</strong>: Official TextMate syntax grammar, bracket-matching rules, and snippet configuration for Visual Studio Code.</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="appendix-a-complete-keywords--directives-reference"><a class="header" href="#appendix-a-complete-keywords--directives-reference">Appendix A: Complete Keywords &amp; Directives Reference</a></h1>
+<div class="table-wrapper"><table><thead><tr><th>Keyword / Directive</th><th>Category</th><th>Syntax / Usage</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>say</code></td><td>I/O</td><td><code>say &lt;expr&gt;</code></td><td>Prints expression followed by newline</td></tr>
+<tr><td><code>say same</code></td><td>I/O</td><td><code>say same &lt;expr&gt;</code></td><td>Prints expression without newline</td></tr>
+<tr><td><code>ask</code></td><td>I/O</td><td><code>ask &lt;prompt&gt;</code></td><td>Reads line from standard input</td></tr>
+<tr><td><code>ask hidden</code></td><td>I/O</td><td><code>ask hidden &lt;prompt&gt;</code></td><td>Reads password with masked input</td></tr>
+<tr><td><code>ask user</code></td><td>Dialog</td><td><code>ask user &lt;prompt&gt;</code></td><td>Graphical yes/no confirmation dialog</td></tr>
+<tr><td><code>choose</code></td><td>Menu</td><td><code>choose &lt;title&gt;, &lt;opt1&gt;, ...</code></td><td>Interactive arrow-key selection menu</td></tr>
+<tr><td><code>alert</code></td><td>Dialog</td><td><code>alert &lt;message&gt;</code></td><td>Graphical alert box</td></tr>
+<tr><td><code>remember</code></td><td>Variables</td><td><code>remember &lt;name&gt; = &lt;val&gt;</code></td><td>Declares a new variable</td></tr>
+<tr><td><code>if</code></td><td>Control</td><td><code>if &lt;cond&gt; { ... }</code></td><td>Conditional branch</td></tr>
+<tr><td><code>otherwise if</code></td><td>Control</td><td><code>otherwise if &lt;cond&gt; { ... }</code></td><td>Alternative conditional branch</td></tr>
+<tr><td><code>otherwise</code></td><td>Control</td><td><code>otherwise { ... }</code></td><td>Fallback branch</td></tr>
+<tr><td><code>repeat</code></td><td>Loop</td><td><code>repeat &lt;N&gt; [as &lt;var&gt;] { ... }</code></td><td>Fixed count loop</td></tr>
+<tr><td><code>while</code></td><td>Loop</td><td><code>while &lt;cond&gt; { ... }</code></td><td>Conditional loop</td></tr>
+<tr><td><code>stop</code></td><td>Loop</td><td><code>stop</code></td><td>Breaks out of loop</td></tr>
+<tr><td><code>skip</code></td><td>Loop</td><td><code>skip</code></td><td>Continues to next iteration</td></tr>
+<tr><td><code>for every ... in</code></td><td>List</td><td><code>for every &lt;item&gt; in &lt;list&gt;</code></td><td>Iterates over list elements</td></tr>
+<tr><td><code>add ... to</code></td><td>List</td><td><code>add &lt;item&gt; to &lt;list&gt;</code></td><td>Appends item to word list</td></tr>
+<tr><td><code>remove ... from</code></td><td>List</td><td><code>remove &lt;item&gt; from &lt;list&gt;</code></td><td>Removes item from word list</td></tr>
+<tr><td><code>count</code></td><td>List</td><td><code>{count &lt;list&gt;}</code></td><td>Returns number of items in list</td></tr>
+<tr><td><code>has</code></td><td>List</td><td><code>if &lt;list&gt; has &lt;item&gt;</code></td><td>Checks if item exists in list</td></tr>
+<tr><td><code>action</code></td><td>Function</td><td><code>action &lt;name&gt;(&lt;args&gt;) { ... }</code></td><td>Defines a function</td></tr>
+<tr><td><code>give</code></td><td>Function</td><td><code>give &lt;expr&gt;</code></td><td>Returns value from function</td></tr>
+<tr><td><code>beep</code></td><td>Audio</td><td><code>beep</code></td><td>Emits system terminal bell</td></tr>
+<tr><td><code>speak</code></td><td>Audio</td><td><code>speak &lt;text&gt;</code></td><td>Text-to-speech engine</td></tr>
+<tr><td><code>read</code></td><td>File I/O</td><td><code>read &lt;path&gt;</code></td><td>Reads entire file into string</td></tr>
+<tr><td><code>write ... into</code></td><td>File I/O</td><td><code>write &lt;content&gt; into &lt;path&gt;</code></td><td>Writes string into file</td></tr>
+<tr><td><code>create folder</code></td><td>Filesystem</td><td><code>create folder &lt;dir&gt;</code></td><td>Creates a directory</td></tr>
+<tr><td><code>delete file</code></td><td>Filesystem</td><td><code>delete file &lt;path&gt;</code></td><td>Deletes a file</td></tr>
+<tr><td><code>delete folder</code></td><td>Filesystem</td><td><code>delete folder &lt;dir&gt;</code></td><td>Deletes a directory</td></tr>
+<tr><td><code>copy file ... to</code></td><td>Filesystem</td><td><code>copy file &lt;src&gt; to &lt;dst&gt;</code></td><td>Copies file</td></tr>
+<tr><td><code>file ... exists</code></td><td>Filesystem</td><td><code>if file &lt;path&gt; exists</code></td><td>Checks file existence</td></tr>
+<tr><td><code>download ... into</code></td><td>Web</td><td><code>download &lt;url&gt; into &lt;path&gt;</code></td><td>Downloads URL to file</td></tr>
+<tr><td><code>read web</code></td><td>Web</td><td><code>read web &lt;url&gt;</code></td><td>HTTP GET request</td></tr>
+<tr><td><code>open web</code></td><td>Web</td><td><code>open web &lt;url&gt;</code></td><td>Opens URL in default browser</td></tr>
+<tr><td><code>make uppercase</code></td><td>String</td><td><code>make &lt;var&gt; uppercase</code></td><td>Converts string to uppercase</td></tr>
+<tr><td><code>make lowercase</code></td><td>String</td><td><code>make &lt;var&gt; lowercase</code></td><td>Converts string to lowercase</td></tr>
+<tr><td><code>make trim</code></td><td>String</td><td><code>make &lt;var&gt; trim</code></td><td>Trims leading/trailing whitespace</td></tr>
+<tr><td><code>replace ... with</code></td><td>String</td><td><code>replace &lt;a&gt; with &lt;b&gt; in &lt;str&gt;</code></td><td>Replaces substrings</td></tr>
+<tr><td><code>screen</code></td><td>Graphics</td><td><code>screen &lt;title&gt;, &lt;w&gt;, &lt;h&gt; { ... }</code></td><td>2D hardware graphics window</td></tr>
+<tr><td><code>window</code></td><td>GUI</td><td><code>window &lt;title&gt;, &lt;w&gt;, &lt;h&gt; { ... }</code></td><td>Desktop GUI window</td></tr>
+<tr><td><code>wait</code></td><td>Timers</td><td><code>wait &lt;seconds&gt;</code></td><td>Pauses execution</td></tr>
+<tr><td><code>random ... to</code></td><td>Math</td><td><code>random &lt;min&gt; to &lt;max&gt;</code></td><td>Generates random integer</td></tr>
+<tr><td><code>measure time</code></td><td>Profiling</td><td><code>measure time { ... }</code></td><td>Profiles time in milliseconds</td></tr>
+<tr><td><code>measure cycles</code></td><td>Profiling</td><td><code>measure cycles { ... }</code></td><td>Profiles time in CPU clock cycles</td></tr>
+<tr><td><code>remove garbageC</code></td><td>Directive</td><td><code>remove garbageC</code></td><td>Disables garbage collector</td></tr>
+<tr><td><code>remove Basic</code></td><td>Directive</td><td><code>remove Basic</code></td><td>Enforces strict static typing</td></tr>
+<tr><td><code>remove Linux</code></td><td>Directive</td><td><code>remove Linux</code></td><td>Freestanding mode (no libc)</td></tr>
+<tr><td><code>add Advanced</code></td><td>Directive</td><td><code>add Advanced</code></td><td>Enables Pro Systems Mode</td></tr>
+<tr><td><code>add Freestanding</code></td><td>Directive</td><td><code>add Freestanding</code></td><td>Emits <code>_start</code> entry point</td></tr>
+<tr><td><code>use</code></td><td>Module</td><td><code>use &lt;module&gt;</code></td><td>Imports stdlib module or file</td></tr>
+<tr><td><code>use lib</code></td><td>Library</td><td><code>use lib &lt;name&gt;</code></td><td>Links external dynamic C library</td></tr>
+<tr><td><code>asm</code></td><td>Hardware</td><td><code>asm { ... }</code></td><td>Emits verbatim x86_64 assembly</td></tr>
+<tr><td><code>addr</code></td><td>Pointer</td><td><code>addr &lt;var&gt;</code></td><td>Returns memory address of variable</td></tr>
+<tr><td><code>@</code></td><td>Pointer</td><td><code>@&lt;ptr&gt;</code> or <code>@&lt;ptr&gt; = &lt;val&gt;</code></td><td>Pointer dereference read/write</td></tr>
+<tr><td><code>alloc</code></td><td>Memory</td><td><code>alloc &lt;size&gt;</code></td><td>Allocates heap memory</td></tr>
+<tr><td><code>free</code></td><td>Memory</td><td><code>free &lt;ptr&gt;</code></td><td>Deallocates heap memory</td></tr>
+<tr><td><code>struct</code></td><td>Data</td><td><code>struct &lt;Name&gt; { ... }</code></td><td>Defines C-compatible POD struct</td></tr>
+<tr><td><code>extern "C"</code></td><td>FFI</td><td><code>extern "C" { action ... }</code></td><td>Imports C functions</td></tr>
+<tr><td><code>thread</code></td><td>Concurrency</td><td><code>thread { ... }</code></td><td>Spawns OS thread</td></tr>
+<tr><td><code>atomic add</code></td><td>Concurrency</td><td><code>atomic add &lt;var&gt;, &lt;val&gt;</code></td><td>Hardware atomic addition</td></tr>
+</tbody></table>
+</div><div style="break-before: page; page-break-before: always;"></div><h1 id="Приложение-Б-Полное-руководство-на-русском-языке"><a class="header" href="#Приложение-Б-Полное-руководство-на-русском-языке">Приложение Б: Полное руководство на русском языке</a></h1>
+<p>Добро пожаловать в официальную документацию языка <strong>Runvoid</strong>!
+Runvoid создан так, чтобы программирование было понятным, невероятно быстрым и приносящим удовольствие.</p>
+<hr />
+<h2 id="1-Быстрый-старт-за-5-минут"><a class="header" href="#1-Быстрый-старт-за-5-минут">1. Быстрый старт за 5 минут</a></h2>
+<h3 id="Первая-программа"><a class="header" href="#Первая-программа">Первая программа</a></h3>
+<p>Создайте файл <code>hello.rv</code>:</p>
+<pre><code class="language-runvoid">say "Привет, прекрасный мир Runvoid!"
+</code></pre>
+<p>Запустите прямо из консоли:</p>
+<pre><code class="language-bash">runvoid run hello.rv
+</code></pre>
+<h3 id="Переменные-Запомни"><a class="header" href="#Переменные-Запомни">Переменные («Запомни»)</a></h3>
+<p>В Runvoid переменные объявляются понятным словом <code>remember</code>:</p>
+<pre><code class="language-runvoid">remember player = "Алекс"
+remember score = 100
+
+say "Игрок: {player}, Очки: {score}"
+
+score = score + 50
+say "Новый счет: {score}"
+</code></pre>
+<h3 id="Ввод-пользователя-Спроси"><a class="header" href="#Ввод-пользователя-Спроси">Ввод пользователя («Спроси»)</a></h3>
+<pre><code class="language-runvoid">remember name = ask "Как зовут твоего героя? "
+say "Добро пожаловать в игру, {name}!"
+</code></pre>
+<h3 id="Условия-и-ветвления"><a class="header" href="#Условия-и-ветвления">Условия и ветвления</a></h3>
+<pre><code class="language-runvoid">remember gold = 75
+
+if gold &gt;= 100 {
+    say "Ты можешь купить легендарный меч!"
+} otherwise if gold &gt;= 50 {
+    say "Золота хватает на прочный щит."
+} otherwise {
+    say "Копи монеты, искатель приключений."
+}
+</code></pre>
+<hr />
+<h2 id="2-Разговорные-списки"><a class="header" href="#2-Разговорные-списки">2. Разговорные списки</a></h2>
+<p>Списки работают так же просто, как список покупок в блокноте:</p>
+<pre><code class="language-runvoid">remember inventory = "Факел", "Щит", "Зелье здоровья"
+
+add "Магическое кольцо" to inventory
+remove "Щит" from inventory
+
+if inventory has "Факел" {
+    say "В подземелье будет светло!"
+}
+
+say "Всего предметов: {count inventory}"
+
+for every item in inventory {
+    say " - {item}"
+}
+</code></pre>
+<hr />
+<h2 id="3-Системный-pro-режим-add-advanced"><a class="header" href="#3-Системный-pro-режим-add-advanced">3. Системный Pro-режим (<code>add Advanced</code>)</a></h2>
+<p>Для максимальной производительности, прямого доступа к регистрам процессора и ручного управления памятью:</p>
+<pre><code class="language-runvoid">remove garbageC   # Отключает сборщик мусора
+remove Basic      # Включает строгую статическую типизацию
+add Advanced      # Включает системные возможности
+use ior
+use mem
+
+# Сырые указатели:
+remember val: Int = 500
+remember ptr: Ptr = addr val
+
+say @ptr       // 500
+@ptr = 750     // запись по адресу
+say val        // 750
+
+# Ручное выделение в куче:
+remember heap: Ptr = alloc 64
+@heap = 9999
+free heap
+
+# Встроенный ассемблер:
+asm {
+    mov rax, 42
+    imul rax, 10
+}
+</code></pre>
+<hr />
+<h2 id="4-bare-metal-режим-без-ОС"><a class="header" href="#4-bare-metal-режим-без-ОС">4. Bare-Metal режим без ОС</a></h2>
+<p>Сборка бинарника без libc и без сторонних рантаймов:</p>
+<pre><code class="language-runvoid">remove garbageC
+remove Basic
+remove Linux
+add Advanced
+add Freestanding
+
+asm {
+    mov rax, 60    ; Linux exit syscall
+    xor rdi, rdi   ; code 0
+    syscall
+}
+</code></pre>
+<p>Компилятор генерирует точку входа <code>_start</code> и компонует автономный ELF напрямую через <code>ld -s</code>.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+        <script>
+        window.addEventListener('load', function() {
+            window.setTimeout(window.print, 100);
+        });
+        </script>
+
+    </div>
+    </body>
+</html>
