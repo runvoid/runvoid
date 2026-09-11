@@ -3,309 +3,73 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Runvoid — The Conversational Language with Pure x86_64 Machine Speed</title>
-  <meta name="description" content="Runvoid is a modern compiled language with conversational English syntax and the raw performance of x86_64 assembly. Standalone 15 KB binaries, Zero-GC, native GUI, and C FFI." />
+  <title>The Runvoid Book (v0.2.0)</title>
+  <meta name="description" content="The official handbook and documentation for the Runvoid programming language in the style of The Rust Book." />
   <link rel="icon" type="image/svg+xml" href="logo.svg" />
   <link rel="stylesheet" href="style.css" />
 </head>
-<body>
+<body class="theme-navy">
 
-  <!-- Header Navigation -->
-  <header>
-    <div class="container nav-container">
-      <a href="#" class="brand">
+  <!-- Left Sidebar (mdBook Navigation) -->
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-header">
+      <a href="#intro" class="sidebar-brand">
         <img src="logo.svg" alt="Runvoid Logo" />
-        <span>Runvoid</span>
-        <span class="badge-version">v0.2.0</span>
+        <span>The Runvoid Book</span>
       </a>
 
-      <ul class="nav-links">
-        <li><a href="#showcase" data-i18n="tagShowcase">Showcase</a></li>
-        <li><a href="#features" data-i18n="tagFeatures">Features</a></li>
-        <li><a href="#benchmarks" data-i18n="tagBenchmark">Benchmarks</a></li>
-        <li><a href="#install" data-i18n="tagInstall">Install</a></li>
-        <li><a id="docLinkNav" href="DOCUMENTATION.md" data-i18n="btnDocs">Documentation</a></li>
-      </ul>
+      <div class="sidebar-search">
+        <input type="text" id="searchInput" placeholder="Search chapters..." aria-label="Search" />
+      </div>
+    </div>
 
-      <div class="nav-actions">
-        <button id="langBtn" class="lang-btn" aria-label="Toggle language">🌐 RU</button>
-        <a href="https://github.com/runvoid/runvoid" target="_blank" rel="noopener" class="btn-github">
-          <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor">
+    <nav id="sidebarNav" class="sidebar-nav"></nav>
+  </aside>
+
+  <!-- Main Wrapper -->
+  <div class="main-wrapper">
+    <!-- Top Navigation Bar (mdBook Topbar) -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <button id="toggleSidebarBtn" class="icon-btn" title="Toggle Sidebar" aria-label="Toggle Sidebar">
+          ☰
+        </button>
+
+        <div class="theme-menu">
+          <button id="themeBtn" class="icon-btn" title="Change Theme" aria-label="Change Theme">
+            🖌️
+          </button>
+          <div id="themeDropdown" class="theme-dropdown">
+            <button class="theme-option" data-theme="navy">Navy</button>
+            <button class="theme-option" data-theme="coal">Coal</button>
+            <button class="theme-option" data-theme="rust">Rust</button>
+            <button class="theme-option" data-theme="ayu">Ayu</button>
+            <button class="theme-option" data-theme="light">Light</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="topbar-right">
+        <button id="langSwitchBtn" class="lang-switch-btn" title="Switch Language">
+          Русский
+        </button>
+
+        <a href="https://github.com/runvoid/runvoid" target="_blank" rel="noopener" class="icon-btn" title="GitHub Repository" aria-label="GitHub Repository">
+          <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor">
             <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
           </svg>
-          <span>GitHub</span>
         </a>
       </div>
-    </div>
-  </header>
+    </header>
 
-  <!-- Hero Section -->
-  <section class="hero">
-    <div class="container">
-      <div class="hero-badge">
-        <span class="dot dot-green"></span>
-        <span data-i18n="badge">v0.2.0 • Pure x86_64 Native Compiler</span>
-      </div>
+    <!-- Content Reader Container -->
+    <main class="content-container">
+      <article id="chapterContent"></article>
+      <nav id="chapterFooterNav" class="chapter-footer-nav"></nav>
+    </main>
+  </div>
 
-      <h1>
-        <span data-i18n="heroTitle">The Conversational Language With Machine Code Speed</span><br />
-        <span class="gradient-text">Runvoid</span>
-      </h1>
-
-      <p class="hero-subtitle" data-i18n="heroSub">
-        Simple and intuitive like Python & Bash. Blazing fast, compact, and bare-metal like C & Assembly. Compiles directly to x86_64 NASM with zero virtual machine overhead.
-      </p>
-
-      <div class="hero-cta">
-        <a href="#install" class="btn-primary" data-i18n="btnGetStarted">Get Started</a>
-        <a id="docLinkHero" href="DOCUMENTATION.md" class="btn-secondary" data-i18n="btnDocs">Documentation</a>
-      </div>
-
-      <!-- Key Metrics -->
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-number" data-i18n="statSize">15 KB</div>
-          <div class="stat-label" data-i18n="statSizeLabel">Standalone Executables</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-number" data-i18n="statVm">0 ms</div>
-          <div class="stat-label" data-i18n="statVmLabel">VM / Interpreter Overhead</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-number" data-i18n="statCode">100%</div>
-          <div class="stat-label" data-i18n="statCodeLabel">Pure x86_64 Machine Code</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-number" data-i18n="statTools">50+</div>
-          <div class="stat-label" data-i18n="statToolsLabel">Native Built-in Features</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Interactive Code Playground Showcase -->
-  <section id="showcase" class="playground-section">
-    <div class="container">
-      <div class="section-header">
-        <div class="section-tag" data-i18n="tagShowcase">Interactive Code Showcase</div>
-        <h2 class="section-title" data-i18n="titleShowcase">From Plain English to Bare-Metal Machine Code</h2>
-        <p class="section-desc" data-i18n="descShowcase">
-          Explore how Runvoid effortlessly adapts from a friendly beginner language to a high-performance bare-metal systems compiler.
-        </p>
-      </div>
-
-      <div class="editor-window">
-        <div class="editor-topbar">
-          <div class="window-dots">
-            <span class="dot dot-red"></span>
-            <span class="dot dot-yellow"></span>
-            <span class="dot dot-green"></span>
-          </div>
-          <div class="editor-tabs">
-            <button class="tab-btn active" data-tab="beginner" data-i18n="tabBeginner">👋 Beginner: Lists & Logic</button>
-            <button class="tab-btn" data-tab="canvas" data-i18n="tabCanvas">🕹️ 2D Canvas & GUI</button>
-            <button class="tab-btn" data-tab="pro" data-i18n="tabPro">⚡ Pro: Pointers & Asm</button>
-            <button class="tab-btn" data-tab="threads" data-i18n="tabThreads">🧵 Multithreading & Atomics</button>
-            <button class="tab-btn" data-tab="baremetal" data-i18n="tabBaremetal">🛡️ Bare-Metal Freestanding</button>
-          </div>
-        </div>
-
-        <div class="editor-body">
-          <div class="code-pane">
-            <pre><code id="codeDisplay"></code></pre>
-          </div>
-          <div class="terminal-pane">
-            <div class="terminal-header">
-              <span class="terminal-title">~/runvoid $ runvoid run code.rv</span>
-              <button id="runBtn" class="btn-run" data-i18n="btnRun">▶ Run</button>
-            </div>
-            <div id="terminalDisplay" class="terminal-output"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Features Grid -->
-  <section id="features" class="features-section">
-    <div class="container">
-      <div class="section-header">
-        <div class="section-tag" data-i18n="tagFeatures">Why Runvoid?</div>
-        <h2 class="section-title" data-i18n="titleFeatures">Engineered for Beginners. Built for Systems.</h2>
-      </div>
-
-      <div class="feature-cards">
-        <div class="feature-card">
-          <div class="feature-icon">💬</div>
-          <h3 class="feature-title" data-i18n="feat1Title">Conversational English Syntax</h3>
-          <p class="feature-desc" data-i18n="feat1Desc">
-            Write code that reads naturally: say, remember, repeat 5 times, for every item in backpack, if file exists.
-          </p>
-        </div>
-
-        <div class="feature-card">
-          <div class="feature-icon">⚡</div>
-          <h3 class="feature-title" data-i18n="feat2Title">Pure x86_64 NASM Compiler</h3>
-          <p class="feature-desc" data-i18n="feat2Desc">
-            Translates code directly into handwritten-quality assembly. Zero bytecode interpreters or bulky garbage runtimes.
-          </p>
-        </div>
-
-        <div class="feature-card">
-          <div class="feature-icon">📦</div>
-          <h3 class="feature-title" data-i18n="feat3Title">Ultra-Lightweight 15 KB Binaries</h3>
-          <p class="feature-desc" data-i18n="feat3Desc">
-            Compiles into standalone static Linux ELF executables that run instantly on any machine with zero installation.
-          </p>
-        </div>
-
-        <div class="feature-card">
-          <div class="feature-icon">🕹️</div>
-          <h3 class="feature-title" data-i18n="feat4Title">Hardware 2D Canvas & Desktop GUI</h3>
-          <p class="feature-desc" data-i18n="feat4Desc">
-            Build arcade games and native windowed tools with hardware acceleration out of the box.
-          </p>
-        </div>
-
-        <div class="feature-card">
-          <div class="feature-icon">🧵</div>
-          <h3 class="feature-title" data-i18n="feat5Title">POSIX Multithreading & Atomics</h3>
-          <p class="feature-desc" data-i18n="feat5Desc">
-            Spawn OS threads with shared memory and hardware-locked CPU atomic operations (lock add).
-          </p>
-        </div>
-
-        <div class="feature-card">
-          <div class="feature-icon">🛠️</div>
-          <h3 class="feature-title" data-i18n="feat6Title">Full Developer Ecosystem</h3>
-          <p class="feature-desc" data-i18n="feat6Desc">
-            Includes built-in code formatter (runvoid fmt), VS Code extension, template generator, and interactive cheat sheet.
-          </p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Performance Comparison -->
-  <section id="benchmarks" class="benchmark-section">
-    <div class="container">
-      <div class="section-header">
-        <div class="section-tag" data-i18n="tagBenchmark">Performance & Size</div>
-        <h2 class="section-title" data-i18n="titleBenchmark">How Runvoid Compares</h2>
-        <p class="section-desc" data-i18n="descBenchmark">
-          Runvoid combines scripting agility with the binary footprint and execution speed of compiled systems languages.
-        </p>
-      </div>
-
-      <div class="table-wrapper">
-        <table>
-          <thead>
-            <tr>
-              <th>Language</th>
-              <th>Binary Footprint</th>
-              <th>Startup Time</th>
-              <th>Runtime / VM Needed</th>
-              <th>Static Typing</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr class="highlight-row">
-              <td>🚀 Runvoid (v0.2.0)</td>
-              <td>15 KB - 45 KB</td>
-              <td>~0.8 ms</td>
-              <td>None (Standalone ELF)</td>
-              <td>Optional / Strict in Pro</td>
-            </tr>
-            <tr>
-              <td>C (GCC -O3)</td>
-              <td>16 KB</td>
-              <td>~0.8 ms</td>
-              <td>None</td>
-              <td>Mandatory</td>
-            </tr>
-            <tr>
-              <td>Rust</td>
-              <td>350 KB - 2 MB</td>
-              <td>~1.2 ms</td>
-              <td>None</td>
-              <td>Mandatory</td>
-            </tr>
-            <tr>
-              <td>Go</td>
-              <td>1.8 MB - 3 MB</td>
-              <td>~3.5 ms</td>
-              <td>Go Runtime Bundled</td>
-              <td>Mandatory</td>
-            </tr>
-            <tr>
-              <td>Python 3</td>
-              <td>Requires ~50 MB Python</td>
-              <td>~35.0 ms</td>
-              <td>CPython VM</td>
-              <td>Dynamic / Optional</td>
-            </tr>
-            <tr>
-              <td>Node.js</td>
-              <td>Requires ~85 MB Node</td>
-              <td>~55.0 ms</td>
-              <td>V8 JIT Engine</td>
-              <td>Dynamic (TypeScript ext)</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </section>
-
-  <!-- Quick Installation Guide -->
-  <section id="install" class="install-section">
-    <div class="container">
-      <div class="section-header">
-        <div class="section-tag" data-i18n="tagInstall">Quick Setup</div>
-        <h2 class="section-title" data-i18n="titleInstall">Install in Seconds</h2>
-        <p class="section-desc" data-i18n="descInstall">
-          Runvoid runs on any Linux x86_64 distribution with GCC and NASM.
-        </p>
-      </div>
-
-      <div class="install-box">
-        <div class="install-tabs">
-          <button class="install-tab active" data-distro="arch">Arch Linux</button>
-          <button class="install-tab" data-distro="ubuntu">Ubuntu / Debian</button>
-          <button class="install-tab" data-distro="fedora">Fedora</button>
-          <button class="install-tab" data-distro="cargo">Cargo Install</button>
-        </div>
-
-        <div class="cmd-block">
-          <span id="installCmd">sudo pacman -S rust cargo nasm gcc libx11</span>
-          <button id="copyBtn" class="copy-btn">Copy</button>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Footer -->
-  <footer>
-    <div class="container">
-      <div class="footer-content">
-        <div class="brand">
-          <img src="logo.svg" alt="Runvoid Logo" />
-          <span>Runvoid</span>
-        </div>
-
-        <ul class="footer-links">
-          <li><a id="docLinkFooter" href="DOCUMENTATION.md" data-i18n="btnDocs">Documentation</a></li>
-          <li><a href="https://github.com/runvoid/runvoid" target="_blank" rel="noopener">GitHub</a></li>
-          <li><a href="https://github.com/runvoid/runvoid/blob/main/LICENSE" target="_blank" rel="noopener">License (GPL-3.0)</a></li>
-        </ul>
-      </div>
-
-      <div class="footer-bottom">
-        <p data-i18n="footerNote">Released under GNU General Public License v3.0 (GPL-3.0). Designed & built with Rust and NASM.</p>
-      </div>
-    </div>
-  </footer>
-
+  <script src="book-content.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
