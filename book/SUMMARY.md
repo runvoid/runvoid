@@ -36,4 +36,3 @@
 - [9. Compiler Architecture & Ecosystem](ch09-00-compiler-architecture.md)
 
 - [Appendix A: Complete Keywords & Directives Reference](appendix-01-keywords-reference.md)
-- [Приложение Б: Полное руководство на русском языке](appendix-02-russian-guide.md)

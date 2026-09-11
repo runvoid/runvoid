@@ -9,7 +9,7 @@
 
 **Simple and intuitive like Python & Bash. Fast, compact, and bare-metal like C & Assembly.**
 
-[Documentation (EN)](docs/DOCUMENTATION.md) • [Документация (RU)](docs/DOCUMENTATION_RU.md) • [Examples](examples/) • [Architecture](docs/DOCUMENTATION.md#13-compiler-pipeline-how-runvoid-works) • [License](LICENSE)
+[The Book (Docs)](https://runvoid.github.io/runvoid/) • [Documentation](docs/DOCUMENTATION.md) • [Examples](examples/) • [Architecture](docs/DOCUMENTATION.md#13-compiler-pipeline-how-runvoid-works) • [License](LICENSE)
 
 </div>
 
@@ -158,8 +158,8 @@ say "Square of 8 = {val}"
 ## 📖 Documentation
 
 For full details on syntax, language specification, memory model, compiler flags, and the AST pipeline, check the complete official handbooks:
-- 🇬🇧 **[English Documentation](docs/DOCUMENTATION.md)** — Comprehensive language guide, architecture, and complete keyword reference.
-- 🇷🇺 **[Документация на русском](docs/DOCUMENTATION_RU.md)** — Полное руководство, быстрый старт за 5 минут, архитектура и справочник.
+- 📖 **[The Runvoid Programming Language Book](https://runvoid.github.io/runvoid/)** — Official interactive book hosted on GitHub Pages.
+- 📄 **[Documentation Guide](docs/DOCUMENTATION.md)** — Comprehensive language guide, architecture, and complete keyword reference.
 
 ---
 
