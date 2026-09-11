@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  build_and_test:
+    name: Build & Test Runvoid
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install System Dependencies (NASM, GCC, libX11)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y nasm gcc libx11-dev
+
+      - name: Set up Rust Toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+
+      - name: Check Formatting
+        run: cargo fmt --check
+
+      - name: Run Clippy Linter
+        run: cargo clippy -- -D warnings
+
+      - name: Run Unit & Integration Tests
+        run: cargo test --verbose
+
+      - name: Build Runvoid Compiler in Release Mode
+        run: cargo build --release
+
+      - name: Test Running Example Scripts End-to-End
+        run: |
+          ./target/release/runvoid run examples/01_hello_basic.rv
+          ./target/release/runvoid run examples/02_no_gc.rv
+          ./target/release/runvoid run examples/03_typed.rv
+          ./target/release/runvoid run examples/04_advanced_pro.rv
+          ./target/release/runvoid run examples/05_loops_and_logic.rv
+          ./target/release/runvoid run examples/10_word_lists.rv
+          ./target/release/runvoid run examples/11_colors_and_terminal.rv
+          ./target/release/runvoid run examples/12_web_and_files.rv
+          ./target/release/runvoid run examples/14_measure_and_strings.rv

@@ -1,0 +1,30 @@
+// Runvoid Word Lists & Conversational Syntax
+say cyan "=== Runvoid Natural Word Lists Demo ==="
+
+// Initialize list of words
+remember backpack = "Wooden Sword", "Health Potion", "Compass", "Bread"
+say "Backpack contains: {count backpack} items"
+
+// Loop through each item
+say yellow "\nInventory contents:"
+for every item in backpack {
+    say "  [+] {item}"
+}
+
+// Add an item
+say green "\nYou discovered a Magic Gem!"
+add "Magic Gem" to backpack
+
+// Membership check
+if backpack has "Magic Gem" {
+    say "Gem is safely stored in backpack."
+}
+
+// Remove an item
+say red "\nYou ate the Bread."
+remove "Bread" from backpack
+
+say yellow "\nUpdated inventory ({count backpack} items):"
+for every item in backpack {
+    say "  [+] {item}"
+}

@@ -1,0 +1,21 @@
+// Pro Mode: Inline Assembly & Hardware CPU Cycle Profiling
+remove garbageC
+remove Basic
+add Advanced
+use ior
+
+// Measure code execution directly in CPU clock cycles (RDTSC)
+measure cycles {
+    remember a: Int = 10
+    remember b: Int = 20
+    remember c: Int = a + b
+    say c
+}
+
+// Direct x86_64 inline assembly
+asm {
+    nop
+    nop
+}
+
+say 420

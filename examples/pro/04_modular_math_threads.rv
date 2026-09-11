@@ -1,0 +1,23 @@
+// Pro Mode: Modular Stdlib (Math & Threads) & Atomic Operations
+remove garbageC
+remove Basic
+add Advanced
+use ior
+use math
+use thread
+
+// High-performance math module functions
+remember root: Int = sqrt(144)
+say root
+
+// Shared atomic counter
+remember shared_counter: Int = 0
+
+// Native OS thread execution
+thread {
+    atomic add shared_counter, 10
+}
+
+wait 1
+
+say shared_counter

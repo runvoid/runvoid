@@ -1,0 +1,31 @@
+// Pro Mode: C-Compatible Structs & C FFI
+remove garbageC
+remove Basic
+add Advanced
+use ior
+
+// Define C-compatible struct (8-byte aligned POD)
+struct Vector2D {
+    x,
+    y
+}
+
+// Instantiate struct
+remember vec: Vector2D = Vector2D(15, 30)
+
+say vec.x
+say vec.y
+
+// Mutate field
+vec.x = 100
+say vec.x
+
+// Direct C FFI interface
+extern "C" {
+    action puts(s: String) -> Int
+    action abs(n: Int) -> Int
+}
+
+puts("Hello from native C puts via FFI!")
+remember diff: Int = 0 - 55
+say abs(diff)

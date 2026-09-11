@@ -1,0 +1,27 @@
+// Runvoid 2D Canvas Hardware Graphics Demo
+say cyan "=== Launching Runvoid 2D Canvas ==="
+
+screen "Runvoid 2D Canvas Showcase", 640, 480 {
+    // Background
+    draw box at 0, 0, size 640, 480, color "black"
+
+    // Colorful geometric shapes
+    draw circle at 320, 240, size 60, color "cyan"
+    draw circle at 320, 240, size 40, color "blue"
+    draw circle at 320, 240, size 20, color "magenta"
+
+    // Rectangles / Obstacles
+    draw box at 60, 80, size 100, 60, color "green"
+    draw box at 480, 80, size 100, 60, color "red"
+    draw box at 200, 360, size 240, 40, color "yellow"
+
+    // Coordinate lines
+    draw line from 0, 240, to 640, 240, color "white"
+    draw line from 320, 0, to 320, 480, color "white"
+
+    // UI Text
+    draw text "Runvoid 2D Canvas - Hardware Accelerated", at 170, 40, color "yellow"
+    draw text "Press any key or click to exit...", at 210, 440, color "cyan"
+}
+
+say green "2D Canvas window closed."

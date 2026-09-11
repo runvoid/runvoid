@@ -1,0 +1,168 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Runvoid",
+  "scopeName": "source.runvoid",
+  "patterns": [
+    {
+      "include": "#comments"
+    },
+    {
+      "include": "#strings"
+    },
+    {
+      "include": "#directives"
+    },
+    {
+      "include": "#keywords"
+    },
+    {
+      "include": "#colors"
+    },
+    {
+      "include": "#types"
+    },
+    {
+      "include": "#constants"
+    },
+    {
+      "include": "#numbers"
+    },
+    {
+      "include": "#operators"
+    }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.double-slash.runvoid",
+          "match": "//.*$"
+        },
+        {
+          "name": "comment.line.number-sign.runvoid",
+          "match": "#.*$"
+        }
+      ]
+    },
+    "directives": {
+      "patterns": [
+        {
+          "match": "\\b(remove|add)\\s+(garbageC|Basic|Advanced|Linux|Freestanding)\\b",
+          "captures": {
+            "1": { "name": "keyword.control.directive.runvoid" },
+            "2": { "name": "entity.name.type.directive.runvoid" }
+          }
+        },
+        {
+          "match": "\\buse\\s+([a-zA-Z0-9_/.-]+)\\b",
+          "captures": {
+            "1": { "name": "string.unquoted.import.runvoid" }
+          }
+        }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.control.runvoid",
+          "match": "\\b(if|otherwise|repeat|while|stop|skip|action|give|for|every|as|times|struct|extern|thread|atomic)\\b"
+        },
+        {
+          "name": "keyword.declaration.runvoid",
+          "match": "\\b(remember|set)\\b"
+        },
+        {
+          "name": "keyword.other.runvoid",
+          "match": "\\b(say|say_same|same|ask|user|hidden|choose|alert|beep|speak|wait|measure|time|cycles|run|read|write|into|open|web|download|create|delete|copy|folder|file|exists|has|add|remove|to|from|count|make|uppercase|lowercase|trim|replace|with|starts|ends|asm|addr|alloc|free|lib)\\b"
+        },
+        {
+          "name": "keyword.gui.runvoid",
+          "match": "\\b(window|button|label|checkbox|screen|draw|circle|box|line|at|size)\\b"
+        }
+      ]
+    },
+    "colors": {
+      "patterns": [
+        {
+          "name": "support.constant.color.runvoid",
+          "match": "\\b(red|green|blue|yellow|cyan|magenta|color)\\b"
+        }
+      ]
+    },
+    "types": {
+      "patterns": [
+        {
+          "name": "entity.name.type.primitive.runvoid",
+          "match": "\\b(Int|String|Bool|Void|Ptr)\\b"
+        }
+      ]
+    },
+    "constants": {
+      "patterns": [
+        {
+          "name": "constant.language.boolean.runvoid",
+          "match": "\\b(true|false)\\b"
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.integer.runvoid",
+          "match": "\\b[0-9]+\\b"
+        }
+      ]
+    },
+    "operators": {
+      "patterns": [
+        {
+          "name": "keyword.operator.logical.runvoid",
+          "match": "\\b(and|or|not|is)\\b"
+        },
+        {
+          "name": "keyword.operator.comparison.runvoid",
+          "match": "(==|!=|<=|>=|<|>)"
+        },
+        {
+          "name": "keyword.operator.arithmetic.runvoid",
+          "match": "(\\+|-|\\*|/|%)"
+        },
+        {
+          "name": "keyword.operator.assignment.runvoid",
+          "match": "(=)"
+        }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.runvoid",
+          "begin": "\"",
+          "end": "\"",
+          "patterns": [
+            {
+              "name": "constant.character.escape.runvoid",
+              "match": "\\\\."
+            },
+            {
+              "name": "meta.interpolation.runvoid",
+              "begin": "\\{",
+              "end": "\\}",
+              "beginCaptures": {
+                "0": { "name": "punctuation.section.interpolation.begin.runvoid" }
+              },
+              "endCaptures": {
+                "0": { "name": "punctuation.section.interpolation.end.runvoid" }
+              },
+              "patterns": [
+                {
+                  "include": "$self"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

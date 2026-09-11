@@ -1,4 +1,4 @@
-# The Runvoid Programming Language Reference & Guide (v0.1.0)
+# The Runvoid Programming Language Reference & Guide (v0.2.0)
 
 Welcome to the official **Runvoid** documentation! 
 This guide comprehensively covers the language syntax, runtime semantics, memory model, and compiler architecture.
@@ -32,12 +32,30 @@ This guide comprehensively covers the language syntax, runtime semantics, memory
 9. [Memory Management & Garbage Collector (GC)](#9-memory-management--garbage-collector-gc)
    - [Standard Mode (Automatic GC)](#91-standard-mode-automatic-gc)
    - [Disabling the GC (`remove garbageC`)](#92-disabling-the-gc-remove-garbagec)
-10. [Pro Dev Mode (`add Advanced`)](#10-pro-dev-mode-add-advanced)
+10. [Pro Dev & Systems Mode (`add Advanced`)](#10-pro-dev-mode-add-advanced)
     - [Requirements & Directives](#101-requirements--directives)
-    - [Zero-Overhead Modular I/O (`use ior`)](#102-zero-overhead-modular-io-use-ior)
-    - [Strict Static Typing (`remove Basic`)](#103-strict-static-typing-remove-basic)
-    - [Compiler Optimizations](#104-compiler-optimizations)
+    - [Modular Standard Library](#102-modular-standard-library)
+    - [Bare-Metal Freestanding Mode](#103-bare-metal-freestanding-mode)
+    - [Hardware Inline Assembly](#104-hardware-inline-assembly)
+    - [CPU Cycle Profiling](#105-cpu-cycle-profiling)
+    - [Raw Pointers & Manual Memory](#106-raw-pointers--manual-memory)
+    - [C-Compatible POD Structs](#107-c-compatible-pod-structs)
+    - [Direct C Foreign Function Interface](#108-direct-c-foreign-function-interface)
+    - [Multithreading & Atomic Operations](#109-multithreading--atomic-operations)
+    - [Compiler Optimizations](#1010-compiler-optimizations)
 11. [Compiler Architecture](#11-compiler-architecture)
+12. [Beginner Conversational Extensions](#12-beginner-conversational-extensions)
+    - [Natural Word Lists & Iteration](#121-natural-word-lists--iteration)
+    - [Colorful Console Output & Terminal Sounds](#122-colorful-console-output--terminal-sounds)
+    - [2D Hardware Screen Canvas](#123-2d-hardware-screen-canvas)
+    - [Interactive Console Menus & Popups](#124-interactive-console-menus--popups)
+    - [File System, Web & String Utilities](#125-file-system-web--string-utilities)
+    - [Performance Benchmarking](#126-performance-benchmarking)
+13. [Developer Tooling & Ecosystem](#13-developer-tooling--ecosystem)
+    - [Formatter (`runvoid fmt`)](#131-formatter-runvoid-fmt)
+    - [Starter Templates (`runvoid new`)](#132-starter-templates-runvoid-new)
+    - [Interactive Cheat Sheet (`runvoid cheat`)](#133-interactive-cheat-sheet-runvoid-cheat)
+    - [Official VS Code Extension](#134-official-vs-code-extension)
 
 ---
 
@@ -293,39 +311,158 @@ completely strips the garbage collection subsystem. Memory allocations are route
 
 ---
 
-## 10. Pro Dev Mode (`add Advanced`)
+## 10. Pro Dev & Systems Mode (`add Advanced`)
 
-When maximum performance and minimal binary footprint are required:
+When maximum performance, absolute control, and minimal binary footprint are required, Runvoid transforms into an uncompromising systems programming language.
 
 ### 10.1 Requirements & Directives
-Pro Dev mode requires explicitly disabling beginner-oriented conveniences:
+Pro Dev mode requires explicitly opting out of high-level runtime conveniences:
 ```runvoid
 remove garbageC
 remove Basic
 add Advanced
 ```
+In this mode:
+- The garbage collector is completely omitted (Zero-GC).
+- Strict static typing is strictly enforced (`: Int`, `: String`, `: Bool`, `: Ptr`, or custom struct names).
+- Untyped variables or undeclared functions are rejected at compile time.
 
-### 10.2 Zero-Overhead Modular I/O (`use ior`)
-In `add Advanced` mode, standard I/O functions (`say`, `ask`, `read`, `write`) are not linked into the binary by default. To use I/O, developers explicitly import the lightweight I/O module:
+### 10.2 Modular Standard Library
+Instead of bundling a monolithic standard library, Pro Mode requires explicit module imports:
 ```runvoid
-use ior
+use ior       # Low-level I/O: say, ask, user dialogs
+use math      # High-performance math: sqrt, sin, cos, pow, abs (links -lm)
+use sys       # System primitives: exit, getpid
+use mem       # Manual memory allocations: alloc, free
+use fs        # Direct file operations: read, write, copy, delete
+use net       # TCP sockets: tcp_listen, tcp_accept, tcp_connect, tcp_send, tcp_recv, tcp_close
+use thread    # Native OS threads: thread { ... }, rv_thread_join (links -lpthread)
 ```
 
-### 10.3 Strict Static Typing (`remove Basic`)
-In strict mode, all variable definitions and function signatures must specify concrete static types (`: Int`, `: String`, `: Bool`):
+#### Dynamic Library Linking:
+Link external C libraries seamlessly using `use lib`:
 ```runvoid
-remember count: Int = 100
-remember name: String = "Pro Dev"
+use lib "raylib"
+use lib "sqlite3"
+```
+The compiler passes these directly as `-lraylib` and `-lsqlite3` to the linker.
 
-action square(n: Int): Int {
-    give n * n
+#### Multi-File Imports:
+Break programs into clean modules:
+```runvoid
+use "helpers.rv"
+```
+The AST of imported `.rv` files is resolved and combined at compile time.
+
+### 10.3 Bare-Metal Freestanding Mode
+For kernel, bootloader, or embedded programming where neither `libc` nor any runtime is permissible:
+```runvoid
+remove garbageC
+remove Basic
+remove Linux
+add Advanced
+add Freestanding
+
+asm {
+    mov rax, 60    # sys_exit
+    xor rdi, rdi   # status 0
+    syscall
+}
+```
+In freestanding mode:
+- The compiler emits `global _start` as the single entry point.
+- Zero runtime functions or libc symbols are referenced.
+- Linked directly with GNU `ld -s` into an ultra-minimal standalone ELF executable.
+
+### 10.4 Hardware Inline Assembly
+Execute raw x86_64 CPU instructions directly inside your Runvoid codebase:
+```runvoid
+asm {
+    mov rax, 42
+    imul rax, 10
 }
 ```
 
-### 10.4 Compiler Optimizations
-Enabling `add Advanced` unlocks aggressive optimization passes:
-- **Constant Folding:** Mathematical and logical expressions involving constants are evaluated at compile time (`10 * 10 + 50` -> `150`).
-- **Dead Code Elimination (DCE):** Unreachable instructions following `give`, `stop`, or `skip` are pruned from the AST.
+### 10.5 CPU Cycle Profiling
+Profile code execution speed directly in hardware CPU clock cycles using the x86 `RDTSC` instruction:
+```runvoid
+measure cycles {
+    remember a: Int = 100
+    remember b: Int = 200
+    say a + b
+}
+```
+Outputs execution time directly in exact CPU clock cycles: `⏱️ Executed in 142 CPU cycles`.
+
+### 10.6 Raw Pointers & Manual Memory
+Direct memory manipulation with C-equivalent speed and control:
+```runvoid
+use mem
+
+remember val: Int = 42
+remember ptr: Ptr = addr val     # Take memory address
+
+say @ptr                         # Dereference read
+
+@ptr = 100                       # Dereference write
+say val                          # 100
+
+remember heap: Ptr = alloc 64    # Allocate 64 bytes on heap
+@heap = 777
+free heap                        # Free heap allocation
+```
+
+### 10.7 C-Compatible POD Structs
+Define 8-byte aligned Plain Old Data structures compatible with C ABI layout:
+```runvoid
+struct Point3D {
+    x,
+    y,
+    z
+}
+
+remember pt: Point3D = Point3D(10, 20, 30)
+say pt.x
+say pt.y
+
+pt.z = 99
+say pt.z
+```
+
+### 10.8 Direct C Foreign Function Interface
+Call any C standard library or third-party C library function directly without wrapper overhead:
+```runvoid
+extern "C" {
+    action puts(s: String) -> Int
+    action abs(n: Int) -> Int
+}
+
+puts("Hello from native C puts!")
+remember neg: Int = 0 - 50
+say abs(neg)
+```
+Runvoid strings automatically pass their internal null-terminated C string pointer (`char*`) to extern functions.
+
+### 10.9 Multithreading & Atomic Operations
+Spawn native Linux POSIX threads and perform hardware-locked atomic operations:
+```runvoid
+use thread
+
+remember shared_counter: Int = 0
+
+thread {
+    atomic add shared_counter, 50
+}
+
+wait 1
+say shared_counter
+```
+`atomic add` compiles directly to `lock add [reg], rax`, ensuring zero-race condition multithreaded synchronization.
+
+### 10.10 Compiler Optimizations
+Enabling `add Advanced` unlocks aggressive multi-tier optimization passes:
+- **Constant Folding:** Expressions involving constants are evaluated at compile time (`10 * 10 + 50` -> `150`).
+- **Dead Code Elimination (DCE):** Unreachable blocks and dead instructions after return/break/continue are pruned from the AST.
 - **Peephole Optimizations:** Register zeroing idioms (`xor eax, eax`), increment/decrement substitutions, and redundant stack operations eliminated.
 - **Link-Time Optimization (LTO) & Stripping:** Builds with `nasm -O3` and `gcc -O3 -flto -s -Wl,--gc-sections`, producing ultra-compact native binaries starting from ~15 KB.
 
@@ -345,3 +482,114 @@ The Runvoid compiler is written in **Rust** targeting **NASM (x86_64 Linux)** fo
    - [`runtime/gui.c`](file:///home/runvoid/Projects/runvoidLanguage/runtime/gui.c): Minimalist X11/XWayland windowing and immediate-mode GUI engine.
 3. **Linker:**
    - Links object files into a standalone Linux ELF executable.
+
+---
+
+## 12. Beginner Conversational Extensions
+
+### 12.1 Natural Word Lists & Iteration
+```runvoid
+remember backpack = "Sword", "Health Potion", "Compass"
+add "Magic Ring" to backpack
+remove "Compass" from backpack
+
+if backpack has "Sword" {
+    say "Ready for battle!"
+}
+
+say "Total items: {count backpack}"
+
+for every item in backpack {
+    say " - {item}"
+}
+```
+
+### 12.2 Colorful Console Output & Terminal Sounds
+```runvoid
+say green "Build Succeeded!"
+say red "Critical Error!"
+say yellow "Warning: disk almost full"
+say blue "Notice: server listening"
+say same "Progress: "
+say same green "[100%]\n"
+
+beep                     # System terminal bell sound
+speak "Hello adventurer!" # Text-to-speech
+```
+
+### 12.3 2D Hardware Screen Canvas
+```runvoid
+screen "Game Canvas", 640, 480 {
+    draw box at 0, 0, size 640, 480, color "black"
+    draw circle at 320, 240, size 40, color "cyan"
+    draw line from 0, 0 to 640, 480, color "red"
+    draw text "Runvoid 2D Canvas", at 200, 50, color "yellow"
+}
+```
+
+### 12.4 Interactive Console Menus & Popups
+```runvoid
+remember weapon = choose "Choose weapon:", "Sword", "Bow", "Magic Staff"
+remember confirmed = ask user "Do you want to proceed?"
+alert "Dungeon Gate Unlocked!"
+```
+
+### 12.5 File System, Web & String Utilities
+```runvoid
+create folder "backups"
+copy file "save.dat" to "backups/save.dat"
+delete file "old.log"
+
+if file "save.dat" exists {
+    say "Save found!"
+}
+
+download "https://runvoid.org/logo.png" into "logo.png"
+remember data = read web "https://api.github.com"
+
+make weapon uppercase
+make weapon lowercase
+make weapon trim
+remember replaced = replace "Sword" with "Excalibur" in weapon
+```
+
+### 12.6 Performance Benchmarking
+```runvoid
+measure time {
+    remember count = 0
+    repeat 1000000 times as i {
+        set count = count + 1
+    }
+}
+```
+
+---
+
+## 13. Developer Tooling & Ecosystem
+
+### 13.1 Formatter (`runvoid fmt`)
+Automatically format indentation, spacing, and block structure:
+```bash
+runvoid fmt script.rv       # print formatted output
+runvoid fmt -w script.rv    # format in-place
+```
+
+### 13.2 Starter Templates (`runvoid new`)
+Scaffold runnable beginner projects instantly:
+```bash
+runvoid new game my_game.rv    # 2D Screen canvas game
+runvoid new gui my_app.rv      # Native Desktop GUI
+runvoid new script my_code.rv  # Conversational beginner script
+```
+
+### 13.3 Interactive Cheat Sheet (`runvoid cheat`)
+Display a terminal quick-reference guide anytime:
+```bash
+runvoid cheat
+```
+
+### 13.4 Official VS Code Extension
+Located at [`editors/vscode/`](file:///home/runvoid/Projects/runvoidLanguage/editors/vscode/):
+- Full TextMate syntax highlighting for all Runvoid keywords, directives, colors, strings, and `{...}` interpolations.
+- Auto-closing brackets and quotes.
+- Automatic 4-space indentation and block folding.

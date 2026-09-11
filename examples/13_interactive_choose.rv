@@ -1,0 +1,13 @@
+// Runvoid Interactive Choose & Dialog Demo
+say cyan "=== The Runvoid RPG Quest ==="
+
+remember hero = "Adventurer"
+say "Greetings, {hero}!"
+
+remember weapon = choose "Choose your starting weapon:", "Flaming Sword", "Elven Bow", "Arcane Staff", "Dual Daggers"
+say green "You selected: {weapon}!"
+
+remember armor = choose "Choose your armor:", "Plate Mail", "Leather Cloak", "Wizard Robes"
+say green "Equipped: {armor}!"
+
+say green "Hero is equipped and ready for adventure!"

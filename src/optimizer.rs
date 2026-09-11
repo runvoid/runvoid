@@ -35,11 +35,16 @@ impl Optimizer {
             }
 
             match stmt {
-                Stmt::Say { expr, newline } => {
+                Stmt::Say {
+                    expr,
+                    newline,
+                    color,
+                } => {
                     let opt_expr = self.optimize_expr(expr);
                     optimized.push(Stmt::Say {
                         expr: opt_expr,
                         newline,
+                        color,
                     });
                 }
                 Stmt::Remember {
@@ -81,20 +86,16 @@ impl Optimizer {
                             let mut resolved = false;
                             for (elif_c, elif_b) in otherwise_ifs {
                                 let opt_elif_c = self.optimize_expr(elif_c);
-                                if let Expr::Bool(elif_b_val) = opt_elif_c {
-                                    if elif_b_val {
-                                        let opt_elif_body = self.optimize_statements(elif_b);
-                                        optimized.extend(opt_elif_body);
-                                        resolved = true;
-                                        break;
-                                    }
+                                if let Expr::Bool(true) = opt_elif_c {
+                                    let opt_elif_body = self.optimize_statements(elif_b);
+                                    optimized.extend(opt_elif_body);
+                                    resolved = true;
+                                    break;
                                 }
                             }
-                            if !resolved {
-                                if let Some(other_b) = otherwise_branch {
-                                    let opt_other = self.optimize_statements(other_b);
-                                    optimized.extend(opt_other);
-                                }
+                            if let (false, Some(other_b)) = (resolved, otherwise_branch) {
+                                let opt_other = self.optimize_statements(other_b);
+                                optimized.extend(opt_other);
                             }
                             continue;
                         }
@@ -103,7 +104,8 @@ impl Optimizer {
                     let opt_then = self.optimize_statements(then_branch);
                     let mut opt_otherwise_ifs = Vec::new();
                     for (c, b) in otherwise_ifs {
-                        opt_otherwise_ifs.push((self.optimize_expr(c), self.optimize_statements(b)));
+                        opt_otherwise_ifs
+                            .push((self.optimize_expr(c), self.optimize_statements(b)));
                     }
                     let opt_otherwise = otherwise_branch.map(|b| self.optimize_statements(b));
 
@@ -232,6 +234,176 @@ impl Optimizer {
                         extra: opt_extra,
                     });
                 }
+                Stmt::Alert(msg) => {
+                    let opt_msg = self.optimize_expr(msg);
+                    optimized.push(Stmt::Alert(opt_msg));
+                }
+                Stmt::Beep => {
+                    optimized.push(Stmt::Beep);
+                }
+                Stmt::Speak(msg) => {
+                    let opt_msg = self.optimize_expr(msg);
+                    optimized.push(Stmt::Speak(opt_msg));
+                }
+                Stmt::OpenWeb(url) => {
+                    let opt_url = self.optimize_expr(url);
+                    optimized.push(Stmt::OpenWeb(opt_url));
+                }
+                Stmt::DownloadWeb { url, target } => {
+                    let opt_url = self.optimize_expr(url);
+                    let opt_target = self.optimize_expr(target);
+                    optimized.push(Stmt::DownloadWeb {
+                        url: opt_url,
+                        target: opt_target,
+                    });
+                }
+                Stmt::Screen {
+                    title,
+                    width,
+                    height,
+                    body,
+                } => {
+                    let opt_title = self.optimize_expr(title);
+                    let opt_w = width.map(|w| self.optimize_expr(w));
+                    let opt_h = height.map(|h| self.optimize_expr(h));
+                    let opt_body = self.optimize_statements(body);
+                    optimized.push(Stmt::Screen {
+                        title: opt_title,
+                        width: opt_w,
+                        height: opt_h,
+                        body: opt_body,
+                    });
+                }
+                Stmt::DrawCircle {
+                    x,
+                    y,
+                    radius,
+                    color,
+                } => {
+                    let opt_x = self.optimize_expr(x);
+                    let opt_y = self.optimize_expr(y);
+                    let opt_r = self.optimize_expr(radius);
+                    let opt_c = color.map(|c| self.optimize_expr(c));
+                    optimized.push(Stmt::DrawCircle {
+                        x: opt_x,
+                        y: opt_y,
+                        radius: opt_r,
+                        color: opt_c,
+                    });
+                }
+                Stmt::DrawRect {
+                    x,
+                    y,
+                    width,
+                    height,
+                    color,
+                } => {
+                    let opt_x = self.optimize_expr(x);
+                    let opt_y = self.optimize_expr(y);
+                    let opt_w = self.optimize_expr(width);
+                    let opt_h = self.optimize_expr(height);
+                    let opt_c = color.map(|c| self.optimize_expr(c));
+                    optimized.push(Stmt::DrawRect {
+                        x: opt_x,
+                        y: opt_y,
+                        width: opt_w,
+                        height: opt_h,
+                        color: opt_c,
+                    });
+                }
+                Stmt::DrawLine {
+                    x1,
+                    y1,
+                    x2,
+                    y2,
+                    color,
+                } => {
+                    let opt_x1 = self.optimize_expr(x1);
+                    let opt_y1 = self.optimize_expr(y1);
+                    let opt_x2 = self.optimize_expr(x2);
+                    let opt_y2 = self.optimize_expr(y2);
+                    let opt_c = color.map(|c| self.optimize_expr(c));
+                    optimized.push(Stmt::DrawLine {
+                        x1: opt_x1,
+                        y1: opt_y1,
+                        x2: opt_x2,
+                        y2: opt_y2,
+                        color: opt_c,
+                    });
+                }
+                Stmt::DrawText { text, x, y, color } => {
+                    let opt_text = self.optimize_expr(text);
+                    let opt_x = self.optimize_expr(x);
+                    let opt_y = self.optimize_expr(y);
+                    let opt_c = color.map(|c| self.optimize_expr(c));
+                    optimized.push(Stmt::DrawText {
+                        text: opt_text,
+                        x: opt_x,
+                        y: opt_y,
+                        color: opt_c,
+                    });
+                }
+                Stmt::ClearScreen => {
+                    optimized.push(Stmt::ClearScreen);
+                }
+                Stmt::CursorAt { x, y } => {
+                    let opt_x = self.optimize_expr(x);
+                    let opt_y = self.optimize_expr(y);
+                    optimized.push(Stmt::CursorAt { x: opt_x, y: opt_y });
+                }
+                Stmt::CreateFolder(p) => {
+                    let opt_p = self.optimize_expr(p);
+                    optimized.push(Stmt::CreateFolder(opt_p));
+                }
+                Stmt::DeleteFile(p) => {
+                    let opt_p = self.optimize_expr(p);
+                    optimized.push(Stmt::DeleteFile(opt_p));
+                }
+                Stmt::DeleteFolder(p) => {
+                    let opt_p = self.optimize_expr(p);
+                    optimized.push(Stmt::DeleteFolder(opt_p));
+                }
+                Stmt::CopyFile { src, dest } => {
+                    let opt_src = self.optimize_expr(src);
+                    let opt_dest = self.optimize_expr(dest);
+                    optimized.push(Stmt::CopyFile {
+                        src: opt_src,
+                        dest: opt_dest,
+                    });
+                }
+                Stmt::AddToList { item, list } => {
+                    let opt_item = self.optimize_expr(item);
+                    optimized.push(Stmt::AddToList {
+                        item: opt_item,
+                        list,
+                    });
+                }
+                Stmt::RemoveFromList { item, list } => {
+                    let opt_item = self.optimize_expr(item);
+                    optimized.push(Stmt::RemoveFromList {
+                        item: opt_item,
+                        list,
+                    });
+                }
+                Stmt::ForEvery {
+                    item_var,
+                    list_var,
+                    body,
+                } => {
+                    let opt_body = self.optimize_statements(body);
+                    optimized.push(Stmt::ForEvery {
+                        item_var,
+                        list_var,
+                        body: opt_body,
+                    });
+                }
+                Stmt::MakeString { var_name, op } => {
+                    optimized.push(Stmt::MakeString { var_name, op });
+                }
+                Stmt::MeasureTime { body } => {
+                    let opt_body = self.optimize_statements(body);
+                    optimized.push(Stmt::MeasureTime { body: opt_body });
+                }
                 Stmt::RunCommand { command } => {
                     let opt_cmd = self.optimize_expr(command);
                     optimized.push(Stmt::RunCommand { command: opt_cmd });
@@ -239,6 +411,53 @@ impl Optimizer {
                 Stmt::ExprStmt(expr) => {
                     let opt_expr = self.optimize_expr(expr);
                     optimized.push(Stmt::ExprStmt(opt_expr));
+                }
+                Stmt::UseLib(lib) => {
+                    optimized.push(Stmt::UseLib(lib));
+                }
+                Stmt::InlineAsm(code) => {
+                    optimized.push(Stmt::InlineAsm(code));
+                }
+                Stmt::MeasureCycles { body } => {
+                    let opt_body = self.optimize_statements(body);
+                    optimized.push(Stmt::MeasureCycles { body: opt_body });
+                }
+                Stmt::DerefAssign {
+                    ptr_expr,
+                    value_expr,
+                } => {
+                    let opt_ptr = self.optimize_expr(ptr_expr);
+                    let opt_val = self.optimize_expr(value_expr);
+                    optimized.push(Stmt::DerefAssign {
+                        ptr_expr: opt_ptr,
+                        value_expr: opt_val,
+                    });
+                }
+                Stmt::FieldAssign {
+                    target,
+                    field,
+                    value,
+                } => {
+                    let opt_val = self.optimize_expr(value);
+                    optimized.push(Stmt::FieldAssign {
+                        target,
+                        field,
+                        value: opt_val,
+                    });
+                }
+                Stmt::StructDef { name, fields } => {
+                    optimized.push(Stmt::StructDef { name, fields });
+                }
+                Stmt::ExternBlock { abi, actions } => {
+                    optimized.push(Stmt::ExternBlock { abi, actions });
+                }
+                Stmt::ThreadSpawn { body } => {
+                    let opt_body = self.optimize_statements(body);
+                    optimized.push(Stmt::ThreadSpawn { body: opt_body });
+                }
+                Stmt::AtomicAdd { var, val } => {
+                    let opt_val = self.optimize_expr(val);
+                    optimized.push(Stmt::AtomicAdd { var, val: opt_val });
                 }
             }
         }
@@ -359,10 +578,8 @@ impl Optimizer {
                     merged_parts.push(Expr::Str(str_acc));
                 }
 
-                if merged_parts.len() == 1 {
-                    if let Some(Expr::Str(s)) = merged_parts.first() {
-                        return Expr::Str(s.clone());
-                    }
+                if let [Expr::Str(s)] = merged_parts.as_slice() {
+                    return Expr::Str(s.clone());
                 }
 
                 Expr::InterpolatedString(merged_parts)
@@ -426,11 +643,13 @@ mod tests {
             Stmt::Say {
                 expr: Expr::Str("First".to_string()),
                 newline: true,
+                color: None,
             },
             Stmt::Give(None),
             Stmt::Say {
                 expr: Expr::Str("Dead".to_string()),
                 newline: true,
+                color: None,
             },
         ];
 

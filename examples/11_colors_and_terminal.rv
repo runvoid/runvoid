@@ -1,0 +1,21 @@
+// Runvoid Colors & Interactive Terminal Console
+say cyan "===================================="
+say cyan "    Runvoid ANSI Color Showcase     "
+say cyan "===================================="
+
+say red "This is a danger message in RED!"
+say green "This is a success message in GREEN!"
+say yellow "This is a warning message in YELLOW!"
+say blue "This is an informative message in BLUE!"
+say magenta "This is a fancy message in MAGENTA!"
+say cyan "This is a cool status in CYAN!"
+
+say same "Inline loading: "
+say same green "[DONE] "
+say same yellow "[PENDING] "
+say red "[FAILED]\n"
+
+say green "Triggering terminal audio beep..."
+beep
+
+say cyan "Terminal demo completed successfully."

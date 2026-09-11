@@ -1,5 +1,5 @@
 use crate::ast::*;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 pub struct CodeGenerator {
     directives: Directives,
@@ -12,6 +12,11 @@ pub struct CodeGenerator {
     loop_stack: Vec<(String, String)>, // (continue_label, break_label)
     in_action: bool,
     pub has_gui: bool,
+    pub has_helpers: bool,
+    pub struct_defs: HashMap<String, Vec<(String, Type)>>,
+    pub extern_actions: HashSet<String>,
+    pub thread_funcs: Vec<String>,
+    pub in_thread: bool,
 }
 
 impl CodeGenerator {
@@ -27,10 +32,29 @@ impl CodeGenerator {
             loop_stack: Vec::new(),
             in_action: false,
             has_gui: false,
+            has_helpers: false,
+            struct_defs: HashMap::new(),
+            extern_actions: HashSet::new(),
+            thread_funcs: Vec::new(),
+            in_thread: false,
         }
     }
 
-    pub fn generate(mut self, program: &Program) -> (String, bool) {
+    pub fn generate(mut self, program: &Program) -> (String, bool, bool) {
+        for stmt in &program.statements {
+            match stmt {
+                Stmt::StructDef { name, fields } => {
+                    self.struct_defs.insert(name.clone(), fields.clone());
+                }
+                Stmt::ExternBlock { actions, .. } => {
+                    for act in actions {
+                        self.extern_actions.insert(act.name.clone());
+                    }
+                }
+                _ => {}
+            }
+        }
+
         // Collect string constants
         let mut body_code = Vec::new();
 
@@ -51,9 +75,62 @@ impl CodeGenerator {
             }
         }
 
+        if self.directives.remove_linux && self.directives.add_freestanding {
+            let mut output = String::new();
+            output.push_str("default rel\n\n");
+            output.push_str("global _start\n\n");
+
+            if !self.asm_rodata.is_empty() {
+                output.push_str("section .rodata\n");
+                for line in &self.asm_rodata {
+                    output.push_str(line);
+                    output.push('\n');
+                }
+                output.push('\n');
+            }
+
+            output.push_str("section .text\n");
+            for line in &action_code {
+                output.push_str(line);
+                output.push('\n');
+            }
+            for line in &self.thread_funcs {
+                output.push_str(line);
+                output.push('\n');
+            }
+
+            output.push_str("_start:\n");
+            output.push_str("    push rbp\n");
+            output.push_str("    mov rbp, rsp\n");
+            let stack_size = ((self.current_stack_offset.abs() + 31) / 16) * 16;
+            if stack_size > 0 {
+                output.push_str(&format!("    sub rsp, {}\n", stack_size));
+            }
+
+            for line in &body_code {
+                output.push_str(line);
+                output.push('\n');
+            }
+
+            output.push_str("    mov rax, 60\n");
+            output.push_str("    xor rdi, rdi\n");
+            output.push_str("    syscall\n");
+
+            let final_asm = if self.directives.add_advanced {
+                self.peephole_optimize(&output)
+            } else {
+                output
+            };
+
+            return (final_asm, false, false);
+        }
+
         let mut output = String::new();
         output.push_str("default rel\n\n");
         output.push_str("global main\n");
+        for act in &self.extern_actions {
+            output.push_str(&format!("extern ${}\n", act));
+        }
         output.push_str("extern rv_init\n");
         output.push_str("extern rv_alloc\n");
         output.push_str("extern rv_gc_collect\n");
@@ -81,6 +158,59 @@ impl CodeGenerator {
         output.push_str("extern rv_imrv_draw_checkbox\n");
         output.push_str("extern rv_imrv_draw_button\n");
         output.push_str("extern rv_imrv_draw_text\n");
+        output.push_str("extern rv_say_color_str\n");
+        output.push_str("extern rv_alert\n");
+        output.push_str("extern rv_ask_user\n");
+        output.push_str("extern rv_beep\n");
+        output.push_str("extern rv_speak\n");
+        output.push_str("extern rv_open_web\n");
+        output.push_str("extern rv_download\n");
+        output.push_str("extern rv_read_web\n");
+        output.push_str("extern rv_clear_screen\n");
+        output.push_str("extern rv_cursor_at\n");
+        output.push_str("extern rv_ask_hidden\n");
+        output.push_str("extern rv_choose\n");
+        output.push_str("extern rv_create_folder\n");
+        output.push_str("extern rv_delete_file\n");
+        output.push_str("extern rv_delete_folder\n");
+        output.push_str("extern rv_copy_file\n");
+        output.push_str("extern rv_file_exists\n");
+        output.push_str("extern rv_str_replace\n");
+        output.push_str("extern rv_str_upper\n");
+        output.push_str("extern rv_str_lower\n");
+        output.push_str("extern rv_str_trim\n");
+        output.push_str("extern rv_str_starts_with\n");
+        output.push_str("extern rv_str_ends_with\n");
+        output.push_str("extern rv_screen_init\n");
+        output.push_str("extern rv_screen_draw_rect\n");
+        output.push_str("extern rv_screen_draw_circle\n");
+        output.push_str("extern rv_screen_draw_line\n");
+        output.push_str("extern rv_screen_draw_text\n");
+        output.push_str("extern rv_screen_loop\n");
+        output.push_str("extern rv_list_create\n");
+        output.push_str("extern rv_list_add\n");
+        output.push_str("extern rv_list_remove\n");
+        output.push_str("extern rv_list_has\n");
+        output.push_str("extern rv_list_count\n");
+        output.push_str("extern rv_list_get\n");
+        output.push_str("extern rv_time_now_ms\n");
+        output.push_str("extern rv_measure_report\n");
+        output.push_str("extern rv_measure_cycles_report\n");
+        output.push_str("extern rv_thread_spawn\n");
+        output.push_str("extern rv_thread_join\n");
+        output.push_str("extern rv_mem_alloc\n");
+        output.push_str("extern rv_mem_free\n");
+        output.push_str("extern rv_sqrt\n");
+        output.push_str("extern rv_sin\n");
+        output.push_str("extern rv_cos\n");
+        output.push_str("extern rv_pow\n");
+        output.push_str("extern rv_abs\n");
+        output.push_str("extern rv_tcp_listen\n");
+        output.push_str("extern rv_tcp_accept\n");
+        output.push_str("extern rv_tcp_connect\n");
+        output.push_str("extern rv_tcp_send\n");
+        output.push_str("extern rv_tcp_recv\n");
+        output.push_str("extern rv_tcp_close\n");
         output.push_str("extern rv_exit\n\n");
 
         // .rodata section
@@ -96,6 +226,12 @@ impl CodeGenerator {
 
         // Action functions
         for line in &action_code {
+            output.push_str(line);
+            output.push('\n');
+        }
+
+        // Thread worker functions
+        for line in &self.thread_funcs {
             output.push_str(line);
             output.push('\n');
         }
@@ -134,7 +270,7 @@ impl CodeGenerator {
             output
         };
 
-        (final_asm, self.has_gui)
+        (final_asm, self.has_gui, self.has_helpers)
     }
 
     fn peephole_optimize(&self, code: &str) -> String {
@@ -194,7 +330,7 @@ impl CodeGenerator {
         }
 
         let lbl = format!("_rv_str_{}", self.string_literals.len());
-        let len = s.as_bytes().len();
+        let len = s.len();
 
         let mut escaped_bytes = Vec::new();
         for b in s.as_bytes() {
@@ -227,16 +363,23 @@ impl CodeGenerator {
         }
     }
 
+    fn get_field_index(&self, field_name: &str) -> usize {
+        for fields in self.struct_defs.values() {
+            for (idx, (f, _)) in fields.iter().enumerate() {
+                if f == field_name {
+                    return idx;
+                }
+            }
+        }
+        0
+    }
+
     fn infer_expr_type(&self, expr: &Expr) -> Type {
         match expr {
             Expr::Int(_) => Type::Int,
             Expr::Str(_) | Expr::InterpolatedString(_) | Expr::Ask(_) => Type::String,
             Expr::Bool(_) => Type::Bool,
-            Expr::Var(name) => self
-                .var_types
-                .get(name)
-                .cloned()
-                .unwrap_or(Type::Int),
+            Expr::Var(name) => self.var_types.get(name).cloned().unwrap_or(Type::Int),
             Expr::Binary { left, op, .. } => match op {
                 BinaryOp::Equal
                 | BinaryOp::NotEqual
@@ -271,6 +414,21 @@ impl CodeGenerator {
                     Type::Void
                 }
             }
+            Expr::AskUser(_)
+            | Expr::FileExists(_)
+            | Expr::ListHas { .. }
+            | Expr::StrStartsWith { .. }
+            | Expr::StrEndsWith { .. } => Type::Bool,
+            Expr::AskHidden(_)
+            | Expr::Choose { .. }
+            | Expr::ReadWeb(_)
+            | Expr::StrReplace { .. } => Type::String,
+            Expr::ListCount(_) | Expr::ListLiteral(_) => Type::Int,
+            Expr::AddrOf(_) | Expr::Alloc(_) => Type::Ptr,
+            Expr::Deref(_) => Type::Int,
+            Expr::Free(_) => Type::Void,
+            Expr::FieldAccess { .. } => Type::Int,
+            Expr::StructInit { name, .. } => Type::Custom(name.clone()),
         }
     }
 
@@ -278,31 +436,53 @@ impl CodeGenerator {
         let mut code = Vec::new();
 
         match stmt {
-            Stmt::Say { expr, newline } => {
-                let ty = self.infer_expr_type(expr);
-                code.extend(self.generate_expr(expr));
-                code.push("    mov rdi, rax".to_string());
+            Stmt::Say {
+                expr,
+                newline,
+                color,
+            } => {
+                if let Some(col) = color {
+                    self.has_helpers = true;
+                    let color_code = match col.to_lowercase().as_str() {
+                        "red" => 1,
+                        "green" => 2,
+                        "yellow" => 3,
+                        "blue" => 4,
+                        "magenta" => 5,
+                        "cyan" => 6,
+                        _ => 0,
+                    };
+                    code.extend(self.generate_stringified_expr(expr));
+                    code.push("    mov rdi, rax".to_string());
+                    code.push(format!("    mov rsi, {}", color_code));
+                    code.push(format!("    mov rdx, {}", if *newline { 1 } else { 0 }));
+                    code.push("    call rv_say_color_str".to_string());
+                } else {
+                    let ty = self.infer_expr_type(expr);
+                    code.extend(self.generate_expr(expr));
+                    code.push("    mov rdi, rax".to_string());
 
-                match ty {
-                    Type::String => {
-                        if *newline {
-                            code.push("    call rv_say_str".to_string());
-                        } else {
-                            code.push("    call rv_say_same_str".to_string());
+                    match ty {
+                        Type::String => {
+                            if *newline {
+                                code.push("    call rv_say_str".to_string());
+                            } else {
+                                code.push("    call rv_say_same_str".to_string());
+                            }
                         }
-                    }
-                    Type::Bool => {
-                        if *newline {
-                            code.push("    call rv_say_bool".to_string());
-                        } else {
-                            code.push("    call rv_say_same_bool".to_string());
+                        Type::Bool => {
+                            if *newline {
+                                code.push("    call rv_say_bool".to_string());
+                            } else {
+                                code.push("    call rv_say_same_bool".to_string());
+                            }
                         }
-                    }
-                    _ => {
-                        if *newline {
-                            code.push("    call rv_say_int".to_string());
-                        } else {
-                            code.push("    call rv_say_same_int".to_string());
+                        _ => {
+                            if *newline {
+                                code.push("    call rv_say_int".to_string());
+                            } else {
+                                code.push("    call rv_say_same_int".to_string());
+                            }
                         }
                     }
                 }
@@ -322,7 +502,8 @@ impl CodeGenerator {
             Stmt::Assign { name, value } => {
                 let offset = *self.var_offsets.get(name).unwrap_or(&-8);
                 code.extend(self.generate_expr(value));
-                code.push(format!("    mov [rbp + ({})], rax", offset));
+                let base = if self.in_thread { "r12" } else { "rbp" };
+                code.push(format!("    mov [{} + ({})], rax", base, offset));
             }
             Stmt::If {
                 condition,
@@ -377,11 +558,15 @@ impl CodeGenerator {
                 let loop_end = self.new_label("repeat_end");
 
                 // Allocate slot for current counter and limit
-                let counter_offset = self.allocate_variable(&format!("__rep_cnt_{}", loop_start), Type::Int);
-                let limit_offset = self.allocate_variable(&format!("__rep_lim_{}", loop_start), Type::Int);
+                let counter_offset =
+                    self.allocate_variable(&format!("__rep_cnt_{}", loop_start), Type::Int);
+                let limit_offset =
+                    self.allocate_variable(&format!("__rep_lim_{}", loop_start), Type::Int);
 
                 // If user named the loop variable, bind it to counter_offset
-                let user_var_offset = var_name.as_ref().map(|v| self.allocate_variable(v, Type::Int));
+                let user_var_offset = var_name
+                    .as_ref()
+                    .map(|v| self.allocate_variable(v, Type::Int));
 
                 // Evaluate count and store in limit
                 code.extend(self.generate_expr(count));
@@ -447,10 +632,7 @@ impl CodeGenerator {
                 }
             }
             Stmt::ActionDef {
-                name,
-                params,
-                body,
-                ..
+                name, params, body, ..
             } => {
                 let func_label = format!("rv_action_{}", name);
                 code.push(format!("{}:", func_label));
@@ -612,8 +794,388 @@ impl CodeGenerator {
                     code.push("    call rv_imrv_draw_text".to_string());
                 }
             }
+            Stmt::Alert(expr) => {
+                self.has_helpers = true;
+                code.extend(self.generate_stringified_expr(expr));
+                code.push("    mov rdi, rax".to_string());
+                code.push("    call rv_alert".to_string());
+            }
+            Stmt::Beep => {
+                self.has_helpers = true;
+                code.push("    call rv_beep".to_string());
+            }
+            Stmt::Speak(expr) => {
+                self.has_helpers = true;
+                code.extend(self.generate_stringified_expr(expr));
+                code.push("    mov rdi, rax".to_string());
+                code.push("    call rv_speak".to_string());
+            }
+            Stmt::OpenWeb(expr) => {
+                self.has_helpers = true;
+                code.extend(self.generate_stringified_expr(expr));
+                code.push("    mov rdi, rax".to_string());
+                code.push("    call rv_open_web".to_string());
+            }
+            Stmt::DownloadWeb { url, target } => {
+                self.has_helpers = true;
+                code.extend(self.generate_stringified_expr(url));
+                code.push("    push rax".to_string());
+                code.extend(self.generate_stringified_expr(target));
+                code.push("    mov rsi, rax".to_string());
+                code.push("    pop rdi".to_string());
+                code.push("    call rv_download".to_string());
+            }
+            Stmt::Screen {
+                title,
+                width,
+                height,
+                body,
+            } => {
+                self.has_gui = true;
+                code.extend(self.generate_stringified_expr(title));
+                code.push("    push rax".to_string());
+                if let Some(w) = width {
+                    code.extend(self.generate_expr(w));
+                } else {
+                    code.push("    mov rax, 600".to_string());
+                }
+                code.push("    push rax".to_string());
+                if let Some(h) = height {
+                    code.extend(self.generate_expr(h));
+                } else {
+                    code.push("    mov rax, 400".to_string());
+                }
+                code.push("    mov rdx, rax".to_string());
+                code.push("    pop rsi".to_string());
+                code.push("    pop rdi".to_string());
+                code.push("    call rv_screen_init".to_string());
+
+                for s in body {
+                    code.extend(self.generate_stmt(s));
+                }
+                code.push("    call rv_screen_loop".to_string());
+            }
+            Stmt::DrawCircle {
+                x,
+                y,
+                radius,
+                color,
+            } => {
+                self.has_gui = true;
+                code.extend(self.generate_expr(x));
+                code.push("    push rax".to_string());
+                code.extend(self.generate_expr(y));
+                code.push("    push rax".to_string());
+                code.extend(self.generate_expr(radius));
+                code.push("    push rax".to_string());
+                if let Some(c) = color {
+                    code.extend(self.generate_stringified_expr(c));
+                } else {
+                    let lbl = self.get_or_create_string("black");
+                    code.push(format!("    lea rax, [{}]", lbl));
+                }
+                code.push("    mov rcx, rax".to_string());
+                code.push("    pop rdx".to_string());
+                code.push("    pop rsi".to_string());
+                code.push("    pop rdi".to_string());
+                code.push("    call rv_screen_draw_circle".to_string());
+            }
+            Stmt::DrawRect {
+                x,
+                y,
+                width,
+                height,
+                color,
+            } => {
+                self.has_gui = true;
+                code.extend(self.generate_expr(x));
+                code.push("    push rax".to_string());
+                code.extend(self.generate_expr(y));
+                code.push("    push rax".to_string());
+                code.extend(self.generate_expr(width));
+                code.push("    push rax".to_string());
+                code.extend(self.generate_expr(height));
+                code.push("    push rax".to_string());
+                if let Some(c) = color {
+                    code.extend(self.generate_stringified_expr(c));
+                } else {
+                    let lbl = self.get_or_create_string("black");
+                    code.push(format!("    lea rax, [{}]", lbl));
+                }
+                code.push("    mov r8, rax".to_string());
+                code.push("    pop rcx".to_string());
+                code.push("    pop rdx".to_string());
+                code.push("    pop rsi".to_string());
+                code.push("    pop rdi".to_string());
+                code.push("    call rv_screen_draw_rect".to_string());
+            }
+            Stmt::DrawLine {
+                x1,
+                y1,
+                x2,
+                y2,
+                color,
+            } => {
+                self.has_gui = true;
+                code.extend(self.generate_expr(x1));
+                code.push("    push rax".to_string());
+                code.extend(self.generate_expr(y1));
+                code.push("    push rax".to_string());
+                code.extend(self.generate_expr(x2));
+                code.push("    push rax".to_string());
+                code.extend(self.generate_expr(y2));
+                code.push("    push rax".to_string());
+                if let Some(c) = color {
+                    code.extend(self.generate_stringified_expr(c));
+                } else {
+                    let lbl = self.get_or_create_string("black");
+                    code.push(format!("    lea rax, [{}]", lbl));
+                }
+                code.push("    mov r8, rax".to_string());
+                code.push("    pop rcx".to_string());
+                code.push("    pop rdx".to_string());
+                code.push("    pop rsi".to_string());
+                code.push("    pop rdi".to_string());
+                code.push("    call rv_screen_draw_line".to_string());
+            }
+            Stmt::DrawText { text, x, y, color } => {
+                self.has_gui = true;
+                code.extend(self.generate_expr(x));
+                code.push("    push rax".to_string());
+                code.extend(self.generate_expr(y));
+                code.push("    push rax".to_string());
+                code.extend(self.generate_stringified_expr(text));
+                code.push("    push rax".to_string());
+                if let Some(c) = color {
+                    code.extend(self.generate_stringified_expr(c));
+                } else {
+                    let lbl = self.get_or_create_string("black");
+                    code.push(format!("    lea rax, [{}]", lbl));
+                }
+                code.push("    mov rcx, rax".to_string());
+                code.push("    pop rdx".to_string());
+                code.push("    pop rsi".to_string());
+                code.push("    pop rdi".to_string());
+                code.push("    call rv_screen_draw_text".to_string());
+            }
+            Stmt::ClearScreen => {
+                self.has_helpers = true;
+                code.push("    call rv_clear_screen".to_string());
+            }
+            Stmt::CursorAt { x, y } => {
+                self.has_helpers = true;
+                code.extend(self.generate_expr(x));
+                code.push("    push rax".to_string());
+                code.extend(self.generate_expr(y));
+                code.push("    mov rsi, rax".to_string());
+                code.push("    pop rdi".to_string());
+                code.push("    call rv_cursor_at".to_string());
+            }
+            Stmt::CreateFolder(expr) => {
+                self.has_helpers = true;
+                code.extend(self.generate_stringified_expr(expr));
+                code.push("    mov rdi, rax".to_string());
+                code.push("    call rv_create_folder".to_string());
+            }
+            Stmt::DeleteFile(expr) => {
+                self.has_helpers = true;
+                code.extend(self.generate_stringified_expr(expr));
+                code.push("    mov rdi, rax".to_string());
+                code.push("    call rv_delete_file".to_string());
+            }
+            Stmt::DeleteFolder(expr) => {
+                self.has_helpers = true;
+                code.extend(self.generate_stringified_expr(expr));
+                code.push("    mov rdi, rax".to_string());
+                code.push("    call rv_delete_folder".to_string());
+            }
+            Stmt::CopyFile { src, dest } => {
+                self.has_helpers = true;
+                code.extend(self.generate_stringified_expr(src));
+                code.push("    push rax".to_string());
+                code.extend(self.generate_stringified_expr(dest));
+                code.push("    mov rsi, rax".to_string());
+                code.push("    pop rdi".to_string());
+                code.push("    call rv_copy_file".to_string());
+            }
+            Stmt::AddToList { item, list } => {
+                self.has_helpers = true;
+                let offset = *self.var_offsets.get(list).unwrap_or(&-8);
+                code.push(format!("    mov rdi, [rbp + ({})]", offset));
+                code.push("    push rdi".to_string());
+                code.extend(self.generate_stringified_expr(item));
+                code.push("    mov rsi, rax".to_string());
+                code.push("    pop rdi".to_string());
+                code.push("    call rv_list_add".to_string());
+            }
+            Stmt::RemoveFromList { item, list } => {
+                self.has_helpers = true;
+                let offset = *self.var_offsets.get(list).unwrap_or(&-8);
+                code.push(format!("    mov rdi, [rbp + ({})]", offset));
+                code.push("    push rdi".to_string());
+                code.extend(self.generate_stringified_expr(item));
+                code.push("    mov rsi, rax".to_string());
+                code.push("    pop rdi".to_string());
+                code.push("    call rv_list_remove".to_string());
+            }
+            Stmt::ForEvery {
+                item_var,
+                list_var,
+                body,
+            } => {
+                self.has_helpers = true;
+                let list_offset = *self.var_offsets.get(list_var).unwrap_or(&-8);
+                let item_offset = self.allocate_variable(item_var, Type::String);
+                let count_sym = format!("_for_idx_{}", self.label_counter);
+                let idx_offset = self.allocate_variable(&count_sym, Type::Int);
+                let loop_start = self.new_label("for_start");
+                let loop_step = self.new_label("for_step");
+                let loop_end = self.new_label("for_end");
+                self.loop_stack.push((loop_step.clone(), loop_end.clone()));
+
+                code.push("    mov rax, 0".to_string());
+                code.push(format!("    mov [rbp + ({})], rax", idx_offset));
+                code.push(format!("{}:", loop_start));
+                code.push(format!("    mov rdi, [rbp + ({})]", list_offset));
+                code.push("    call rv_list_count".to_string());
+                code.push(format!("    mov rbx, [rbp + ({})]", idx_offset));
+                code.push("    cmp rbx, rax".to_string());
+                code.push(format!("    jge {}", loop_end));
+
+                code.push(format!("    mov rdi, [rbp + ({})]", list_offset));
+                code.push(format!("    mov rsi, [rbp + ({})]", idx_offset));
+                code.push("    call rv_list_get".to_string());
+                code.push(format!("    mov [rbp + ({})], rax", item_offset));
+
+                for s in body {
+                    code.extend(self.generate_stmt(s));
+                }
+
+                code.push(format!("{}:", loop_step));
+                code.push(format!("    mov rax, [rbp + ({})]", idx_offset));
+                code.push("    inc rax".to_string());
+                code.push(format!("    mov [rbp + ({})], rax", idx_offset));
+                code.push(format!("    jmp {}", loop_start));
+                code.push(format!("{}:", loop_end));
+                self.loop_stack.pop();
+            }
+            Stmt::MakeString { var_name, op } => {
+                self.has_helpers = true;
+                let offset = *self.var_offsets.get(var_name).unwrap_or(&-8);
+                code.push(format!("    mov rdi, [rbp + ({})]", offset));
+                match op {
+                    MakeStringOp::Uppercase => code.push("    call rv_str_upper".to_string()),
+                    MakeStringOp::Lowercase => code.push("    call rv_str_lower".to_string()),
+                    MakeStringOp::Trim => code.push("    call rv_str_trim".to_string()),
+                }
+                code.push(format!("    mov [rbp + ({})], rax", offset));
+            }
+            Stmt::MeasureTime { body } => {
+                self.has_helpers = true;
+                let sym = format!("_time_{}", self.label_counter);
+                let start_time_offset = self.allocate_variable(&sym, Type::Int);
+                code.push("    call rv_time_now_ms".to_string());
+                code.push(format!("    mov [rbp + ({})], rax", start_time_offset));
+                for s in body {
+                    code.extend(self.generate_stmt(s));
+                }
+                code.push(format!("    mov rdi, [rbp + ({})]", start_time_offset));
+                code.push("    call rv_measure_report".to_string());
+            }
             Stmt::ExprStmt(expr) => {
                 code.extend(self.generate_expr(expr));
+            }
+            Stmt::UseLib(_) => {}
+            Stmt::InlineAsm(raw_asm) => {
+                for l in raw_asm.lines() {
+                    let trimmed = l.trim();
+                    if !trimmed.is_empty() {
+                        code.push(format!("    {}", trimmed));
+                    }
+                }
+            }
+            Stmt::MeasureCycles { body } => {
+                self.has_helpers = true;
+                code.push("    rdtsc".to_string());
+                code.push("    shl rdx, 32".to_string());
+                code.push("    or rax, rdx".to_string());
+                code.push("    push rax".to_string());
+
+                for s in body {
+                    code.extend(self.generate_stmt(s));
+                }
+
+                code.push("    rdtsc".to_string());
+                code.push("    shl rdx, 32".to_string());
+                code.push("    or rax, rdx".to_string());
+                code.push("    pop rbx".to_string());
+                code.push("    sub rax, rbx".to_string());
+                code.push("    mov rdi, rax".to_string());
+                code.push("    call rv_measure_cycles_report".to_string());
+            }
+            Stmt::DerefAssign {
+                ptr_expr,
+                value_expr,
+            } => {
+                code.extend(self.generate_expr(value_expr));
+                code.push("    push rax".to_string());
+                code.extend(self.generate_expr(ptr_expr));
+                code.push("    pop rbx".to_string());
+                code.push("    mov [rax], rbx".to_string());
+            }
+            Stmt::FieldAssign {
+                target,
+                field,
+                value,
+            } => {
+                let target_offset = *self.var_offsets.get(target).unwrap_or(&-8);
+                let field_idx = self.get_field_index(field);
+                code.extend(self.generate_expr(value));
+                code.push("    push rax".to_string());
+                code.push(format!("    mov rbx, [rbp + ({})]", target_offset));
+                code.push("    pop rax".to_string());
+                code.push(format!("    mov [rbx + {}], rax", field_idx * 8));
+            }
+            Stmt::StructDef { name, fields } => {
+                self.struct_defs.insert(name.clone(), fields.clone());
+            }
+            Stmt::ExternBlock { actions, .. } => {
+                for act in actions {
+                    self.extern_actions.insert(act.name.clone());
+                }
+            }
+            Stmt::ThreadSpawn { body } => {
+                self.has_helpers = true;
+                let func_lbl = self.new_label("thread_fn");
+                let prev_in_thread = self.in_thread;
+                self.in_thread = true;
+                let mut fn_code = Vec::new();
+                fn_code.push(format!("{}:", func_lbl));
+                fn_code.push("    push rbp".to_string());
+                fn_code.push("    mov rbp, rsp".to_string());
+                fn_code.push("    push r12".to_string());
+                fn_code.push("    mov r12, rdi".to_string());
+                fn_code.push("    sub rsp, 256".to_string());
+                for s in body {
+                    fn_code.extend(self.generate_stmt(s));
+                }
+                fn_code.push("    xor eax, eax".to_string());
+                fn_code.push("    add rsp, 256".to_string());
+                fn_code.push("    pop r12".to_string());
+                fn_code.push("    leave".to_string());
+                fn_code.push("    ret".to_string());
+                self.thread_funcs.extend(fn_code);
+                self.in_thread = prev_in_thread;
+
+                code.push(format!("    lea rdi, [rel {}]", func_lbl));
+                code.push("    mov rsi, rbp".to_string());
+                code.push("    call rv_thread_spawn".to_string());
+            }
+            Stmt::AtomicAdd { var, val } => {
+                let base = if self.in_thread { "r12" } else { "rbp" };
+                let offset = *self.var_offsets.get(var).unwrap_or(&-8);
+                code.extend(self.generate_expr(val));
+                code.push(format!("    lock add [{} + ({})], rax", base, offset));
             }
         }
 
@@ -637,7 +1199,8 @@ impl CodeGenerator {
             }
             Expr::Var(name) => {
                 if let Some(&offset) = self.var_offsets.get(name) {
-                    code.push(format!("    mov rax, [rbp + ({})]", offset));
+                    let base = if self.in_thread { "r12" } else { "rbp" };
+                    code.push(format!("    mov rax, [{} + ({})]", base, offset));
                 } else {
                     code.push("    xor eax, eax".to_string());
                 }
@@ -756,18 +1319,68 @@ impl CodeGenerator {
                 }
             }
             Expr::Call { callee, args } => {
-                let arg_regs = ["rdi", "rsi", "rdx", "rcx", "r8", "r9"];
-                // Evaluate args in reverse and push, then pop into arg registers
-                for a in args.iter().rev() {
-                    code.extend(self.generate_expr(a));
+                if self.struct_defs.contains_key(callee) {
+                    let num_fields = self
+                        .struct_defs
+                        .get(callee)
+                        .map(|f| f.len())
+                        .unwrap_or(args.len());
+                    let size = num_fields * 8;
+                    self.has_helpers = true;
+                    code.push(format!("    mov rdi, {}", size));
+                    code.push("    call rv_mem_alloc".to_string());
                     code.push("    push rax".to_string());
-                }
-                for idx in 0..args.len() {
-                    if idx < arg_regs.len() {
-                        code.push(format!("    pop {}", arg_regs[idx]));
+                    for (idx, a) in args.iter().enumerate() {
+                        code.extend(self.generate_expr(a));
+                        code.push("    mov rbx, [rsp]".to_string());
+                        code.push(format!("    mov [rbx + {}], rax", idx * 8));
+                    }
+                    code.push("    pop rax".to_string());
+                } else {
+                    let arg_regs = ["rdi", "rsi", "rdx", "rcx", "r8", "r9"];
+                    // Evaluate args in reverse and push, then pop into arg registers
+                    for a in args.iter().rev() {
+                        code.extend(self.generate_expr(a));
+                        code.push("    push rax".to_string());
+                    }
+                    for idx in 0..args.len() {
+                        if idx < arg_regs.len() {
+                            code.push(format!("    pop {}", arg_regs[idx]));
+                        }
+                    }
+                    if self.extern_actions.contains(callee) {
+                        for (idx, a) in args.iter().enumerate() {
+                            if idx < arg_regs.len() && self.infer_expr_type(a) == Type::String {
+                                code.push(format!("    add {}, 8", arg_regs[idx]));
+                            }
+                        }
+                        code.push("    xor eax, eax".to_string());
+                        code.push(format!("    call ${}", callee));
+                    } else if [
+                        "sqrt",
+                        "sin",
+                        "cos",
+                        "pow",
+                        "abs",
+                        "exit",
+                        "getpid",
+                        "tcp_listen",
+                        "tcp_accept",
+                        "tcp_connect",
+                        "tcp_send",
+                        "tcp_recv",
+                        "tcp_close",
+                        "thread_spawn",
+                        "thread_join",
+                    ]
+                    .contains(&callee.as_str())
+                    {
+                        self.has_helpers = true;
+                        code.push(format!("    call rv_{}", callee));
+                    } else {
+                        code.push(format!("    call rv_action_{}", callee));
                     }
                 }
-                code.push(format!("    call rv_action_{}", callee));
             }
             Expr::InterpolatedString(parts) => {
                 if parts.is_empty() {
@@ -784,7 +1397,7 @@ impl CodeGenerator {
                     code.push("    push rax".to_string());
                     code.extend(self.generate_stringified_expr(p));
                     code.push("    mov rsi, rax".to_string()); // new part
-                    code.push("    pop rdi".to_string());      // accumulated
+                    code.push("    pop rdi".to_string()); // accumulated
                     code.push("    call rv_str_concat".to_string());
                 }
             }
@@ -839,6 +1452,158 @@ impl CodeGenerator {
                     code.push("    xor eax, eax".to_string());
                 }
             }
+            Expr::AskUser(prompt) => {
+                self.has_helpers = true;
+                code.extend(self.generate_stringified_expr(prompt));
+                code.push("    mov rdi, rax".to_string());
+                code.push("    call rv_ask_user".to_string());
+            }
+            Expr::AskHidden(prompt) => {
+                self.has_helpers = true;
+                code.extend(self.generate_stringified_expr(prompt));
+                code.push("    mov rdi, rax".to_string());
+                code.push("    call rv_ask_hidden".to_string());
+            }
+            Expr::Choose { prompt, options } => {
+                self.has_helpers = true;
+                let num = options.len().min(4);
+                let regs = ["rdx", "rcx", "r8", "r9"];
+                for opt in options.iter().take(num).rev() {
+                    code.extend(self.generate_stringified_expr(opt));
+                    code.push("    push rax".to_string());
+                }
+                for r in regs.iter().take(num) {
+                    code.push(format!("    pop {}", r));
+                }
+                code.extend(self.generate_stringified_expr(prompt));
+                code.push("    mov rdi, rax".to_string());
+                code.push(format!("    mov rsi, {}", num));
+                code.push("    xor eax, eax".to_string());
+                code.push("    call rv_choose".to_string());
+            }
+            Expr::ReadWeb(url) => {
+                self.has_helpers = true;
+                code.extend(self.generate_stringified_expr(url));
+                code.push("    mov rdi, rax".to_string());
+                code.push("    call rv_read_web".to_string());
+            }
+            Expr::FileExists(path) => {
+                self.has_helpers = true;
+                code.extend(self.generate_stringified_expr(path));
+                code.push("    mov rdi, rax".to_string());
+                code.push("    call rv_file_exists".to_string());
+            }
+            Expr::ListLiteral(items) => {
+                self.has_helpers = true;
+                let cap = if items.len() > 8 {
+                    items.len() as i64
+                } else {
+                    8
+                };
+                code.push(format!("    mov rdi, {}", cap));
+                code.push("    call rv_list_create".to_string());
+                code.push("    push rax".to_string());
+                for item in items {
+                    code.extend(self.generate_stringified_expr(item));
+                    code.push("    mov rsi, rax".to_string());
+                    code.push("    mov rdi, [rsp]".to_string());
+                    code.push("    call rv_list_add".to_string());
+                }
+                code.push("    pop rax".to_string());
+            }
+            Expr::ListHas { list, item } => {
+                self.has_helpers = true;
+                let offset = *self.var_offsets.get(list).unwrap_or(&-8);
+                code.push(format!("    mov rdi, [rbp + ({})]", offset));
+                code.push("    push rdi".to_string());
+                code.extend(self.generate_stringified_expr(item));
+                code.push("    mov rsi, rax".to_string());
+                code.push("    pop rdi".to_string());
+                code.push("    call rv_list_has".to_string());
+            }
+            Expr::ListCount(list) => {
+                self.has_helpers = true;
+                let offset = *self.var_offsets.get(list).unwrap_or(&-8);
+                code.push(format!("    mov rdi, [rbp + ({})]", offset));
+                code.push("    call rv_list_count".to_string());
+            }
+            Expr::StrReplace {
+                target,
+                replacement,
+                source,
+            } => {
+                self.has_helpers = true;
+                code.extend(self.generate_stringified_expr(target));
+                code.push("    push rax".to_string());
+                code.extend(self.generate_stringified_expr(replacement));
+                code.push("    push rax".to_string());
+                code.extend(self.generate_stringified_expr(source));
+                code.push("    mov rdx, rax".to_string());
+                code.push("    pop rsi".to_string());
+                code.push("    pop rdi".to_string());
+                code.push("    call rv_str_replace".to_string());
+            }
+            Expr::StrStartsWith { source, prefix } => {
+                self.has_helpers = true;
+                code.extend(self.generate_stringified_expr(source));
+                code.push("    push rax".to_string());
+                code.extend(self.generate_stringified_expr(prefix));
+                code.push("    mov rsi, rax".to_string());
+                code.push("    pop rdi".to_string());
+                code.push("    call rv_str_starts_with".to_string());
+            }
+            Expr::StrEndsWith { source, suffix } => {
+                self.has_helpers = true;
+                code.extend(self.generate_stringified_expr(source));
+                code.push("    push rax".to_string());
+                code.extend(self.generate_stringified_expr(suffix));
+                code.push("    mov rsi, rax".to_string());
+                code.push("    pop rdi".to_string());
+                code.push("    call rv_str_ends_with".to_string());
+            }
+            Expr::AddrOf(name) => {
+                let offset = *self.var_offsets.get(name).unwrap_or(&-8);
+                code.push(format!("    lea rax, [rbp + ({})]", offset));
+            }
+            Expr::Deref(inner) => {
+                code.extend(self.generate_expr(inner));
+                code.push("    mov rax, [rax]".to_string());
+            }
+            Expr::Alloc(size_expr) => {
+                self.has_helpers = true;
+                code.extend(self.generate_expr(size_expr));
+                code.push("    mov rdi, rax".to_string());
+                code.push("    call rv_mem_alloc".to_string());
+            }
+            Expr::Free(ptr_expr) => {
+                self.has_helpers = true;
+                code.extend(self.generate_expr(ptr_expr));
+                code.push("    mov rdi, rax".to_string());
+                code.push("    call rv_mem_free".to_string());
+            }
+            Expr::FieldAccess { target, field } => {
+                let field_idx = self.get_field_index(field);
+                code.extend(self.generate_expr(target));
+                code.push(format!("    mov rax, [rax + {}]", field_idx * 8));
+            }
+            Expr::StructInit { name, args } => {
+                let num_fields = self
+                    .struct_defs
+                    .get(name)
+                    .map(|f| f.len())
+                    .unwrap_or(args.len());
+                let size = num_fields * 8;
+                self.has_helpers = true;
+                code.push(format!("    mov rdi, {}", size));
+                code.push("    call rv_mem_alloc".to_string());
+                code.push("    push rax".to_string());
+                for (idx, a) in args.iter().enumerate() {
+                    code.extend(self.generate_expr(a));
+                    code.push("    mov rbx, [rsp]".to_string());
+                    code.push(format!("    mov [rbx + {}], rax", idx * 8));
+                }
+                code.push("    pop rax".to_string());
+            }
         }
 
         code
@@ -887,7 +1652,7 @@ mod tests {
         let prog = parser.parse().unwrap();
 
         let codegen = CodeGenerator::new(prog.directives.clone());
-        let (asm, _) = codegen.generate(&prog);
+        let (asm, _, _) = codegen.generate(&prog);
 
         assert!(asm.contains("main:"));
         assert!(asm.contains("rv_say_int"));
@@ -910,7 +1675,7 @@ mod tests {
         let prog = parser.parse().unwrap();
 
         let codegen = CodeGenerator::new(prog.directives.clone());
-        let (asm, _) = codegen.generate(&prog);
+        let (asm, _, _) = codegen.generate(&prog);
 
         assert!(asm.contains("xor eax, eax"));
     }

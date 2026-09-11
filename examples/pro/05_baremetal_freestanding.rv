@@ -1,0 +1,14 @@
+// Pro Mode: Bare-Metal Freestanding Binary (No libc, No runtime, ld -s)
+remove garbageC
+remove Basic
+remove Linux
+add Advanced
+add Freestanding
+
+// Entry point _start is emitted automatically
+// Linux direct exit syscall: rax = 60, rdi = status code
+asm {
+    mov rax, 60
+    mov rdi, 0
+    syscall
+}

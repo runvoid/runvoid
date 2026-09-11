@@ -6,6 +6,8 @@ pub enum TokenKind {
     GarbageC,
     Basic,
     Advanced,
+    Linux,
+    Freestanding,
 
     // Keywords
     Say,
@@ -37,6 +39,88 @@ pub enum TokenKind {
     Checkbox,
     Draw,
 
+    // Beginner & System Extensions
+    // Colors
+    Green,
+    Red,
+    Blue,
+    Yellow,
+    Cyan,
+    Magenta,
+    Color,
+    Same,
+
+    // Dialogs & Sound
+    Alert,
+    Beep,
+    Speak,
+
+    // Web & Internet
+    Open,
+    Web,
+    Download,
+
+    // 2D Screen & Shapes
+    Screen,
+    Circle,
+    Box,
+    Line,
+    At,
+    From,
+    Size,
+
+    // Console & Interaction
+    Clear,
+    Cursor,
+    Hidden,
+    Choose,
+
+    // Files & Folders
+    Folder,
+    Create,
+    Delete,
+    Copy,
+    File,
+    Exists,
+    All,
+    In,
+
+    // Strings
+    Replace,
+    With,
+    Make,
+    Uppercase,
+    Lowercase,
+    Trim,
+    Starts,
+    Ends,
+
+    // Lists & Collections
+    Has,
+    For,
+    Every,
+    How,
+    Many,
+    Count,
+    List,
+
+    // Benchmarking
+    Measure,
+    Time,
+    Cycles,
+
+    // Pro Mode, Memory, Concurrency & FFI
+    Asm,
+    AsmBlock(String),
+    Addr,
+    Alloc,
+    Free,
+    Struct,
+    Extern,
+    Thread,
+    Atomic,
+    Lib,
+
     // Logical & comparison keywords
     Is,
     IsNot,
@@ -60,31 +144,36 @@ pub enum TokenKind {
     TypeInt,
     TypeString,
     TypeBool,
+    TypePtr,
 
     // Identifiers
     Ident(String),
 
     // Operators & Punctuation
-    Equal,          // =
-    DoubleEqual,    // ==
-    NotEqual,       // !=
-    Less,           // <
-    Greater,        // >
-    LessEqual,      // <=
-    GreaterEqual,   // >=
+    Equal,        // =
+    DoubleEqual,  // ==
+    NotEqual,     // !=
+    Less,         // <
+    Greater,      // >
+    LessEqual,    // <=
+    GreaterEqual, // >=
 
-    Plus,           // +
-    Minus,          // -
-    Star,           // *
-    Slash,          // /
-    Percent,        // %
+    Plus,    // +
+    Minus,   // -
+    Star,    // *
+    Slash,   // /
+    Percent, // %
 
-    OpenBrace,      // {
-    CloseBrace,     // }
-    OpenParen,      // (
-    CloseParen,     // )
-    Comma,          // ,
-    Colon,          // :
+    AtSign, // @
+    Dot,    // .
+    Arrow,  // ->
+
+    OpenBrace,  // {
+    CloseBrace, // }
+    OpenParen,  // (
+    CloseParen, // )
+    Comma,      // ,
+    Colon,      // :
 
     Newline,
     Eof,

@@ -1,0 +1,41 @@
+// Runvoid String Operations and Performance Benchmarking
+say cyan "=== Runvoid String Manipulation & Benchmarking ==="
+
+// 1. String Transforms
+remember title = "   runvoid programming language   "
+say "Original string: '{title}'"
+
+make title trim
+say "After trim: '{title}'"
+
+make title uppercase
+say "After uppercase: '{title}'"
+
+make title lowercase
+say "After lowercase: '{title}'"
+
+// 2. String Replace
+remember sentence = "I love Python and JavaScript"
+remember updated = replace "Python" with "Runvoid" in sentence
+say "Replaced string: '{updated}'"
+
+// 3. String Prefix and Suffix
+if title starts with "run" {
+    say green "Title correctly starts with 'run'!"
+}
+
+if title ends with "language" {
+    say green "Title correctly ends with 'language'!"
+}
+
+// 4. Performance Benchmarking
+say yellow "\nMeasuring execution time of a loop..."
+measure time {
+    remember total = 0
+    repeat 1000000 times as i {
+        set total = total + 1
+    }
+    say "Computed total: {total}"
+}
+
+say green "Benchmark completed!"

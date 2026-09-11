@@ -1,0 +1,40 @@
+// Runvoid Filesystem and Web Operations
+say cyan "=== Runvoid File System Operations ==="
+
+remember test_dir = "temp_runvoid_demo"
+remember file1 = "{test_dir}/message.txt"
+remember file2 = "{test_dir}/copied.txt"
+
+// 1. Create Folder
+say yellow "Creating directory: {test_dir}"
+create folder test_dir
+
+// 2. Write and Check Existence
+say yellow "Writing data into file..."
+write "Hello from Runvoid native system IO!" into file1
+
+if file file1 exists {
+    say green "File verified to exist: {file1}"
+}
+
+// 3. Read File
+remember text = read file1
+say "Read content: '{text}'"
+
+// 4. Copy File
+say yellow "Copying file..."
+copy file file1 to file2
+
+if file file2 exists {
+    say green "Copied file exists: {file2}"
+}
+
+// 5. Cleanup
+say yellow "Cleaning up temporary files..."
+delete file file1
+delete file file2
+delete folder test_dir
+
+if not (file file1 exists) {
+    say green "All temporary files cleaned up safely!"
+}

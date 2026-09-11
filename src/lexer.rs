@@ -27,8 +27,8 @@ impl Lexer {
         while !self.is_eof() {
             let ch = self.peek();
 
-            // Handle comments
-            if ch == '#' {
+            // Handle comments (# and //)
+            if ch == '#' || (ch == '/' && self.peek_ahead(1) == '/') {
                 self.skip_comment();
                 continue;
             }
@@ -71,12 +71,74 @@ impl Lexer {
                 let start_line = self.line;
                 let start_col = self.col;
                 let ident = self.lex_ident();
+
+                if ident == "asm" {
+                    let mut look = self.pos;
+                    while look < self.chars.len() && self.chars[look].is_whitespace() {
+                        look += 1;
+                    }
+                    if look < self.chars.len() && self.chars[look] == '{' {
+                        while self.pos <= look {
+                            let c = self.chars[self.pos];
+                            if c == '\n' {
+                                self.line += 1;
+                                self.col = 1;
+                            } else {
+                                self.col += 1;
+                            }
+                            self.pos += 1;
+                        }
+                        let mut asm_code = String::new();
+                        let mut brace_depth = 1;
+                        while self.pos < self.chars.len() && brace_depth > 0 {
+                            let c = self.chars[self.pos];
+                            if c == '\n' {
+                                self.line += 1;
+                                self.col = 1;
+                            } else {
+                                self.col += 1;
+                            }
+                            self.pos += 1;
+                            if c == '{' {
+                                brace_depth += 1;
+                                asm_code.push(c);
+                            } else if c == '}' {
+                                brace_depth -= 1;
+                                if brace_depth > 0 {
+                                    asm_code.push(c);
+                                }
+                            } else {
+                                asm_code.push(c);
+                            }
+                        }
+                        tokens.push(Token::new(
+                            TokenKind::AsmBlock(asm_code.trim().to_string()),
+                            start_line,
+                            start_col,
+                        ));
+                        continue;
+                    }
+                }
+
                 let kind = match ident.as_str() {
                     "remove" => TokenKind::Remove,
                     "add" => TokenKind::Add,
                     "garbageC" => TokenKind::GarbageC,
                     "Basic" => TokenKind::Basic,
                     "Advanced" => TokenKind::Advanced,
+                    "Linux" => TokenKind::Linux,
+                    "Freestanding" => TokenKind::Freestanding,
+
+                    "asm" => TokenKind::Asm,
+                    "cycles" => TokenKind::Cycles,
+                    "addr" => TokenKind::Addr,
+                    "alloc" => TokenKind::Alloc,
+                    "free" => TokenKind::Free,
+                    "struct" => TokenKind::Struct,
+                    "extern" => TokenKind::Extern,
+                    "thread" => TokenKind::Thread,
+                    "atomic" => TokenKind::Atomic,
+                    "lib" => TokenKind::Lib,
 
                     "say" => TokenKind::Say,
                     "say_same" => TokenKind::SaySame,
@@ -106,6 +168,65 @@ impl Lexer {
                     "checkbox" => TokenKind::Checkbox,
                     "draw" => TokenKind::Draw,
 
+                    "green" => TokenKind::Green,
+                    "red" => TokenKind::Red,
+                    "blue" => TokenKind::Blue,
+                    "yellow" => TokenKind::Yellow,
+                    "cyan" => TokenKind::Cyan,
+                    "magenta" => TokenKind::Magenta,
+                    "color" => TokenKind::Color,
+                    "same" => TokenKind::Same,
+
+                    "alert" => TokenKind::Alert,
+                    "beep" => TokenKind::Beep,
+                    "speak" => TokenKind::Speak,
+
+                    "open" => TokenKind::Open,
+                    "web" => TokenKind::Web,
+                    "download" => TokenKind::Download,
+
+                    "screen" => TokenKind::Screen,
+                    "circle" => TokenKind::Circle,
+                    "box" => TokenKind::Box,
+                    "line" => TokenKind::Line,
+                    "at" => TokenKind::At,
+                    "from" => TokenKind::From,
+                    "size" => TokenKind::Size,
+
+                    "clear" => TokenKind::Clear,
+                    "cursor" => TokenKind::Cursor,
+                    "hidden" => TokenKind::Hidden,
+                    "choose" => TokenKind::Choose,
+
+                    "folder" => TokenKind::Folder,
+                    "create" => TokenKind::Create,
+                    "delete" => TokenKind::Delete,
+                    "copy" => TokenKind::Copy,
+                    "file" => TokenKind::File,
+                    "exists" => TokenKind::Exists,
+                    "all" => TokenKind::All,
+                    "in" => TokenKind::In,
+
+                    "replace" => TokenKind::Replace,
+                    "with" => TokenKind::With,
+                    "make" => TokenKind::Make,
+                    "uppercase" => TokenKind::Uppercase,
+                    "lowercase" => TokenKind::Lowercase,
+                    "trim" => TokenKind::Trim,
+                    "starts" => TokenKind::Starts,
+                    "ends" => TokenKind::Ends,
+
+                    "has" => TokenKind::Has,
+                    "for" => TokenKind::For,
+                    "every" => TokenKind::Every,
+                    "how" => TokenKind::How,
+                    "many" => TokenKind::Many,
+                    "count" => TokenKind::Count,
+                    "list" => TokenKind::List,
+
+                    "measure" => TokenKind::Measure,
+                    "time" => TokenKind::Time,
+
                     "is" => TokenKind::Is,
                     "and" => TokenKind::And,
                     "or" => TokenKind::Or,
@@ -117,6 +238,7 @@ impl Lexer {
                     "Int" => TokenKind::TypeInt,
                     "String" => TokenKind::TypeString,
                     "Bool" => TokenKind::TypeBool,
+                    "Ptr" => TokenKind::TypePtr,
 
                     _ => TokenKind::Ident(ident),
                 };
@@ -135,14 +257,12 @@ impl Lexer {
                 }
                 '}' => {
                     self.advance();
-                    if let Some(&depth) = self.interp_stack.last() {
-                        if self.current_brace_depth == depth {
-                            // Interpolation block ends, resume string scanning!
-                            self.interp_stack.pop();
-                            self.current_brace_depth -= 1;
-                            self.lex_string(&mut tokens, start_line, start_col, false)?;
-                            continue;
-                        }
+                    if self.interp_stack.last() == Some(&self.current_brace_depth) {
+                        // Interpolation block ends, resume string scanning!
+                        self.interp_stack.pop();
+                        self.current_brace_depth -= 1;
+                        self.lex_string(&mut tokens, start_line, start_col, false)?;
+                        continue;
                     }
                     if self.current_brace_depth > 0 {
                         self.current_brace_depth -= 1;
@@ -171,11 +291,24 @@ impl Lexer {
                 }
                 '-' => {
                     self.advance();
-                    TokenKind::Minus
+                    if self.peek() == '>' {
+                        self.advance();
+                        TokenKind::Arrow
+                    } else {
+                        TokenKind::Minus
+                    }
                 }
                 '*' => {
                     self.advance();
                     TokenKind::Star
+                }
+                '@' => {
+                    self.advance();
+                    TokenKind::AtSign
+                }
+                '.' => {
+                    self.advance();
+                    TokenKind::Dot
                 }
                 '/' => {
                     self.advance();
@@ -264,7 +397,7 @@ impl Lexer {
                         return Err(format!(
                             "Invalid escape sequence '\\{}' at line {}, col {}",
                             other, self.line, self.col
-                        ))
+                        ));
                     }
                 };
                 buf.push(esc);
@@ -350,6 +483,14 @@ impl Lexer {
         }
     }
 
+    fn peek_ahead(&self, offset: usize) -> char {
+        if self.pos + offset < self.chars.len() {
+            self.chars[self.pos + offset]
+        } else {
+            '\0'
+        }
+    }
+
     fn advance(&mut self) -> char {
         let ch = self.peek();
         self.pos += 1;
@@ -394,21 +535,31 @@ mod tests {
         let mut lexer = Lexer::new(code);
         let tokens = lexer.tokenize().unwrap();
 
-        assert!(tokens
-            .iter()
-            .any(|t| matches!(&t.kind, TokenKind::InterpStringBegin(s) if s == "Hello, ")));
-        assert!(tokens
-            .iter()
-            .any(|t| matches!(&t.kind, TokenKind::Ident(s) if s == "name")));
-        assert!(tokens
-            .iter()
-            .any(|t| matches!(&t.kind, TokenKind::InterpStringMid(s) if s == "! Age: ")));
-        assert!(tokens
-            .iter()
-            .any(|t| matches!(&t.kind, TokenKind::Ident(s) if s == "age")));
-        assert!(tokens
-            .iter()
-            .any(|t| matches!(&t.kind, TokenKind::InterpStringEnd(s) if s == ".")));
+        assert!(
+            tokens
+                .iter()
+                .any(|t| matches!(&t.kind, TokenKind::InterpStringBegin(s) if s == "Hello, "))
+        );
+        assert!(
+            tokens
+                .iter()
+                .any(|t| matches!(&t.kind, TokenKind::Ident(s) if s == "name"))
+        );
+        assert!(
+            tokens
+                .iter()
+                .any(|t| matches!(&t.kind, TokenKind::InterpStringMid(s) if s == "! Age: "))
+        );
+        assert!(
+            tokens
+                .iter()
+                .any(|t| matches!(&t.kind, TokenKind::Ident(s) if s == "age"))
+        );
+        assert!(
+            tokens
+                .iter()
+                .any(|t| matches!(&t.kind, TokenKind::InterpStringEnd(s) if s == "."))
+        );
     }
 
     #[test]

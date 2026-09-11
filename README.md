@@ -1,9 +1,9 @@
-# The Runvoid Programming Language (v0.1.0)
+# The Runvoid Programming Language (v0.2.0)
 
 <div align="center">
 
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-0.1.0-brightgreen.svg)](Cargo.toml)
+[![Version](https://img.shields.io/badge/version-0.2.0-brightgreen.svg)](Cargo.toml)
 [![Platform](https://img.shields.io/badge/platform-Linux%20x86__64-orange.svg)](#requirements)
 [![Compiler](https://img.shields.io/badge/compiler-Rust%20%2B%20NASM-red.svg)](src/)
 
@@ -21,12 +21,20 @@
 
 ### ✨ Key Features:
 - 💡 **Human-Centric Syntax:** `say` for printing, `remember` for variables, `ask` for input, `if / otherwise` for control flow, `repeat` and `while` for loops.
-- 🧵 **Native String Interpolation:** `say "Hello, {name}! You have {score} points."` supported out of the box.
-- 🪟 **Built-in Native GUI:** Declarative X11/XWayland windows (`window "App" { button "Click" { ... } }`) and Immediate Mode GUI (`imrv draw ...`).
-- 📂 **Expressive I/O & System APIs:** `read "file.txt"`, `write "data" into "file.txt"`, `wait 1`, `random 1 to 100`, and direct Bash execution via `run "command"`.
+- 🎨 **Conversational Natural Lists:** `remember backpack = "sword", "potion"`, `for every item in backpack`, `add item to list`, `remove item from list`, `if list has item`, `{count list}`.
+- 🌈 **Terminal Colors & Audio:** `say green "Done!"`, `say red "Error!"`, `say yellow "Warning!"`, terminal `beep`, and text-to-speech `speak`.
+- 🕹️ **2D Screen Canvas & GUI:** Draw hardware-accelerated 2D games (`screen "Title", 640, 480 { draw circle ...; draw box ...; draw line ... }`) and native desktop windows (`window "App" { button "Click" { ... } }`).
+- 🧭 **Interactive CLI & Dialogs:** `choose` menus, hidden password prompts (`ask hidden`), modal confirmations (`ask user`), and graphical alerts (`alert`).
+- 📁 **Native Filesystem & Web APIs:** `create folder`, `delete file`, `copy file ... to ...`, `file ... exists`, `download url into path`, `read web url`.
+- ⚡ **Benchmarking & Text Manipulation:** `measure time { ... }`, `make var uppercase / lowercase / trim`, `replace a with b in str`, `starts with`, `ends with`.
+- 🛠️ **Developer Tooling & Ecosystem:**
+  - Built-in formatter: `runvoid fmt <file>`
+  - Starter templates: `runvoid new <game|gui|script>`
+  - Terminal cheat sheet: `runvoid cheat`
+  - Official VS Code extension (`editors/vscode/`)
 - ⚙️ **Dual-Mode Language Paradigm:**
   - **Beginner Mode (Default):** Built-in Garbage Collector (GC), automatic type inference, zero boilerplate, batteries included.
-  - **Pro Dev Mode (`add Advanced`):** Disable GC (`remove garbageC`), enforce strict static typing (`remove Basic`), zero-overhead modular I/O (`use ior`), and aggressive compiler optimizations (Constant Folding, Dead Code Elimination, Peephole assembly rewrites, `-O3`, LTO, section stripping).
+  - **Pro Systems Mode (`add Advanced`):** Zero-GC (`remove garbageC`), strict static typing (`remove Basic`), modular standard library (`use ior`, `math`, `sys`, `mem`, `fs`, `net`, `thread`), external C dynamic libraries (`use lib "..."`), multi-file imports (`use "mod.rv"`), bare-metal freestanding binaries (`remove Linux`, `add Freestanding`), direct inline x86_64 assembly (`asm { ... }`), CPU cycle benchmarking (`measure cycles { ... }`), raw pointers & memory allocation (`addr`, `@`, `alloc`, `free`), C-compatible POD structs (`struct`), native C FFI (`extern "C"`), OS multithreading (`thread`), and hardware atomic operations (`atomic add`).
 
 ---
 
@@ -79,6 +87,23 @@ runvoid build hello.rv -o my_app
 ### 3. Inspect Generated Assembly (`emit-asm` mode):
 ```bash
 runvoid emit-asm hello.rv
+```
+
+### 4. Interactive Terminal Cheat Sheet (`cheat` mode):
+```bash
+runvoid cheat
+```
+
+### 5. Create a Project Template (`new` mode):
+```bash
+runvoid new game my_game.rv    # 2D Screen canvas starter
+runvoid new gui my_gui.rv      # Desktop GUI starter
+runvoid new script my_app.rv   # Conversational starter script
+```
+
+### 6. Auto-Format Code (`fmt` mode):
+```bash
+runvoid fmt -w hello.rv
 ```
 
 ---

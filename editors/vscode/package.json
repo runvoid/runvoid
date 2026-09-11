@@ -1,0 +1,35 @@
+{
+  "name": "runvoid-vscode",
+  "displayName": "Runvoid Language Support",
+  "description": "Syntax highlighting, code snippets, and language configuration for the Runvoid programming language.",
+  "version": "0.2.0",
+  "publisher": "runvoid",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "runvoid",
+        "aliases": [
+          "Runvoid",
+          "runvoid"
+        ],
+        "extensions": [
+          ".rv"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "runvoid",
+        "scopeName": "source.runvoid",
+        "path": "./syntaxes/runvoid.tmLanguage.json"
+      }
+    ]
+  }
+}

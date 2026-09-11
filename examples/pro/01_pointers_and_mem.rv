@@ -1,0 +1,24 @@
+// Pro Mode: Pointers, Direct Memory Management, Zero-GC
+remove garbageC
+remove Basic
+add Advanced
+use ior
+use mem
+
+// Stack allocation and raw address
+remember value: Int = 100
+remember ptr: Ptr = addr value
+
+say @ptr
+
+// Pointer mutation
+@ptr = 250
+say value
+say @ptr
+
+// Manual heap allocation
+remember heap_buf: Ptr = alloc 64
+@heap_buf = 9999
+say @heap_buf
+
+free heap_buf
