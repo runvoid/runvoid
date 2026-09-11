@@ -1,4 +1,4 @@
-# The Runvoid Programming Language Reference & Guide (v0.2.0)
+# The Runvoid Programming Language Reference & Guide (v0.3.0)
 
 Welcome to the official **Runvoid** documentation! 
 Whether you are writing your very first line of code or building high-performance bare-metal systems, Runvoid is crafted to make programming intuitive, lightning fast, and joyfully productive.
@@ -26,6 +26,9 @@ Whether you are writing your very first line of code or building high-performanc
    - [Formatting Code (`fmt`)](#44-formatting-code-fmt)
    - [Scaffolding Projects (`new`)](#45-scaffolding-projects-new)
    - [Interactive Terminal Cheat Sheet (`cheat`)](#46-interactive-terminal-cheat-sheet-cheat)
+   - [Automated Test Runner (`test`)](#47-automated-test-runner-test)
+   - [Interactive REPL (`repl`)](#48-interactive-repl-repl)
+   - [Hot-Reloading Watcher (`watch`)](#49-hot-reloading-watcher-watch)
 5. [Beginner Language Guide](#5-beginner-language-guide)
    - [5.1 Output & Colors (`say`, `say same`, ANSI)](#51-output--colors-say-say-same-ansi)
    - [5.2 Variables & Expressions (`remember`, `{...}`)](#52-variables--expressions-remember-)
@@ -36,6 +39,10 @@ Whether you are writing your very first line of code or building high-performanc
    - [5.7 Terminal Audio & Speech (`beep`, `speak`)](#57-terminal-audio--speech-beep-speak)
    - [5.8 File System, Web & String Utilities](#58-file-system-web--string-utilities)
    - [5.9 2D Hardware Screen Canvas & Desktop GUI](#59-2d-hardware-screen-canvas--desktop-gui)
+   - [5.10 Key-Value Dictionaries & Maps (v0.3.0)](#510-key-value-dictionaries--maps-v030)
+   - [5.11 Pattern Matching & Pipelines (v0.3.0)](#511-pattern-matching--pipelines-v030)
+   - [5.12 Low-Level Bitwise Operators & Hardware Audio Synthesizer (v0.3.0)](#512-low-level-bitwise-operators--hardware-audio-synthesizer-v030)
+   - [5.13 Test Assertions & Test Blocks (v0.3.0)](#513-test-assertions--test-blocks-v030)
 6. [Memory Management & Garbage Collection](#6-memory-management--garbage-collection)
    - [Automatic Mark-and-Sweep GC](#61-automatic-mark-and-sweep-gc)
    - [Disabling GC (`remove garbageC`)](#62-disabling-gc-remove-garbagec)
@@ -338,6 +345,25 @@ Open a color-coded reference cheat sheet directly in your terminal anytime:
 runvoid cheat
 ```
 
+### 4.7 Automated Test Runner (`test`)
+Execute built-in assertions and unit test blocks across your project:
+```bash
+runvoid test                # Run all test suites in tests/ or current dir
+runvoid test tests/suite.rv # Run specific test file
+```
+
+### 4.8 Interactive REPL (`repl`)
+Start an interactive read-eval-print session with preserved variable state:
+```bash
+runvoid repl
+```
+
+### 4.9 Hot-Reloading Watcher (`watch`)
+Monitor a source file and automatically recompile and run on every save:
+```bash
+runvoid watch app.rv
+```
+
 ---
 
 ## 5. Beginner Language Guide
@@ -600,6 +626,83 @@ window "Runvoid Preferences", 450, 320 {
     button "Save Changes" {
         say "Preferences saved!"
     }
+}
+```
+
+### 5.10 Key-Value Dictionaries & Maps (v0.3.0)
+Define associative dictionaries using conversational pairs or JSON-style braces:
+```runvoid
+# Conversational declaration
+remember hero = name: "Alex", hp: 100, class: "Mage"
+
+# JSON-style declaration
+remember config = { "host": "127.0.0.1", "port": 8080 }
+
+# Bracket indexing or possessive notation:
+say "Hero name: {hero['name']}"
+say "Hero HP: {hero's hp}"
+
+# Add and remove keys:
+add "shield": 50 to hero
+remove "class" from hero
+
+# Membership & counts:
+if hero has "shield" {
+    say "Hero has shield!"
+}
+say "Attributes count: {count hero}"
+```
+
+### 5.11 Pattern Matching & Pipelines (v0.3.0)
+Replace nested conditional trees with expressive pattern matching and clean functional pipelines:
+```runvoid
+remember status = 200
+
+match status {
+    when 200 -> say green "OK"
+    when 404 -> say red "Not Found"
+    otherwise -> say "Other Status"
+}
+
+action double(n: Int): Int {
+    give n * 2
+}
+
+action inc(n: Int): Int {
+    give n + 1
+}
+
+# Left-to-right functional pipeline:
+remember result = 10 |> double |> inc
+say "Pipelined result: {result}" # 21
+```
+
+### 5.12 Low-Level Bitwise Operators & Hardware Audio Synthesizer (v0.3.0)
+Perform single-cycle bitwise operations using English keywords or standard symbols:
+```runvoid
+remember a = 12 bit and 10     # 8
+remember b = 12 bit or 10      # 14
+remember c = 12 bit xor 10     # 6
+remember d = 1 shift left 4    # 16
+remember e = 32 shift right 2  # 8
+remember f = ~0                # -1
+
+# Generate raw square-wave audio frequency tone (Hz, duration ms):
+play synth 440, 250
+```
+
+### 5.13 Test Assertions & Test Blocks (v0.3.0)
+Write first-class automated tests and assertions:
+```runvoid
+test "math operations" {
+    verify that 2 + 2 is 4
+    verify that (10 > 5)
+}
+
+test "player stats" {
+    remember player = name: "Hero", hp: 100
+    verify that player's hp is 100
+    verify that player has "name"
 }
 ```
 

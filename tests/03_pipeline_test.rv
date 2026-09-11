@@ -1,0 +1,15 @@
+// Test Runvoid 0.3.0 Pipelines
+action double(n: Int): Int {
+    remember res: Int = n * 2
+    give res
+}
+
+action inc(n: Int): Int {
+    remember res: Int = n + 1
+    give res
+}
+
+test "pipeline operator" {
+    remember val = 5 |> double |> inc
+    verify that val is 11
+}

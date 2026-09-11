@@ -1,9 +1,9 @@
-# The Runvoid Programming Language (v0.2.0)
+# The Runvoid Programming Language (v0.3.0)
 
 <div align="center">
 
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-0.2.0-brightgreen.svg)](Cargo.toml)
+[![Version](https://img.shields.io/badge/version-0.3.0-brightgreen.svg)](Cargo.toml)
 [![Platform](https://img.shields.io/badge/platform-Linux%20x86__64-orange.svg)](#requirements)
 [![Compiler](https://img.shields.io/badge/compiler-Rust%20%2B%20NASM-red.svg)](src/)
 
@@ -21,6 +21,10 @@
 
 ### ✨ Key Features:
 - 💡 **Human-Centric Syntax:** `say` for printing, `remember` for variables, `ask` for input, `if / otherwise` for control flow, `repeat` and `while` for loops.
+- 🗺️ **First-Class Dictionaries & Maps (v0.3.0):** `remember hero = name: "Alex", hp: 100`, indexing with `hero["name"]` or natural possessive syntax `hero's hp`, `add "shield": 50 to hero`, `remove "hp" from hero`, `hero has "name"`.
+- 🎯 **Pattern Matching & Pipelines (v0.3.0):** Clean branching with `match expr { when 1 -> ... otherwise -> ... }` and left-to-right functional pipelines `5 |> double |> say`.
+- ⚡ **Bitwise Instructions & Synthesizer (v0.3.0):** Native CPU bitwise operations (`bit and`, `bit or`, `bit xor`, `shift left`, `shift right`, `~`) and audio synthesis (`play synth 440, 200`).
+- 🧪 **Native Test Framework (v0.3.0):** First-class unit testing blocks `test "name" { verify that ... }` with automated color-coded test execution.
 - 🎨 **Conversational Natural Lists:** `remember backpack = "sword", "potion"`, `for every item in backpack`, `add item to list`, `remove item from list`, `if list has item`, `{count list}`.
 - 🌈 **Terminal Colors & Audio:** `say green "Done!"`, `say red "Error!"`, `say yellow "Warning!"`, terminal `beep`, and text-to-speech `speak`.
 - 🕹️ **2D Screen Canvas & GUI:** Draw hardware-accelerated 2D games (`screen "Title", 640, 480 { draw circle ...; draw box ...; draw line ... }`) and native desktop windows (`window "App" { button "Click" { ... } }`).
@@ -28,6 +32,9 @@
 - 📁 **Native Filesystem & Web APIs:** `create folder`, `delete file`, `copy file ... to ...`, `file ... exists`, `download url into path`, `read web url`.
 - ⚡ **Benchmarking & Text Manipulation:** `measure time { ... }`, `make var uppercase / lowercase / trim`, `replace a with b in str`, `starts with`, `ends with`.
 - 🛠️ **Developer Tooling & Ecosystem:**
+  - Automated test runner: `runvoid test [file]`
+  - Interactive REPL: `runvoid repl`
+  - Hot-reloader watcher: `runvoid watch <file>`
   - Built-in formatter: `runvoid fmt <file>`
   - Starter templates: `runvoid new <game|gui|script>`
   - Terminal cheat sheet: `runvoid cheat`
@@ -89,19 +96,34 @@ runvoid build hello.rv -o my_app
 runvoid emit-asm hello.rv
 ```
 
-### 4. Interactive Terminal Cheat Sheet (`cheat` mode):
+### 4. Run Automated Tests (`test` mode):
+```bash
+runvoid test
+```
+
+### 5. Interactive REPL (`repl` mode):
+```bash
+runvoid repl
+```
+
+### 6. Hot-Reloading Watcher (`watch` mode):
+```bash
+runvoid watch hello.rv
+```
+
+### 7. Interactive Terminal Cheat Sheet (`cheat` mode):
 ```bash
 runvoid cheat
 ```
 
-### 5. Create a Project Template (`new` mode):
+### 8. Create a Project Template (`new` mode):
 ```bash
 runvoid new game my_game.rv    # 2D Screen canvas starter
 runvoid new gui my_gui.rv      # Desktop GUI starter
 runvoid new script my_app.rv   # Conversational starter script
 ```
 
-### 6. Auto-Format Code (`fmt` mode):
+### 9. Auto-Format Code (`fmt` mode):
 ```bash
 runvoid fmt -w hello.rv
 ```

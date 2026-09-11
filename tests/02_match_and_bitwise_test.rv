@@ -1,0 +1,26 @@
+// Test Runvoid 0.3.0 Match and Bitwise
+test "bitwise operations" {
+    remember a = 12 bit and 10
+    verify that a is 8
+
+    remember b = 12 bit or 10
+    verify that b is 14
+
+    remember c = 12 bit xor 10
+    verify that c is 6
+
+    remember d = 1 shift left 3
+    verify that d is 8
+
+    remember e = 16 shift right 2
+    verify that e is 4
+}
+
+test "pattern matching" {
+    remember code = 200
+    remember status = 1
+    match code {
+        when 200 -> verify that status is 1
+        otherwise -> verify that 0 is 1
+    }
+}

@@ -48,12 +48,24 @@ pub enum BinaryOp {
     GreaterEqual,
     And,
     Or,
+    BitAnd,
+    BitOr,
+    BitXor,
+    ShiftLeft,
+    ShiftRight,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum UnaryOp {
     Neg,
     Not,
+    BitNot,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct MatchArm {
+    pub pattern: Expr,
+    pub body: Vec<Stmt>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -117,6 +129,15 @@ pub enum Expr {
         source: Box<Expr>,
         suffix: Box<Expr>,
     },
+
+    // Maps, Dicts & Indexing
+    MapLiteral(Vec<(Expr, Expr)>),
+    Index {
+        target: Box<Expr>,
+        index: Box<Expr>,
+    },
+    MapKeys(String),
+    MapValues(String),
 
     // Pro Mode, Memory & Struct Expressions
     AddrOf(String),
@@ -314,5 +335,39 @@ pub enum Stmt {
     AtomicAdd {
         var: String,
         val: Expr,
+    },
+
+    // Version 0.3.0 Statements
+    AddToMap {
+        key: Expr,
+        value: Expr,
+        map: String,
+    },
+    RemoveFromMap {
+        key: Expr,
+        map: String,
+    },
+    IndexAssign {
+        target: Expr,
+        index: Expr,
+        value: Expr,
+    },
+    Match {
+        target: Expr,
+        arms: Vec<MatchArm>,
+        otherwise: Option<Vec<Stmt>>,
+    },
+    Verify {
+        actual: Expr,
+        expected: Option<Expr>,
+        line: usize,
+    },
+    TestBlock {
+        name: String,
+        body: Vec<Stmt>,
+    },
+    PlaySynth {
+        freq: Expr,
+        duration: Expr,
     },
 }

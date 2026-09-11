@@ -1,0 +1,18 @@
+// Test Runvoid 0.3.0 Maps and Dictionaries
+test "map creation and indexing" {
+    remember player = name: "Hero", hp: 100, gold: 50
+    verify that player["hp"] is 100
+    verify that player's gold is 50
+    verify that {count player} is 3
+    verify that player has "name"
+}
+
+test "map mutation" {
+    remember inventory = sword: 1, potion: 5
+    add "shield": 2 to inventory
+    verify that inventory["shield"] is 2
+    verify that {count inventory} is 3
+
+    remove "potion" from inventory
+    verify that {count inventory} is 2
+}

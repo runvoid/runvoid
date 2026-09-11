@@ -191,21 +191,52 @@ impl Parser {
                 }
 
                 self.consume(TokenKind::Equal, "Expected '=' in variable declaration")?;
-                let mut value = self.parse_expression()?;
-
-                // Check for list literal via comma separation: `remember items = "a", "b", "c"`
-                if self.match_token(TokenKind::Comma) {
-                    let mut list_items = vec![value];
+                let value = if (matches!(self.peek().kind, TokenKind::Ident(_))
+                    || matches!(self.peek().kind, TokenKind::StringLit(_)))
+                    && self.pos + 1 < self.tokens.len()
+                    && self.tokens[self.pos + 1].kind == TokenKind::Colon
+                {
+                    let mut pairs = Vec::new();
                     loop {
-                        list_items.push(self.parse_expression()?);
+                        let k_tok = self.peek().clone();
+                        let k_expr = match k_tok.kind {
+                            TokenKind::Ident(s) => {
+                                self.advance();
+                                Expr::Str(s)
+                            }
+                            TokenKind::StringLit(s) => {
+                                self.advance();
+                                Expr::Str(s)
+                            }
+                            _ => self.parse_expression()?,
+                        };
+                        self.consume(TokenKind::Colon, "Expected ':' after map key")?;
+                        let v_expr = self.parse_expression()?;
+                        pairs.push((k_expr, v_expr));
                         if self.match_token(TokenKind::Comma) {
                             continue;
                         } else {
                             break;
                         }
                     }
-                    value = Expr::ListLiteral(list_items);
-                }
+                    Expr::MapLiteral(pairs)
+                } else {
+                    let first = self.parse_expression()?;
+                    if self.match_token(TokenKind::Comma) {
+                        let mut list_items = vec![first];
+                        loop {
+                            list_items.push(self.parse_expression()?);
+                            if self.match_token(TokenKind::Comma) {
+                                continue;
+                            } else {
+                                break;
+                            }
+                        }
+                        Expr::ListLiteral(list_items)
+                    } else {
+                        first
+                    }
+                };
 
                 Ok(Stmt::Remember {
                     name,
@@ -631,23 +662,50 @@ impl Parser {
             }
             TokenKind::Add => {
                 self.advance();
-                let item = self.parse_expression()?;
-                self.consume(
-                    TokenKind::To,
-                    "Expected 'to' after item in 'add ... to <list>'",
-                )?;
-                let list_tok = self.peek().clone();
-                let list = match list_tok.kind {
-                    TokenKind::Ident(s) => s,
-                    _ => {
-                        return Err(format!(
-                            "Expected list name after 'to' at line {}, col {}",
-                            list_tok.line, list_tok.col
-                        ));
-                    }
-                };
-                self.advance();
-                Ok(Stmt::AddToList { item, list })
+                let key_or_item = self.parse_expression()?;
+                if self.match_token(TokenKind::Colon) {
+                    let value = self.parse_expression()?;
+                    self.consume(
+                        TokenKind::To,
+                        "Expected 'to' after value in 'add key: val to <map>'",
+                    )?;
+                    let map_tok = self.peek().clone();
+                    let map = match map_tok.kind {
+                        TokenKind::Ident(s) => s,
+                        _ => {
+                            return Err(format!(
+                                "Expected map name after 'to' at line {}, col {}",
+                                map_tok.line, map_tok.col
+                            ));
+                        }
+                    };
+                    self.advance();
+                    Ok(Stmt::AddToMap {
+                        key: key_or_item,
+                        value,
+                        map,
+                    })
+                } else {
+                    self.consume(
+                        TokenKind::To,
+                        "Expected 'to' after item in 'add ... to <list>'",
+                    )?;
+                    let list_tok = self.peek().clone();
+                    let list = match list_tok.kind {
+                        TokenKind::Ident(s) => s,
+                        _ => {
+                            return Err(format!(
+                                "Expected list name after 'to' at line {}, col {}",
+                                list_tok.line, list_tok.col
+                            ));
+                        }
+                    };
+                    self.advance();
+                    Ok(Stmt::AddToList {
+                        item: key_or_item,
+                        list,
+                    })
+                }
             }
             TokenKind::Remove => {
                 self.advance();
@@ -947,6 +1005,95 @@ impl Parser {
                     Ok(Stmt::ExprStmt(expr))
                 }
             }
+            TokenKind::Match => {
+                self.advance();
+                let target = self.parse_expression()?;
+                self.consume(TokenKind::OpenBrace, "Expected '{' after match target")?;
+                self.skip_newlines();
+                let mut arms = Vec::new();
+                let mut otherwise = None;
+                while !self.check(TokenKind::CloseBrace) && !self.is_eof() {
+                    self.skip_newlines();
+                    if self.check(TokenKind::CloseBrace) {
+                        break;
+                    }
+                    if self.match_token(TokenKind::When) {
+                        let pattern = self.parse_expression()?;
+                        self.consume(TokenKind::Arrow, "Expected '->' after when pattern")?;
+                        self.skip_newlines();
+                        let body = if self.check(TokenKind::OpenBrace) {
+                            self.parse_block()?
+                        } else {
+                            vec![self.parse_statement()?]
+                        };
+                        arms.push(MatchArm { pattern, body });
+                    } else if self.match_token(TokenKind::Otherwise) {
+                        let _ = self.match_token(TokenKind::Arrow);
+                        self.skip_newlines();
+                        let body = if self.check(TokenKind::OpenBrace) {
+                            self.parse_block()?
+                        } else {
+                            vec![self.parse_statement()?]
+                        };
+                        otherwise = Some(body);
+                    } else {
+                        return Err(format!(
+                            "Expected 'when' or 'otherwise' inside match at line {}",
+                            self.peek().line
+                        ));
+                    }
+                    self.skip_newlines();
+                }
+                self.consume(TokenKind::CloseBrace, "Expected '}' at end of match block")?;
+                Ok(Stmt::Match {
+                    target,
+                    arms,
+                    otherwise,
+                })
+            }
+            TokenKind::Verify => {
+                let line = self.peek().line;
+                self.advance();
+                if matches!(&self.peek().kind, TokenKind::Ident(s) if s == "that") {
+                    self.advance();
+                }
+                let actual = self.parse_expression()?;
+                let expected = if self.match_token(TokenKind::Is) {
+                    Some(self.parse_expression()?)
+                } else {
+                    None
+                };
+                Ok(Stmt::Verify {
+                    actual,
+                    expected,
+                    line,
+                })
+            }
+            TokenKind::Test => {
+                self.advance();
+                let name_expr = self.parse_expression()?;
+                let name = match name_expr {
+                    Expr::Str(s) => s,
+                    Expr::Var(s) => s,
+                    _ => "unnamed_test".to_string(),
+                };
+                let body = self.parse_block()?;
+                Ok(Stmt::TestBlock { name, body })
+            }
+            TokenKind::Play => {
+                self.advance();
+                if self.match_token(TokenKind::Synth) {
+                    let freq = self.parse_expression()?;
+                    self.consume(
+                        TokenKind::Comma,
+                        "Expected ',' between frequency and duration",
+                    )?;
+                    let duration = self.parse_expression()?;
+                    Ok(Stmt::PlaySynth { freq, duration })
+                } else {
+                    return Err("Expected 'synth' after 'play'".to_string());
+                }
+            }
             TokenKind::Ident(ref name) => {
                 if name == "imrv"
                     && self.pos + 1 < self.tokens.len()
@@ -979,25 +1126,45 @@ impl Parser {
                     });
                 }
 
-                // Check if optional 'set var = expr'
+                // Check if optional 'set var = expr' or 'set target[index] = expr'
                 if name == "set"
                     && self.pos + 2 < self.tokens.len()
                     && matches!(self.tokens[self.pos + 1].kind, TokenKind::Ident(_))
-                    && self.tokens[self.pos + 2].kind == TokenKind::Equal
                 {
-                    self.advance(); // consume "set"
-                    let var_tok = self.peek().clone();
-                    let var_name = match var_tok.kind {
-                        TokenKind::Ident(s) => s,
-                        _ => unreachable!(),
-                    };
+                    if self.tokens[self.pos + 2].kind == TokenKind::Equal {
+                        self.advance(); // consume "set"
+                        let var_tok = self.peek().clone();
+                        let var_name = match var_tok.kind {
+                            TokenKind::Ident(s) => s,
+                            _ => unreachable!(),
+                        };
+                        self.advance(); // consume ident
+                        self.advance(); // consume '='
+                        let value = self.parse_expression()?;
+                        return Ok(Stmt::Assign {
+                            name: var_name,
+                            value,
+                        });
+                    }
+                }
+
+                // Check if index assignment: `target[index] = expr`
+                if self.pos + 1 < self.tokens.len()
+                    && self.tokens[self.pos + 1].kind == TokenKind::OpenBracket
+                {
+                    let target = Expr::Var(name.clone());
                     self.advance(); // consume ident
-                    self.advance(); // consume '='
-                    let value = self.parse_expression()?;
-                    return Ok(Stmt::Assign {
-                        name: var_name,
-                        value,
-                    });
+                    self.advance(); // consume '['
+                    let index = self.parse_expression()?;
+                    self.consume(TokenKind::CloseBracket, "Expected ']' after index")?;
+                    if self.match_token(TokenKind::Equal) {
+                        let value = self.parse_expression()?;
+                        return Ok(Stmt::IndexAssign {
+                            target,
+                            index,
+                            value,
+                        });
+                    }
                 }
 
                 // Check if struct field assignment: `target.field = expr`
@@ -1093,7 +1260,33 @@ impl Parser {
     }
 
     pub fn parse_expression(&mut self) -> Result<Expr, String> {
-        self.parse_or()
+        self.parse_pipeline()
+    }
+
+    fn parse_pipeline(&mut self) -> Result<Expr, String> {
+        let mut expr = self.parse_or()?;
+        while self.match_token(TokenKind::PipeGreater) {
+            let next = self.parse_primary()?;
+            match next {
+                Expr::Call { callee, mut args } => {
+                    args.insert(0, expr);
+                    expr = Expr::Call { callee, args };
+                }
+                Expr::Var(callee) => {
+                    expr = Expr::Call {
+                        callee,
+                        args: vec![expr],
+                    };
+                }
+                _ => {
+                    return Err(
+                        "Expected function call or identifier after pipeline operator '|>'"
+                            .to_string(),
+                    );
+                }
+            }
+        }
+        Ok(expr)
     }
 
     fn parse_or(&mut self) -> Result<Expr, String> {
@@ -1110,12 +1303,96 @@ impl Parser {
     }
 
     fn parse_and(&mut self) -> Result<Expr, String> {
-        let mut left = self.parse_equality()?;
+        let mut left = self.parse_bitwise_or()?;
         while self.match_token(TokenKind::And) {
-            let right = self.parse_equality()?;
+            let right = self.parse_bitwise_or()?;
             left = Expr::Binary {
                 left: Box::new(left),
                 op: BinaryOp::And,
+                right: Box::new(right),
+            };
+        }
+        Ok(left)
+    }
+
+    fn parse_bitwise_or(&mut self) -> Result<Expr, String> {
+        let mut left = self.parse_bitwise_xor()?;
+        loop {
+            let matched = if self.match_token(TokenKind::Pipe) {
+                true
+            } else if self.check(TokenKind::Bit)
+                && self.pos + 1 < self.tokens.len()
+                && self.tokens[self.pos + 1].kind == TokenKind::Or
+            {
+                self.advance();
+                self.advance();
+                true
+            } else {
+                false
+            };
+            if !matched {
+                break;
+            }
+            let right = self.parse_bitwise_xor()?;
+            left = Expr::Binary {
+                left: Box::new(left),
+                op: BinaryOp::BitOr,
+                right: Box::new(right),
+            };
+        }
+        Ok(left)
+    }
+
+    fn parse_bitwise_xor(&mut self) -> Result<Expr, String> {
+        let mut left = self.parse_bitwise_and()?;
+        loop {
+            let matched = if self.match_token(TokenKind::Caret) {
+                true
+            } else if self.check(TokenKind::Bit)
+                && self.pos + 1 < self.tokens.len()
+                && self.tokens[self.pos + 1].kind == TokenKind::Xor
+            {
+                self.advance();
+                self.advance();
+                true
+            } else {
+                false
+            };
+            if !matched {
+                break;
+            }
+            let right = self.parse_bitwise_and()?;
+            left = Expr::Binary {
+                left: Box::new(left),
+                op: BinaryOp::BitXor,
+                right: Box::new(right),
+            };
+        }
+        Ok(left)
+    }
+
+    fn parse_bitwise_and(&mut self) -> Result<Expr, String> {
+        let mut left = self.parse_equality()?;
+        loop {
+            let matched = if self.match_token(TokenKind::Ampersand) {
+                true
+            } else if self.check(TokenKind::Bit)
+                && self.pos + 1 < self.tokens.len()
+                && self.tokens[self.pos + 1].kind == TokenKind::And
+            {
+                self.advance();
+                self.advance();
+                true
+            } else {
+                false
+            };
+            if !matched {
+                break;
+            }
+            let right = self.parse_equality()?;
+            left = Expr::Binary {
+                left: Box::new(left),
+                op: BinaryOp::BitAnd,
                 right: Box::new(right),
             };
         }
@@ -1188,7 +1465,7 @@ impl Parser {
     }
 
     fn parse_comparison(&mut self) -> Result<Expr, String> {
-        let mut left = self.parse_term()?;
+        let mut left = self.parse_shift()?;
 
         loop {
             let op = if self.match_token(TokenKind::Less) {
@@ -1203,6 +1480,40 @@ impl Parser {
                 break;
             };
 
+            let right = self.parse_shift()?;
+            left = Expr::Binary {
+                left: Box::new(left),
+                op,
+                right: Box::new(right),
+            };
+        }
+        Ok(left)
+    }
+
+    fn parse_shift(&mut self) -> Result<Expr, String> {
+        let mut left = self.parse_term()?;
+        loop {
+            let op = if self.match_token(TokenKind::DoubleLess) {
+                BinaryOp::ShiftLeft
+            } else if self.match_token(TokenKind::DoubleGreater) {
+                BinaryOp::ShiftRight
+            } else if self.check(TokenKind::Shift)
+                && self.pos + 1 < self.tokens.len()
+                && self.tokens[self.pos + 1].kind == TokenKind::Left
+            {
+                self.advance();
+                self.advance();
+                BinaryOp::ShiftLeft
+            } else if self.check(TokenKind::Shift)
+                && self.pos + 1 < self.tokens.len()
+                && self.tokens[self.pos + 1].kind == TokenKind::Right
+            {
+                self.advance();
+                self.advance();
+                BinaryOp::ShiftRight
+            } else {
+                break;
+            };
             let right = self.parse_term()?;
             left = Expr::Binary {
                 left: Box::new(left),
@@ -1267,6 +1578,25 @@ impl Parser {
                 expr: Box::new(expr),
             });
         }
+        if self.match_token(TokenKind::Tilde) {
+            let expr = self.parse_unary()?;
+            return Ok(Expr::Unary {
+                op: UnaryOp::BitNot,
+                expr: Box::new(expr),
+            });
+        }
+        if self.check(TokenKind::Bit)
+            && self.pos + 1 < self.tokens.len()
+            && self.tokens[self.pos + 1].kind == TokenKind::Not
+        {
+            self.advance();
+            self.advance();
+            let expr = self.parse_unary()?;
+            return Ok(Expr::Unary {
+                op: UnaryOp::BitNot,
+                expr: Box::new(expr),
+            });
+        }
         if self.match_token(TokenKind::Minus) {
             let expr = self.parse_unary()?;
             return Ok(Expr::Unary {
@@ -1274,7 +1604,62 @@ impl Parser {
                 expr: Box::new(expr),
             });
         }
-        self.parse_primary()
+        self.parse_postfix()
+    }
+
+    fn parse_postfix(&mut self) -> Result<Expr, String> {
+        let mut expr = self.parse_primary()?;
+        loop {
+            if self.match_token(TokenKind::OpenBracket) {
+                let index = self.parse_expression()?;
+                self.consume(TokenKind::CloseBracket, "Expected ']' after index")?;
+                expr = Expr::Index {
+                    target: Box::new(expr),
+                    index: Box::new(index),
+                };
+            } else if self.match_token(TokenKind::Dot) {
+                let field_tok = self.peek().clone();
+                let field = match field_tok.kind {
+                    TokenKind::Ident(s) => s,
+                    _ => {
+                        return Err(format!(
+                            "Expected field name after '.' at line {}, col {}",
+                            field_tok.line, field_tok.col
+                        ));
+                    }
+                };
+                self.advance();
+                expr = Expr::FieldAccess {
+                    target: Box::new(expr),
+                    field,
+                };
+            } else if self.match_token(TokenKind::ApostropheS) {
+                let prop_tok = self.peek().clone();
+                let prop_expr = match prop_tok.kind {
+                    TokenKind::Ident(s) => {
+                        self.advance();
+                        Expr::Str(s)
+                    }
+                    TokenKind::StringLit(s) => {
+                        self.advance();
+                        Expr::Str(s)
+                    }
+                    _ => {
+                        return Err(format!(
+                            "Expected property name after 's at line {}, col {}",
+                            prop_tok.line, prop_tok.col
+                        ));
+                    }
+                };
+                expr = Expr::Index {
+                    target: Box::new(expr),
+                    index: Box::new(prop_expr),
+                };
+            } else {
+                break;
+            }
+        }
+        Ok(expr)
     }
 
     fn parse_primary(&mut self) -> Result<Expr, String> {
@@ -1515,7 +1900,7 @@ impl Parser {
                 }
                 self.advance();
                 // Check if function call: name(...)
-                let mut expr = if self.match_token(TokenKind::OpenParen) {
+                let expr = if self.match_token(TokenKind::OpenParen) {
                     let mut args = Vec::new();
                     if !self.check(TokenKind::CloseParen) {
                         loop {
@@ -1536,25 +1921,6 @@ impl Parser {
                     Expr::Var(name)
                 };
 
-                // Check for field accesses: expr.field
-                while self.match_token(TokenKind::Dot) {
-                    let field_tok = self.peek().clone();
-                    let field = match field_tok.kind {
-                        TokenKind::Ident(s) => s,
-                        _ => {
-                            return Err(format!(
-                                "Expected field name after '.' at line {}, col {}",
-                                field_tok.line, field_tok.col
-                            ));
-                        }
-                    };
-                    self.advance();
-                    expr = Expr::FieldAccess {
-                        target: Box::new(expr),
-                        field,
-                    };
-                }
-
                 Ok(expr)
             }
             TokenKind::OpenParen => {
@@ -1563,11 +1929,99 @@ impl Parser {
                 self.consume(TokenKind::CloseParen, "Expected ')'")?;
                 Ok(expr)
             }
+            TokenKind::Map => {
+                self.advance();
+                self.consume(TokenKind::OpenBrace, "Expected '{' after 'map'")?;
+                self.parse_map_entries()
+            }
+            TokenKind::OpenBrace => {
+                self.advance();
+                self.skip_newlines();
+                if self.check(TokenKind::CloseBrace) {
+                    self.advance();
+                    return Ok(Expr::MapLiteral(Vec::new()));
+                }
+                let is_map = if self.pos + 1 < self.tokens.len() {
+                    self.tokens[self.pos + 1].kind == TokenKind::Colon
+                } else {
+                    false
+                };
+
+                if is_map {
+                    self.parse_map_entries()
+                } else {
+                    let expr = self.parse_expression()?;
+                    self.skip_newlines();
+                    self.consume(TokenKind::CloseBrace, "Expected '}' after expression")?;
+                    Ok(expr)
+                }
+            }
+            TokenKind::Keys => {
+                self.advance();
+                let map_tok = self.peek().clone();
+                let name = match map_tok.kind {
+                    TokenKind::Ident(s) => s,
+                    _ => return Err("Expected map name after 'keys'".to_string()),
+                };
+                self.advance();
+                Ok(Expr::MapKeys(name))
+            }
+            TokenKind::Values => {
+                self.advance();
+                let map_tok = self.peek().clone();
+                let name = match map_tok.kind {
+                    TokenKind::Ident(s) => s,
+                    _ => return Err("Expected map name after 'values'".to_string()),
+                };
+                self.advance();
+                Ok(Expr::MapValues(name))
+            }
             _ => Err(format!(
                 "Unexpected token {:?} in expression at line {}, col {}",
                 tok.kind, tok.line, tok.col
             )),
         }
+    }
+
+    fn parse_map_entries(&mut self) -> Result<Expr, String> {
+        self.skip_newlines();
+        let mut pairs = Vec::new();
+        if !self.check(TokenKind::CloseBrace) {
+            loop {
+                self.skip_newlines();
+                if self.check(TokenKind::CloseBrace) {
+                    break;
+                }
+                let k_tok = self.peek().clone();
+                let key_expr = match k_tok.kind {
+                    TokenKind::Ident(s) => {
+                        self.advance();
+                        Expr::Str(s)
+                    }
+                    TokenKind::StringLit(s) => {
+                        self.advance();
+                        Expr::Str(s)
+                    }
+                    _ => self.parse_expression()?,
+                };
+                self.consume(TokenKind::Colon, "Expected ':' after map key")?;
+                let val_expr = self.parse_expression()?;
+                pairs.push((key_expr, val_expr));
+                self.skip_newlines();
+                if self.match_token(TokenKind::Comma) {
+                    self.skip_newlines();
+                    if self.check(TokenKind::CloseBrace) {
+                        break;
+                    }
+                    continue;
+                } else {
+                    break;
+                }
+            }
+        }
+        self.skip_newlines();
+        self.consume(TokenKind::CloseBrace, "Expected '}' at end of map literal")?;
+        Ok(Expr::MapLiteral(pairs))
     }
 
     fn skip_newlines(&mut self) {

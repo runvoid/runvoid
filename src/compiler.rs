@@ -435,4 +435,82 @@ mod tests {
         assert!(res.is_ok(), "Failed: {:?}", res.err());
         assert_eq!(res.unwrap(), Some(0));
     }
+
+    #[test]
+    fn test_v03_maps_and_indexing() {
+        let code = r#"
+            remember player = name: "Alex", gold: 100, class: "Mage"
+            add "shield": 50 to player
+            say "Player name: {player['name']}"
+            say "Gold: {player['gold']}"
+            say "Count: {count player}"
+            remove "gold" from player
+            say "After remove count: {count player}"
+        "#;
+        let res = run_code(code);
+        assert!(res.is_ok(), "Failed: {:?}", res.err());
+        assert_eq!(res.unwrap(), Some(0));
+    }
+
+    #[test]
+    fn test_v03_bitwise_operations() {
+        let code = r#"
+            remember a = 12 bit and 10     # 8
+            remember b = 12 bit or 10      # 14
+            remember c = 12 bit xor 10     # 6
+            remember d = 1 shift left 4    # 16
+            remember e = 32 shift right 2  # 8
+            remember f = ~0                # -1
+            say "a: {a}, b: {b}, c: {c}, d: {d}, e: {e}, f: {f}"
+        "#;
+        let res = run_code(code);
+        assert!(res.is_ok(), "Failed: {:?}", res.err());
+        assert_eq!(res.unwrap(), Some(0));
+    }
+
+    #[test]
+    fn test_v03_pattern_matching() {
+        let code = r#"
+            remember code = 2
+            match code {
+                when 1 -> say "Started"
+                when 2 -> say "Running"
+                when 3 -> say "Stopped"
+                otherwise -> say "Unknown"
+            }
+
+            remember name = "alice"
+            match name {
+                when "bob" -> say "Hi Bob"
+                when "alice" -> say "Hi Alice"
+                otherwise -> say "Who are you?"
+            }
+        "#;
+        let res = run_code(code);
+        assert!(res.is_ok(), "Failed: {:?}", res.err());
+        assert_eq!(res.unwrap(), Some(0));
+    }
+
+    #[test]
+    fn test_v03_pipeline_and_verify() {
+        let code = r#"
+            action double(n: Int): Int {
+                give n * 2
+            }
+
+            remember val = 5 |> double |> double
+            say "Val: {val}"
+            verify that val is 20
+            verify that 10 > 5
+
+            test "arithmetic verification" {
+                remember x = 100 + 200
+                verify that x is 300
+            }
+        "#;
+        let res = run_code(code);
+        assert!(res.is_ok(), "Failed: {:?}", res.err());
+        assert_eq!(res.unwrap(), Some(0));
+    }
 }
+

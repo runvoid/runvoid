@@ -507,6 +507,76 @@ Please declare at the beginning of the file:\n  remove garbageC\n  remove Basic\
                 self.check_expr(val)?;
                 Ok(())
             }
+            Stmt::AddToMap { key, value, map } => {
+                if !self.symbols.contains(map) {
+                    return Err(format!(
+                        "Error: Variable '{}' was not declared before use",
+                        map
+                    ));
+                }
+                self.check_expr(key)?;
+                self.check_expr(value)?;
+                Ok(())
+            }
+            Stmt::RemoveFromMap { key, map } => {
+                if !self.symbols.contains(map) {
+                    return Err(format!(
+                        "Error: Variable '{}' was not declared before use",
+                        map
+                    ));
+                }
+                self.check_expr(key)?;
+                Ok(())
+            }
+            Stmt::IndexAssign {
+                target,
+                index,
+                value,
+            } => {
+                self.check_expr(target)?;
+                self.check_expr(index)?;
+                self.check_expr(value)?;
+                Ok(())
+            }
+            Stmt::Match {
+                target,
+                arms,
+                otherwise,
+            } => {
+                self.check_expr(target)?;
+                for arm in arms {
+                    self.check_expr(&arm.pattern)?;
+                    for s in &arm.body {
+                        self.check_stmt(s)?;
+                    }
+                }
+                if let Some(oth) = otherwise {
+                    for s in oth {
+                        self.check_stmt(s)?;
+                    }
+                }
+                Ok(())
+            }
+            Stmt::Verify {
+                actual, expected, ..
+            } => {
+                self.check_expr(actual)?;
+                if let Some(exp) = expected {
+                    self.check_expr(exp)?;
+                }
+                Ok(())
+            }
+            Stmt::TestBlock { body, .. } => {
+                for s in body {
+                    self.check_stmt(s)?;
+                }
+                Ok(())
+            }
+            Stmt::PlaySynth { freq, duration } => {
+                self.check_expr(freq)?;
+                self.check_expr(duration)?;
+                Ok(())
+            }
         }
     }
 
@@ -713,6 +783,27 @@ Please declare at the beginning of the file:\n  remove garbageC\n  remove Basic\
                 }
                 for a in args {
                     self.check_expr(a)?;
+                }
+                Ok(())
+            }
+            Expr::MapLiteral(entries) => {
+                for (k, v) in entries {
+                    self.check_expr(k)?;
+                    self.check_expr(v)?;
+                }
+                Ok(())
+            }
+            Expr::Index { target, index } => {
+                self.check_expr(target)?;
+                self.check_expr(index)?;
+                Ok(())
+            }
+            Expr::MapKeys(map) | Expr::MapValues(map) => {
+                if !self.symbols.contains(map) {
+                    return Err(format!(
+                        "Error: Variable '{}' was not declared before use",
+                        map
+                    ));
                 }
                 Ok(())
             }

@@ -637,16 +637,29 @@ void rv_screen_loop(void) {
 }
 #endif
 
-// Lists & Collections
+// Lists, Maps & Collections
+#define RV_TAG_LIST 0x11571157
+#define RV_TAG_MAP  0x22682268
+
 typedef struct {
+    int64_t tag;
     int64_t count;
     int64_t cap;
     RvString **items;
 } RvList;
 
+typedef struct {
+    int64_t tag;
+    int64_t count;
+    int64_t cap;
+    RvString **keys;
+    RvString **values;
+} RvMap;
+
 RvList* rv_list_create(int64_t initial_cap) {
     if (initial_cap <= 0) initial_cap = 8;
     RvList *list = (RvList*)malloc(sizeof(RvList));
+    list->tag = RV_TAG_LIST;
     list->count = 0;
     list->cap = initial_cap;
     list->items = (RvString**)malloc(sizeof(RvString*) * initial_cap);
@@ -662,38 +675,175 @@ void rv_list_add(RvList *list, RvString *item) {
     list->items[list->count++] = item;
 }
 
-void rv_list_remove(RvList *list, RvString *item) {
-    if (!list || !item) return;
-    const char *target = (const char*)&item->data[0];
-    for (int64_t i = 0; i < list->count; i++) {
-        if (strcmp((const char*)&list->items[i]->data[0], target) == 0) {
-            for (int64_t j = i; j < list->count - 1; j++) {
-                list->items[j] = list->items[j + 1];
-            }
-            list->count--;
+RvMap* rv_map_create(int64_t initial_cap) {
+    if (initial_cap <= 0) initial_cap = 8;
+    RvMap *map = (RvMap*)malloc(sizeof(RvMap));
+    map->tag = RV_TAG_MAP;
+    map->count = 0;
+    map->cap = initial_cap;
+    map->keys = (RvString**)malloc(sizeof(RvString*) * initial_cap);
+    map->values = (RvString**)malloc(sizeof(RvString*) * initial_cap);
+    return map;
+}
+
+void rv_map_set(RvMap *map, RvString *key, RvString *value) {
+    if (!map || !key) return;
+    const char *target = (const char*)&key->data[0];
+    for (int64_t i = 0; i < map->count; i++) {
+        if (strcmp((const char*)&map->keys[i]->data[0], target) == 0) {
+            map->values[i] = value;
             return;
+        }
+    }
+    if (map->count >= map->cap) {
+        map->cap *= 2;
+        map->keys = (RvString**)realloc(map->keys, sizeof(RvString*) * map->cap);
+        map->values = (RvString**)realloc(map->values, sizeof(RvString*) * map->cap);
+    }
+    map->keys[map->count] = key;
+    map->values[map->count] = value;
+    map->count++;
+}
+
+RvString* rv_map_get(void *col, RvString *key) {
+    if (!col || !key) return rv_cstr_to_str("");
+    int64_t tag = *(int64_t*)col;
+    if (tag == RV_TAG_MAP) {
+        RvMap *map = (RvMap*)col;
+        const char *target = (const char*)&key->data[0];
+        for (int64_t i = 0; i < map->count; i++) {
+            if (strcmp((const char*)&map->keys[i]->data[0], target) == 0) {
+                return map->values[i];
+            }
+        }
+    } else if (tag == RV_TAG_LIST) {
+        RvList *list = (RvList*)col;
+        int64_t idx = atoll((const char*)&key->data[0]);
+        if (idx >= 0 && idx < list->count) {
+            return list->items[idx];
+        }
+    }
+    return rv_cstr_to_str("");
+}
+
+void rv_list_remove(void *col, RvString *item) {
+    if (!col || !item) return;
+    int64_t tag = *(int64_t*)col;
+    const char *target = (const char*)&item->data[0];
+    if (tag == RV_TAG_MAP) {
+        RvMap *map = (RvMap*)col;
+        for (int64_t i = 0; i < map->count; i++) {
+            if (strcmp((const char*)&map->keys[i]->data[0], target) == 0) {
+                for (int64_t j = i; j < map->count - 1; j++) {
+                    map->keys[j] = map->keys[j + 1];
+                    map->values[j] = map->values[j + 1];
+                }
+                map->count--;
+                return;
+            }
+        }
+    } else {
+        RvList *list = (RvList*)col;
+        for (int64_t i = 0; i < list->count; i++) {
+            if (strcmp((const char*)&list->items[i]->data[0], target) == 0) {
+                for (int64_t j = i; j < list->count - 1; j++) {
+                    list->items[j] = list->items[j + 1];
+                }
+                list->count--;
+                return;
+            }
         }
     }
 }
 
-int64_t rv_list_has(RvList *list, RvString *item) {
-    if (!list || !item) return 0;
+int64_t rv_list_has(void *col, RvString *item) {
+    if (!col || !item) return 0;
+    int64_t tag = *(int64_t*)col;
     const char *target = (const char*)&item->data[0];
-    for (int64_t i = 0; i < list->count; i++) {
-        if (strcmp((const char*)&list->items[i]->data[0], target) == 0) {
-            return 1;
+    if (tag == RV_TAG_MAP) {
+        RvMap *map = (RvMap*)col;
+        for (int64_t i = 0; i < map->count; i++) {
+            if (strcmp((const char*)&map->keys[i]->data[0], target) == 0) {
+                return 1;
+            }
+        }
+    } else {
+        RvList *list = (RvList*)col;
+        for (int64_t i = 0; i < list->count; i++) {
+            if (strcmp((const char*)&list->items[i]->data[0], target) == 0) {
+                return 1;
+            }
         }
     }
     return 0;
 }
 
-int64_t rv_list_count(RvList *list) {
-    return list ? list->count : 0;
+int64_t rv_list_count(void *col) {
+    if (!col) return 0;
+    return ((RvList*)col)->count;
 }
 
-RvString* rv_list_get(RvList *list, int64_t idx) {
-    if (!list || idx < 0 || idx >= list->count) return rv_cstr_to_str("");
-    return list->items[idx];
+RvString* rv_list_get(void *col, int64_t idx) {
+    if (!col || idx < 0) return rv_cstr_to_str("");
+    int64_t tag = *(int64_t*)col;
+    if (tag == RV_TAG_MAP) {
+        RvMap *map = (RvMap*)col;
+        if (idx >= map->count) return rv_cstr_to_str("");
+        return map->keys[idx];
+    } else {
+        RvList *list = (RvList*)col;
+        if (idx >= list->count) return rv_cstr_to_str("");
+        return list->items[idx];
+    }
+}
+
+RvList* rv_map_keys(RvMap *map) {
+    if (!map) return rv_list_create(0);
+    RvList *res = rv_list_create(map->count);
+    for (int64_t i = 0; i < map->count; i++) {
+        rv_list_add(res, map->keys[i]);
+    }
+    return res;
+}
+
+RvList* rv_map_values(RvMap *map) {
+    if (!map) return rv_list_create(0);
+    RvList *res = rv_list_create(map->count);
+    for (int64_t i = 0; i < map->count; i++) {
+        rv_list_add(res, map->values[i]);
+    }
+    return res;
+}
+
+// Verification & Built-in Testing
+void rv_verify_fail(int64_t line, RvString *actual, RvString *expected) {
+    const char *act = (actual && actual->len > 0) ? (const char*)&actual->data[0] : "(empty/false)";
+    const char *exp = (expected && expected->len > 0) ? (const char*)&expected->data[0] : "";
+    if (expected) {
+        fprintf(stderr, "\x1b[1;31m❌ Verification failed at line %ld!\x1b[0m\n   Expected: %s\n   Actual:   %s\n", (long)line, exp, act);
+    } else {
+        fprintf(stderr, "\x1b[1;31m❌ Verification failed at line %ld: condition evaluated to false!\x1b[0m\n", (long)line);
+    }
+    exit(1);
+}
+
+void rv_test_start(RvString *name) {
+    const char *n = (name && name->len > 0) ? (const char*)&name->data[0] : "test";
+    printf("🧪 test %s ... ", n);
+    fflush(stdout);
+}
+
+void rv_test_pass(void) {
+    printf("\x1b[1;32mok\x1b[0m\n");
+}
+
+// Audio Synthesizer
+void rv_play_synth(int64_t freq, int64_t duration_ms) {
+    if (freq <= 0) freq = 440;
+    if (duration_ms <= 0) duration_ms = 150;
+    char cmd[256];
+    snprintf(cmd, sizeof(cmd), "aplay -q -c 1 -t raw -r 8000 -f U8 <(yes \"\\x80\\x7f\" | head -c %ld) 2>/dev/null || printf '\\a'", (long)(duration_ms * 8));
+    (void)system(cmd);
 }
 
 // Benchmarking

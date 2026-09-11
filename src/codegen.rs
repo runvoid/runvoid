@@ -193,6 +193,15 @@ impl CodeGenerator {
         output.push_str("extern rv_list_has\n");
         output.push_str("extern rv_list_count\n");
         output.push_str("extern rv_list_get\n");
+        output.push_str("extern rv_map_create\n");
+        output.push_str("extern rv_map_set\n");
+        output.push_str("extern rv_map_get\n");
+        output.push_str("extern rv_map_keys\n");
+        output.push_str("extern rv_map_values\n");
+        output.push_str("extern rv_verify_fail\n");
+        output.push_str("extern rv_test_start\n");
+        output.push_str("extern rv_test_pass\n");
+        output.push_str("extern rv_play_synth\n");
         output.push_str("extern rv_time_now_ms\n");
         output.push_str("extern rv_measure_report\n");
         output.push_str("extern rv_measure_cycles_report\n");
@@ -401,7 +410,7 @@ impl CodeGenerator {
             },
             Expr::Unary { op, .. } => match op {
                 UnaryOp::Not => Type::Bool,
-                UnaryOp::Neg => Type::Int,
+                UnaryOp::Neg | UnaryOp::BitNot => Type::Int,
             },
             Expr::Call { .. } => Type::Int,
             Expr::Run(_) => Type::String,
@@ -422,8 +431,13 @@ impl CodeGenerator {
             Expr::AskHidden(_)
             | Expr::Choose { .. }
             | Expr::ReadWeb(_)
+            | Expr::Index { .. }
             | Expr::StrReplace { .. } => Type::String,
-            Expr::ListCount(_) | Expr::ListLiteral(_) => Type::Int,
+            Expr::ListCount(_)
+            | Expr::ListLiteral(_)
+            | Expr::MapLiteral(_)
+            | Expr::MapKeys(_)
+            | Expr::MapValues(_) => Type::Int,
             Expr::AddrOf(_) | Expr::Alloc(_) => Type::Ptr,
             Expr::Deref(_) => Type::Int,
             Expr::Free(_) => Type::Void,
@@ -1177,6 +1191,153 @@ impl CodeGenerator {
                 code.extend(self.generate_expr(val));
                 code.push(format!("    lock add [{} + ({})], rax", base, offset));
             }
+            Stmt::AddToMap { key, value, map } => {
+                self.has_helpers = true;
+                let map_offset = *self.var_offsets.get(map).unwrap_or(&-8);
+                code.push(format!("    mov rdi, [rbp + ({})]", map_offset));
+                code.push("    push rdi".to_string());
+                code.extend(self.generate_stringified_expr(key));
+                code.push("    push rax".to_string());
+                code.extend(self.generate_stringified_expr(value));
+                code.push("    mov rdx, rax".to_string());
+                code.push("    pop rsi".to_string());
+                code.push("    pop rdi".to_string());
+                code.push("    call rv_map_set".to_string());
+            }
+            Stmt::RemoveFromMap { key, map } => {
+                self.has_helpers = true;
+                let map_offset = *self.var_offsets.get(map).unwrap_or(&-8);
+                code.push(format!("    mov rdi, [rbp + ({})]", map_offset));
+                code.push("    push rdi".to_string());
+                code.extend(self.generate_stringified_expr(key));
+                code.push("    mov rsi, rax".to_string());
+                code.push("    pop rdi".to_string());
+                code.push("    call rv_list_remove".to_string());
+            }
+            Stmt::IndexAssign {
+                target,
+                index,
+                value,
+            } => {
+                self.has_helpers = true;
+                code.extend(self.generate_expr(target));
+                code.push("    push rax".to_string());
+                code.extend(self.generate_stringified_expr(index));
+                code.push("    push rax".to_string());
+                code.extend(self.generate_stringified_expr(value));
+                code.push("    mov rdx, rax".to_string());
+                code.push("    pop rsi".to_string());
+                code.push("    pop rdi".to_string());
+                code.push("    call rv_map_set".to_string());
+            }
+            Stmt::Match {
+                target,
+                arms,
+                otherwise,
+            } => {
+                let end_label = self.new_label("match_end");
+                code.extend(self.generate_expr(target));
+                code.push("    push rax".to_string());
+                let is_str = self.infer_expr_type(target) == Type::String;
+
+                for arm in arms {
+                    let next_arm = self.new_label("match_arm_next");
+                    if is_str {
+                        code.extend(self.generate_stringified_expr(&arm.pattern));
+                        code.push("    mov rsi, rax".to_string());
+                        code.push("    mov rdi, [rsp]".to_string());
+                        code.push("    call rv_str_eq".to_string());
+                        code.push("    cmp rax, 1".to_string());
+                        code.push(format!("    jne {}", next_arm));
+                    } else {
+                        code.extend(self.generate_expr(&arm.pattern));
+                        code.push("    mov rsi, rax".to_string());
+                        code.push("    mov rdi, [rsp]".to_string());
+                        code.push("    cmp rdi, rsi".to_string());
+                        code.push(format!("    jne {}", next_arm));
+                    }
+                    for s in &arm.body {
+                        code.extend(self.generate_stmt(s));
+                    }
+                    code.push(format!("    jmp {}", end_label));
+                    code.push(format!("{}:", next_arm));
+                }
+
+                if let Some(oth) = otherwise {
+                    for s in oth {
+                        code.extend(self.generate_stmt(s));
+                    }
+                }
+
+                code.push(format!("{}:", end_label));
+                code.push("    add rsp, 8".to_string());
+            }
+            Stmt::Verify {
+                actual,
+                expected,
+                line,
+            } => {
+                self.has_helpers = true;
+                let ok_label = self.new_label("verify_ok");
+                if let Some(exp) = expected {
+                    let actual_ty = self.infer_expr_type(actual);
+                    let exp_ty = self.infer_expr_type(exp);
+                    let is_str = actual_ty == Type::String || exp_ty == Type::String;
+                    if is_str {
+                        code.extend(self.generate_stringified_expr(actual));
+                        code.push("    push rax".to_string());
+                        code.extend(self.generate_stringified_expr(exp));
+                        code.push("    mov rsi, rax".to_string());
+                        code.push("    pop rdi".to_string());
+                        code.push("    call rv_str_eq".to_string());
+                        code.push("    cmp rax, 1".to_string());
+                        code.push(format!("    je {}", ok_label));
+                    } else {
+                        code.extend(self.generate_expr(actual));
+                        code.push("    push rax".to_string());
+                        code.extend(self.generate_expr(exp));
+                        code.push("    mov rsi, rax".to_string());
+                        code.push("    pop rdi".to_string());
+                        code.push("    cmp rdi, rsi".to_string());
+                        code.push(format!("    je {}", ok_label));
+                    }
+                    code.push(format!("    mov rdi, {}", line));
+                    code.extend(self.generate_stringified_expr(actual));
+                    code.push("    push rax".to_string());
+                    code.extend(self.generate_stringified_expr(exp));
+                    code.push("    mov rdx, rax".to_string());
+                    code.push("    pop rsi".to_string());
+                    code.push("    call rv_verify_fail".to_string());
+                } else {
+                    code.extend(self.generate_expr(actual));
+                    code.push("    cmp rax, 0".to_string());
+                    code.push(format!("    jne {}", ok_label));
+                    code.push(format!("    mov rdi, {}", line));
+                    code.push("    xor esi, esi".to_string());
+                    code.push("    xor edx, edx".to_string());
+                    code.push("    call rv_verify_fail".to_string());
+                }
+                code.push(format!("{}:", ok_label));
+            }
+            Stmt::TestBlock { name, body } => {
+                self.has_helpers = true;
+                let test_lbl = self.get_or_create_string(name);
+                code.push(format!("    lea rdi, [rel {}]", test_lbl));
+                code.push("    call rv_test_start".to_string());
+                for s in body {
+                    code.extend(self.generate_stmt(s));
+                }
+                code.push("    call rv_test_pass".to_string());
+            }
+            Stmt::PlaySynth { freq, duration } => {
+                self.has_helpers = true;
+                code.extend(self.generate_expr(freq));
+                code.push("    push rax".to_string());
+                code.extend(self.generate_expr(duration));
+                code.push("    mov rsi, rax".to_string());
+                code.push("    pop rdi".to_string());
+                code.push("    call rv_play_synth".to_string());
+            }
         }
 
         code
@@ -1247,7 +1408,17 @@ impl CodeGenerator {
                     }
                     BinaryOp::Equal => {
                         let left_ty = self.infer_expr_type(left);
-                        if left_ty == Type::String {
+                        let right_ty = self.infer_expr_type(right);
+                        if left_ty == Type::String || right_ty == Type::String {
+                            if left_ty != Type::String {
+                                code.push("    mov rdi, rbx".to_string());
+                                code.push("    call rv_int_to_str".to_string());
+                                code.push("    mov rbx, rax".to_string());
+                            }
+                            if right_ty != Type::String {
+                                code.push("    mov rdi, rax".to_string());
+                                code.push("    call rv_int_to_str".to_string());
+                            }
                             code.push("    mov rdi, rbx".to_string());
                             code.push("    mov rsi, rax".to_string());
                             code.push("    call rv_str_eq".to_string());
@@ -1259,7 +1430,17 @@ impl CodeGenerator {
                     }
                     BinaryOp::NotEqual => {
                         let left_ty = self.infer_expr_type(left);
-                        if left_ty == Type::String {
+                        let right_ty = self.infer_expr_type(right);
+                        if left_ty == Type::String || right_ty == Type::String {
+                            if left_ty != Type::String {
+                                code.push("    mov rdi, rbx".to_string());
+                                code.push("    call rv_int_to_str".to_string());
+                                code.push("    mov rbx, rax".to_string());
+                            }
+                            if right_ty != Type::String {
+                                code.push("    mov rdi, rax".to_string());
+                                code.push("    call rv_int_to_str".to_string());
+                            }
                             code.push("    mov rdi, rbx".to_string());
                             code.push("    mov rsi, rax".to_string());
                             code.push("    call rv_str_eq".to_string());
@@ -1303,6 +1484,25 @@ impl CodeGenerator {
                         code.push("    setnz al".to_string());
                         code.push("    movzx rax, al".to_string());
                     }
+                    BinaryOp::BitAnd => {
+                        code.push("    and rax, rbx".to_string());
+                    }
+                    BinaryOp::BitOr => {
+                        code.push("    or rax, rbx".to_string());
+                    }
+                    BinaryOp::BitXor => {
+                        code.push("    xor rax, rbx".to_string());
+                    }
+                    BinaryOp::ShiftLeft => {
+                        code.push("    mov rcx, rax".to_string());
+                        code.push("    mov rax, rbx".to_string());
+                        code.push("    shl rax, cl".to_string());
+                    }
+                    BinaryOp::ShiftRight => {
+                        code.push("    mov rcx, rax".to_string());
+                        code.push("    mov rax, rbx".to_string());
+                        code.push("    shr rax, cl".to_string());
+                    }
                 }
             }
             Expr::Unary { op, expr } => {
@@ -1315,6 +1515,9 @@ impl CodeGenerator {
                         code.push("    test rax, rax".to_string());
                         code.push("    setz al".to_string());
                         code.push("    movzx rax, al".to_string());
+                    }
+                    UnaryOp::BitNot => {
+                        code.push("    not rax".to_string());
                     }
                 }
             }
@@ -1603,6 +1806,48 @@ impl CodeGenerator {
                     code.push(format!("    mov [rbx + {}], rax", idx * 8));
                 }
                 code.push("    pop rax".to_string());
+            }
+            Expr::MapLiteral(entries) => {
+                self.has_helpers = true;
+                let cap = if entries.len() > 8 {
+                    entries.len() as i64
+                } else {
+                    8
+                };
+                code.push(format!("    mov rdi, {}", cap));
+                code.push("    call rv_map_create".to_string());
+                code.push("    push rax".to_string());
+                for (key, val) in entries {
+                    code.extend(self.generate_stringified_expr(key));
+                    code.push("    push rax".to_string());
+                    code.extend(self.generate_stringified_expr(val));
+                    code.push("    mov rdx, rax".to_string());
+                    code.push("    pop rsi".to_string());
+                    code.push("    mov rdi, [rsp]".to_string());
+                    code.push("    call rv_map_set".to_string());
+                }
+                code.push("    pop rax".to_string());
+            }
+            Expr::Index { target, index } => {
+                self.has_helpers = true;
+                code.extend(self.generate_expr(target));
+                code.push("    push rax".to_string());
+                code.extend(self.generate_stringified_expr(index));
+                code.push("    mov rsi, rax".to_string());
+                code.push("    pop rdi".to_string());
+                code.push("    call rv_map_get".to_string());
+            }
+            Expr::MapKeys(map) => {
+                self.has_helpers = true;
+                let offset = *self.var_offsets.get(map).unwrap_or(&-8);
+                code.push(format!("    mov rdi, [rbp + ({})]", offset));
+                code.push("    call rv_map_keys".to_string());
+            }
+            Expr::MapValues(map) => {
+                self.has_helpers = true;
+                let offset = *self.var_offsets.get(map).unwrap_or(&-8);
+                code.push(format!("    mov rdi, [rbp + ({})]", offset));
+                code.push("    call rv_map_values".to_string());
             }
         }
 

@@ -42,5 +42,31 @@ $ runvoid new gui dashboard.rv  # Desktop GUI template
 $ runvoid new script tool.rv    # Conversational script template
 ```
 
-### 6. `runvoid cheat`
-Displays an interactive color-coded terminal cheat sheet anytime you need a quick syntax reminder.
+### 6. `runvoid test [file]`
+Run built-in test suites and assertions across your project:
+```bash
+$ runvoid test                  # Run all tests in tests/ and *_test.rv
+$ runvoid test tests/suite.rv   # Run a specific test file
+```
+
+### 7. `runvoid repl`
+Launch an interactive read-eval-print loop with persistent state:
+```bash
+$ runvoid repl
+runvoid> remember hero = name: "Alex", hp: 100
+runvoid> hero's hp
+100
+runvoid> :help
+```
+
+### 8. `runvoid watch <file.rv>`
+Hot-reload your application on every file save:
+```bash
+$ runvoid watch main.rv
+```
+
+### 9. `runvoid cheat`
+Displays an interactive color-coded terminal cheat sheet anytime you need a quick syntax reminder:
+```bash
+$ runvoid cheat
+```

@@ -57,6 +57,31 @@ impl Lexer {
                 continue;
             }
 
+            if ch == '\'' {
+                let start_line = self.line;
+                let start_col = self.col;
+                let is_possessive = if self.peek_ahead(1) == 's' {
+                    let after_s = self.peek_ahead(2);
+                    let valid_follower = after_s == '\0' || (!after_s.is_alphanumeric() && after_s != '_' && after_s != '\'');
+                    let prev_is_expr = tokens.last().map(|t| matches!(t.kind, TokenKind::Ident(_) | TokenKind::CloseParen | TokenKind::CloseBracket)).unwrap_or(false);
+                    prev_is_expr && valid_follower
+                } else {
+                    false
+                };
+
+                if is_possessive {
+                    self.advance(); // consume '\''
+                    self.advance(); // consume 's'
+                    tokens.push(Token::new(TokenKind::ApostropheS, start_line, start_col));
+                    continue;
+                } else {
+                    self.advance(); // consume opening '\''
+                    let tok = self.lex_single_quoted_string(start_line, start_col)?;
+                    tokens.push(tok);
+                    continue;
+                }
+            }
+
             // Numbers
             if ch.is_ascii_digit() {
                 let start_line = self.line;
@@ -240,6 +265,23 @@ impl Lexer {
                     "Bool" => TokenKind::TypeBool,
                     "Ptr" => TokenKind::TypePtr,
 
+                    "match" => TokenKind::Match,
+                    "when" => TokenKind::When,
+                    "verify" => TokenKind::Verify,
+                    "test" => TokenKind::Test,
+                    "map" => TokenKind::Map,
+                    "keys" => TokenKind::Keys,
+                    "values" => TokenKind::Values,
+                    "play" => TokenKind::Play,
+                    "synth" => TokenKind::Synth,
+                    "duration" => TokenKind::Duration,
+                    "freq" => TokenKind::Freq,
+                    "bit" => TokenKind::Bit,
+                    "shift" => TokenKind::Shift,
+                    "left" => TokenKind::Left,
+                    "right" => TokenKind::Right,
+                    "xor" => TokenKind::Xor,
+
                     _ => TokenKind::Ident(ident),
                 };
                 tokens.push(Token::new(kind, start_line, start_col));
@@ -339,11 +381,51 @@ impl Lexer {
                         ));
                     }
                 }
+                '[' => {
+                    self.advance();
+                    TokenKind::OpenBracket
+                }
+                ']' => {
+                    self.advance();
+                    TokenKind::CloseBracket
+                }
+                '|' => {
+                    self.advance();
+                    if self.peek() == '>' {
+                        self.advance();
+                        TokenKind::PipeGreater
+                    } else if self.peek() == '|' {
+                        self.advance();
+                        TokenKind::Or
+                    } else {
+                        TokenKind::Pipe
+                    }
+                }
+                '&' => {
+                    self.advance();
+                    if self.peek() == '&' {
+                        self.advance();
+                        TokenKind::And
+                    } else {
+                        TokenKind::Ampersand
+                    }
+                }
+                '^' => {
+                    self.advance();
+                    TokenKind::Caret
+                }
+                '~' => {
+                    self.advance();
+                    TokenKind::Tilde
+                }
                 '<' => {
                     self.advance();
                     if self.peek() == '=' {
                         self.advance();
                         TokenKind::LessEqual
+                    } else if self.peek() == '<' {
+                        self.advance();
+                        TokenKind::DoubleLess
                     } else {
                         TokenKind::Less
                     }
@@ -353,6 +435,9 @@ impl Lexer {
                     if self.peek() == '=' {
                         self.advance();
                         TokenKind::GreaterEqual
+                    } else if self.peek() == '>' {
+                        self.advance();
+                        TokenKind::DoubleGreater
                     } else {
                         TokenKind::Greater
                     }
@@ -473,6 +558,47 @@ impl Lexer {
         while !self.is_eof() && self.peek() != '\n' {
             self.advance();
         }
+    }
+
+    fn lex_single_quoted_string(
+        &mut self,
+        start_line: usize,
+        start_col: usize,
+    ) -> Result<Token, String> {
+        let mut buf = String::new();
+        while !self.is_eof() {
+            let ch = self.peek();
+            if ch == '\\' {
+                self.advance();
+                let esc = match self.peek() {
+                    'n' => '\n',
+                    't' => '\t',
+                    'r' => '\r',
+                    '\\' => '\\',
+                    '\'' => '\'',
+                    '"' => '"',
+                    other => {
+                        return Err(format!(
+                            "Invalid escape sequence '\\{}' at line {}, col {}",
+                            other, self.line, self.col
+                        ));
+                    }
+                };
+                buf.push(esc);
+                self.advance();
+            } else if ch == '\'' {
+                self.advance(); // consume closing '\''
+                return Ok(Token::new(TokenKind::StringLit(buf), start_line, start_col));
+            } else {
+                buf.push(ch);
+                self.advance();
+            }
+        }
+
+        Err(format!(
+            "Unterminated single-quoted string literal starting at line {}, col {}",
+            start_line, start_col
+        ))
     }
 
     fn peek(&self) -> char {

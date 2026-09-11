@@ -459,6 +459,83 @@ impl Optimizer {
                     let opt_val = self.optimize_expr(val);
                     optimized.push(Stmt::AtomicAdd { var, val: opt_val });
                 }
+                Stmt::AddToMap { key, value, map } => {
+                    let opt_key = self.optimize_expr(key);
+                    let opt_val = self.optimize_expr(value);
+                    optimized.push(Stmt::AddToMap {
+                        key: opt_key,
+                        value: opt_val,
+                        map,
+                    });
+                }
+                Stmt::RemoveFromMap { key, map } => {
+                    let opt_key = self.optimize_expr(key);
+                    optimized.push(Stmt::RemoveFromMap { key: opt_key, map });
+                }
+                Stmt::IndexAssign {
+                    target,
+                    index,
+                    value,
+                } => {
+                    let opt_target = self.optimize_expr(target);
+                    let opt_index = self.optimize_expr(index);
+                    let opt_val = self.optimize_expr(value);
+                    optimized.push(Stmt::IndexAssign {
+                        target: opt_target,
+                        index: opt_index,
+                        value: opt_val,
+                    });
+                }
+                Stmt::Match {
+                    target,
+                    arms,
+                    otherwise,
+                } => {
+                    let opt_target = self.optimize_expr(target);
+                    let mut opt_arms = Vec::new();
+                    for arm in arms {
+                        let opt_pat = self.optimize_expr(arm.pattern);
+                        let opt_body = self.optimize_statements(arm.body);
+                        opt_arms.push(MatchArm {
+                            pattern: opt_pat,
+                            body: opt_body,
+                        });
+                    }
+                    let opt_otherwise = otherwise.map(|b| self.optimize_statements(b));
+                    optimized.push(Stmt::Match {
+                        target: opt_target,
+                        arms: opt_arms,
+                        otherwise: opt_otherwise,
+                    });
+                }
+                Stmt::Verify {
+                    actual,
+                    expected,
+                    line,
+                } => {
+                    let opt_actual = self.optimize_expr(actual);
+                    let opt_expected = expected.map(|e| self.optimize_expr(e));
+                    optimized.push(Stmt::Verify {
+                        actual: opt_actual,
+                        expected: opt_expected,
+                        line,
+                    });
+                }
+                Stmt::TestBlock { name, body } => {
+                    let opt_body = self.optimize_statements(body);
+                    optimized.push(Stmt::TestBlock {
+                        name,
+                        body: opt_body,
+                    });
+                }
+                Stmt::PlaySynth { freq, duration } => {
+                    let opt_freq = self.optimize_expr(freq);
+                    let opt_dur = self.optimize_expr(duration);
+                    optimized.push(Stmt::PlaySynth {
+                        freq: opt_freq,
+                        duration: opt_dur,
+                    });
+                }
             }
         }
 
@@ -525,6 +602,26 @@ impl Optimizer {
                         self.folded_constants_count += 1;
                         Expr::Bool(*a || *b)
                     }
+                    (Expr::Int(a), BinaryOp::BitAnd, Expr::Int(b)) => {
+                        self.folded_constants_count += 1;
+                        Expr::Int(a & b)
+                    }
+                    (Expr::Int(a), BinaryOp::BitOr, Expr::Int(b)) => {
+                        self.folded_constants_count += 1;
+                        Expr::Int(a | b)
+                    }
+                    (Expr::Int(a), BinaryOp::BitXor, Expr::Int(b)) => {
+                        self.folded_constants_count += 1;
+                        Expr::Int(a ^ b)
+                    }
+                    (Expr::Int(a), BinaryOp::ShiftLeft, Expr::Int(b)) => {
+                        self.folded_constants_count += 1;
+                        Expr::Int(a << b)
+                    }
+                    (Expr::Int(a), BinaryOp::ShiftRight, Expr::Int(b)) => {
+                        self.folded_constants_count += 1;
+                        Expr::Int(a >> b)
+                    }
                     (Expr::Str(a), BinaryOp::Add, Expr::Str(b)) => {
                         self.folded_constants_count += 1;
                         Expr::Str(format!("{}{}", a, b))
@@ -546,6 +643,10 @@ impl Optimizer {
                     (UnaryOp::Not, Expr::Bool(b)) => {
                         self.folded_constants_count += 1;
                         Expr::Bool(!b)
+                    }
+                    (UnaryOp::BitNot, Expr::Int(n)) => {
+                        self.folded_constants_count += 1;
+                        Expr::Int(!n)
                     }
                     _ => Expr::Unary {
                         op,
@@ -606,6 +707,17 @@ impl Optimizer {
                 element,
                 label: Box::new(self.optimize_expr(*label)),
                 extra: extra.map(|e| Box::new(self.optimize_expr(*e))),
+            },
+            Expr::MapLiteral(entries) => {
+                let opt_entries = entries
+                    .into_iter()
+                    .map(|(k, v)| (self.optimize_expr(k), self.optimize_expr(v)))
+                    .collect();
+                Expr::MapLiteral(opt_entries)
+            }
+            Expr::Index { target, index } => Expr::Index {
+                target: Box::new(self.optimize_expr(*target)),
+                index: Box::new(self.optimize_expr(*index)),
             },
             other => other,
         }

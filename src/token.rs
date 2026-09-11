@@ -175,8 +175,38 @@ pub enum TokenKind {
     Comma,      // ,
     Colon,      // :
 
+    // Version 0.3.0: Pattern matching, Maps, Testing, Bitwise, Audio
+    Match,
+    When,
+    Verify,
+    Test,
+    Map,
+    Keys,
+    Values,
+    Play,
+    Synth,
+    Duration,
+    Freq,
+    Bit,
+    Shift,
+    Left,
+    Right,
+    Xor,
+
     Newline,
     Eof,
+
+    // Brackets and extra operators
+    OpenBracket,  // [
+    CloseBracket, // ]
+    Pipe,         // |
+    PipeGreater,  // |>
+    Ampersand,    // &
+    Caret,        // ^
+    Tilde,        // ~
+    DoubleLess,   // <<
+    DoubleGreater,// >>
+    ApostropheS,  // 's
 }
 
 #[derive(Debug, Clone, PartialEq)]
