@@ -168,7 +168,7 @@ static void run_gui_installer(const char* dest_dir, const char* runtime_dir) {
         printf("[WARN] Graphical display ($DISPLAY) not detected. Falling back to CLI mode.\n");
         printf("[INFO] Installing Runvoid to %s ...\n", dest_dir);
         if (execute_installation(dest_dir, runtime_dir)) {
-            printf("[PASS] Runvoid v0.3.0 installed successfully to %s/runvoid\n", dest_dir);
+            printf("[PASS] Runvoid 1 (v1.3.0) installed successfully to %s/runvoid\n", dest_dir);
         } else {
             printf("[FAIL] Installation failed. Please check permissions.\n");
         }
@@ -197,7 +197,7 @@ static void run_gui_installer(const char* dest_dir, const char* runtime_dir) {
 
     Window win = XCreateSimpleWindow(dpy, root, win_x, win_y, win_w, win_h, 1, col_accent, col_bg);
 
-    XStoreName(dpy, win, "Runvoid v0.3.0 Setup");
+    XStoreName(dpy, win, "Runvoid 1 (v1.3.0) Setup");
     Atom wm_delete = XInternAtom(dpy, "WM_DELETE_WINDOW", False);
     XSetWMProtocols(dpy, win, &wm_delete, 1);
 
@@ -235,7 +235,8 @@ static void run_gui_installer(const char* dest_dir, const char* runtime_dir) {
             XDrawString(dpy, win, gc, 25, 32, "Runvoid Programming Language", 28);
 
             XSetForeground(dpy, gc, col_subtext);
-            XDrawString(dpy, win, gc, 25, 55, "Native AOT Compiler & Systems Runtime for Linux x86_64 - v0.3.0", 63);
+            const char* sub = "Native AOT Compiler & Systems Runtime for Linux x86_64 - Runvoid 1 (v1.3.0)";
+            XDrawString(dpy, win, gc, 25, 55, sub, strlen(sub));
 
             // 2. Card: Destination
             XSetForeground(dpy, gc, col_card);
@@ -312,7 +313,7 @@ static void run_gui_installer(const char* dest_dir, const char* runtime_dir) {
                     if (execute_installation(dest_dir, runtime_dir)) {
                         g_progress = 100;
                         g_installed = 1;
-                        snprintf(g_status_msg, sizeof(g_status_msg), "Success! Runvoid v0.3.0 is ready to use.");
+                        snprintf(g_status_msg, sizeof(g_status_msg), "Success! Runvoid 1 (v1.3.0) is ready to use.");
                     } else {
                         g_progress = 0;
                         snprintf(g_status_msg, sizeof(g_status_msg), "Error: Failed to write files. Check permissions.");
@@ -336,7 +337,7 @@ static void run_gui_installer(const char* dest_dir, const char* runtime_dir) {
                     g_progress = 100;
                     g_installed = 1;
                     execute_installation(dest_dir, runtime_dir);
-                    snprintf(g_status_msg, sizeof(g_status_msg), "Success! Runvoid v0.3.0 is ready.");
+                    snprintf(g_status_msg, sizeof(g_status_msg), "Success! Runvoid 1 (v1.3.0) is ready.");
                     XClearArea(dpy, win, 0, 0, 0, 0, True);
                 }
             }
@@ -379,7 +380,7 @@ int main(int argc, char** argv) {
     }
 
     if (cli_mode) {
-        printf("[INFO] Installing Runvoid (v0.3.0) to %s ...\n", dest_dir);
+        printf("[INFO] Installing Runvoid 1 (v1.3.0) to %s ...\n", dest_dir);
         if (execute_installation(dest_dir, runtime_dir)) {
             printf("[PASS] Installation complete! Runvoid installed to %s/runvoid\n", dest_dir);
             printf("[INFO] Try running: runvoid --version\n");

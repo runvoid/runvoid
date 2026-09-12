@@ -16,9 +16,10 @@ use std::path::PathBuf;
 #[derive(ClapParser)]
 #[command(name = "runvoid")]
 #[command(
-    about = "Compiler for the simple, high-performance Runvoid programming language",
-    version = "0.3.0"
-)]
+    about = "Compiler for the simple, high-performance Runvoid programming language (Runvoid 1)",
+    version = "1.3.0"
+)
+]
 struct Cli {
     #[command(subcommand)]
     command: Commands,
@@ -399,9 +400,10 @@ fn run_tests(file: Option<PathBuf>, verbose: bool, target: Option<TargetOs>) {
 fn run_repl() {
     use std::io::{self, BufRead, Write};
     println!("\x1b[1;36m╔══════════════════════════════════════════════════════════════╗\x1b[0m");
-    println!("\x1b[1;36m║           Runvoid Interactive REPL v0.3.0                   ║\x1b[0m");
+    println!("\x1b[1;36m║           Runvoid 1 Interactive REPL (v1.3)                  ║\x1b[0m");
     println!("\x1b[1;36m║   Type :help for help, :clear to reset, :exit to quit        ║\x1b[0m");
     println!("\x1b[1;36m╚══════════════════════════════════════════════════════════════╝\x1b[0m");
+
 
     let stdin = io::stdin();
     let mut history: Vec<String> = Vec::new();
@@ -580,7 +582,7 @@ fn print_cheat_sheet() {
     println!("  if list has \"sword\" {{ ... }}           # Membership check");
     println!("  for every item in list {{ ... }}        # Loop through list\n");
 
-    println!("\x1b[1;33m📌 2. DICTIONARIES / MAPS (v0.3.0)\x1b[0m");
+    println!("\x1b[1;33m📌 2. DICTIONARIES / MAPS (Runvoid 1.3)\x1b[0m");
     println!("  remember hero = name: \"Alex\", hp: 100 # Key-value map definition");
     println!("  say hero[\"name\"]                      # Square bracket indexing");
     println!("  say hero's hp                         # Natural possessive syntax");
@@ -588,7 +590,7 @@ fn print_cheat_sheet() {
     println!("  remove \"hp\" from hero                 # Remove key");
     println!("  if hero has \"name\" {{ ... }}            # Key existence check\n");
 
-    println!("\x1b[1;33m📌 3. PATTERN MATCHING & PIPELINES (v0.3.0)\x1b[0m");
+    println!("\x1b[1;33m📌 3. PATTERN MATCHING & PIPELINES (Runvoid 1.3)\x1b[0m");
     println!("  match role {{                           # Pattern matching");
     println!("      when \"admin\" -> say \"Full access\"");
     println!("      when \"guest\" -> say \"Limited access\"");
@@ -596,13 +598,14 @@ fn print_cheat_sheet() {
     println!("  }}");
     println!("  5 |> square |> say                    # Pipeline operator |>\n");
 
-    println!("\x1b[1;33m📌 4. BITWISE OPERATORS & AUDIO SYNTHESIZER (v0.3.0)\x1b[0m");
+    println!("\x1b[1;33m📌 4. BITWISE OPERATORS & AUDIO SYNTHESIZER (Runvoid 1.3)\x1b[0m");
     println!("  remember mask = a bit and b           # bit and / bit or / bit xor");
     println!("  remember val = 1 shift left 4         # shift left / shift right");
     println!("  remember inv = ~mask                  # bit not (~)");
     println!("  play synth 440, 200                   # Synthesizer tone (Hz, ms)\n");
 
-    println!("\x1b[1;33m📌 5. VERIFICATION & TESTING (v0.3.0)\x1b[0m");
+    println!("\x1b[1;33m📌 5. VERIFICATION & TESTING (Runvoid 1.3)\x1b[0m");
+
     println!("  verify that 2 + 2 is 4                # Assertion / verification");
     println!("  test \"player level\" {{                 # Unit test block");
     println!("      verify that player's hp > 0");

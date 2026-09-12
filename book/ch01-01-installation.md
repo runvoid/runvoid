@@ -174,7 +174,7 @@ runvoid --version
 
 Output:
 ```text
-runvoid 0.3.0
+runvoid 1.3.0
 ```
 
 Print the interactive quick-reference cheat sheet:

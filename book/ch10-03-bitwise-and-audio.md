@@ -2,7 +2,7 @@
 
 Systems programmers, game designers, and network engineers frequently need to pack data into compact bitfields, manipulate hardware registers, and synthesize audio feedback.
 
-Runvoid 0.3.0 provides native hardware bitwise operations and a programmable square-wave frequency sound generator.
+Runvoid 1.3 provides native hardware bitwise operations and a programmable square-wave frequency sound generator.
 
 ---
 

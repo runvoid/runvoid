@@ -1,6 +1,6 @@
 # Introduction
 
-> **Note:** This book covers **Runvoid 0.3.0**, featuring full cross-platform native compilation for Linux x86_64 and Windows x86_64, built-in test runners, hot-reloading watch mode, and advanced systems directives.
+> **Note:** This book covers **Runvoid 1 (version 1.3.0)**, featuring full cross-platform native compilation for Linux x86_64 and Windows x86_64, built-in test runners, hot-reloading watch mode, and advanced systems directives.
 
 Welcome to **The Runvoid Programming Language**, the comprehensive guide to programming in Runvoid. Runvoid is an innovative compiled programming language engineered to unite the conversational clarity of natural English with the uncompromising speed, micro-footprint, and hardware control of bare-metal x86_64 machine code.
 
@@ -66,7 +66,7 @@ Runvoid adapts to your task:
 - **Pro Systems Mode:** Enabled with modular directives (`remove garbageC`, `remove Basic`, `add Advanced`). You gain strict static typing (`as int`, `as str`), C-compatible memory layouts, raw memory pointers, hardware atomics, and direct C FFI bindings.
 
 ### 3. First-Class Cross-Platform Compilation
-Runvoid 0.3.0 provides first-class support for both **Linux x86_64** and **Windows x86_64**. With native installers (`install.sh` for Linux, `install.ps1` and `install.bat` for Windows) and cross-compilation support (`--target windows` or `--target linux`), you can build binaries for any target OS directly from your workstation.
+Runvoid 1 (v1.3.0) provides first-class support for both **Linux x86_64** and **Windows x86_64**. With native installers (`install.sh` for Linux, `install.ps1` and `install.bat` for Windows) and cross-compilation support (`--target windows` or `--target linux`), you can build binaries for any target OS directly from your workstation.
 
 ### 4. Zero-Friction Developer Tooling
 The `runvoid` CLI ships as a complete software development kit:
@@ -96,7 +96,7 @@ This book is organized into four main sections:
 1. **Getting Started & Tutorial (Chapters 1–2):** Install Runvoid on your platform, configure prerequisites, write your first "Hello, World!" program, and build a complete interactive Guessing Game from scratch.
 2. **Core Language Features (Chapters 3–7):** Master variables, data types, control flow, collections, system dialogs, audio, 2D graphics, and memory management.
 3. **Pro Systems Programming (Chapter 8):** Dive deep into systems mode: compiler directives, strict static typing, raw pointers, C FFI, multithreading, inline assembly, and freestanding bare-metal development.
-4. **Architecture & Modern Features (Chapters 9–10):** Explore the internals of the Runvoid compiler, followed by v0.3.0 innovations: dictionaries, pattern matching, pipelines, bitwise operations, and the testing framework.
+4. **Architecture & Modern Features (Chapters 9–10):** Explore the internals of the Runvoid compiler, followed by Runvoid 1.3 innovations: dictionaries, pattern matching, pipelines, bitwise operations, and the testing framework.
 
 Every code sample in this book can be compiled and run directly. We encourage you to follow along, type the code into your editor, and run it with `runvoid run`!
 

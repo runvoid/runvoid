@@ -155,7 +155,7 @@ The interactive Read-Eval-Print Loop (REPL) allows you to experiment with langua
 
 ```bash
 $ runvoid repl
-Runvoid v0.3.0 Interactive Shell
+Runvoid 1 Interactive REPL (v1.3)
 Type :exit to quit, :help for commands.
 
 runvoid> remember numbers = [10, 20, 30]

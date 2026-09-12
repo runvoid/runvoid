@@ -251,7 +251,7 @@ static BOOL perform_installation(HWND hwnd) {
         g_installed = TRUE;
 
         MessageBoxA(hwnd,
-            "Runvoid 0.3.0 has been installed successfully!\n\n"
+            "Runvoid 1 (v1.3.0) has been installed successfully!\n\n"
             "You can now open a new Command Prompt or PowerShell window\n"
             "and run:\n\n"
             "    runvoid --version\n"
@@ -286,7 +286,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                 WS_CHILD | WS_VISIBLE | SS_LEFT,
                 24, 20, 460, 26, hwnd, NULL, NULL, NULL);
 
-            CreateWindowExA(0, "STATIC", "Native Compiler & Systems Runtime for Windows x86_64 — v0.3.0",
+            CreateWindowExA(0, "STATIC", "Native Compiler & Systems Runtime for Windows x86_64 — Runvoid 1 (v1.3.0)",
                 WS_CHILD | WS_VISIBLE | SS_LEFT,
                 24, 48, 460, 20, hwnd, NULL, NULL, NULL);
 
@@ -453,7 +453,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     HWND hwnd = CreateWindowExA(
         WS_EX_APPWINDOW,
         "RunvoidSetupWindowClass",
-        "Runvoid v0.3.0 Setup",
+        "Runvoid 1 (v1.3.0) Setup",
         WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
         pos_x, pos_y, win_w, win_h,
         NULL, NULL, hInstance, NULL);

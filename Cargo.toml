@@ -1,6 +1,7 @@
 [package]
 name = "runvoid"
-version = "0.3.0"
+version = "1.3.0"
+
 edition = "2024"
 authors = ["runvoid"]
 description = "A simple, ultra-fast scripting-feel compiled language written in Rust and NASM"

@@ -90,7 +90,7 @@ Runvoid makes filesystem manipulation conversational and concise:
 ### Reading and Writing Files
 ```runvoid
 // Write text into a file (creates or overwrites):
-write "Runvoid v0.3.0 Build Cache\nStatus: OK" into "build.log"
+write "Runvoid 1.3.0 Build Cache\nStatus: OK" into "build.log"
 
 // Read the contents of a file into a string:
 remember content = read "build.log"

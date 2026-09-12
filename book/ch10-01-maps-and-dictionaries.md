@@ -2,7 +2,7 @@
 
 Real-world applications frequently model data with named fields and dynamic attributes—user profiles, HTTP configuration headers, JSON payloads, and game entity state.
 
-Runvoid 0.3.0 introduces first-class **Key-Value Dictionaries (Maps)**, combining human-friendly syntax with a high-performance native open-addressing hash table implementation.
+Runvoid 1.3 introduces first-class **Key-Value Dictionaries (Maps)**, combining human-friendly syntax with a high-performance native open-addressing hash table implementation.
 
 ---
 

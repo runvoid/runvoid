@@ -1,6 +1,6 @@
 # Appendix A: Complete Keywords & Directives Reference
 
-This appendix provides an exhaustive reference of all keywords, directives, operators, and CLI commands supported by **Runvoid 0.3.0**.
+This appendix provides an exhaustive reference of all keywords, directives, operators, and CLI commands supported by **Runvoid 1 (version 1.3.0)**.
 
 ---
 

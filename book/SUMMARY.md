@@ -35,7 +35,7 @@
 
 - [9. Compiler Architecture & Ecosystem](ch09-00-compiler-architecture.md)
 
-- [10. Modern Language Features (v0.3.0)](ch10-00-v03-features.md)
+- [10. Modern Language Features (Runvoid 1.3)](ch10-00-v03-features.md)
     - [10.1 Key-Value Dictionaries & Maps](ch10-01-maps-and-dictionaries.md)
     - [10.2 Pattern Matching & Pipelines](ch10-02-pattern-matching-and-pipelines.md)
     - [10.3 Bitwise Operations & Audio Synthesizer](ch10-03-bitwise-and-audio.md)

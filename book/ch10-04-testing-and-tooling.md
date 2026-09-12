@@ -2,7 +2,7 @@
 
 Writing reliable software demands rapid iteration cycles and automated regression testing. In many programming ecosystems, setting up testing requires installing third-party frameworks, configuring complex runners, and writing brittle build scripts.
 
-Runvoid 0.3.0 ships with **native unit testing syntax**, a **built-in test runner CLI**, an **interactive REPL**, and a **hot-reloading file watcher** directly out of the box.
+Runvoid 1.3 ships with **native unit testing syntax**, a **built-in test runner CLI**, an **interactive REPL**, and a **hot-reloading file watcher** directly out of the box.
 
 ---
 
@@ -89,7 +89,7 @@ The Read-Eval-Print Loop lets you prototype ideas, experiment with expressions, 
 
 ```bash
 $ runvoid repl
-Runvoid v0.3.0 Interactive Shell
+Runvoid 1 Interactive REPL (v1.3)
 Type :help for help, :clear to reset, :exit to quit
 
 runvoid> remember user = name: "Aria", score: 950

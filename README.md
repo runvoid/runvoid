@@ -1,15 +1,15 @@
-# The Runvoid Programming Language (v0.3.0)
+# The Runvoid Programming Language (Runvoid 1 - v1.3.0)
 
 <div align="center">
 
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-0.3.0-brightgreen.svg)](Cargo.toml)
-[![Platform](https://img.shields.io/badge/platform-Linux%20x86__64-orange.svg)](#requirements)
+[![Version](https://img.shields.io/badge/version-1.3.0-brightgreen.svg)](Cargo.toml)
+[![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20Windows%20x86__64-orange.svg)](#requirements)
 [![Compiler](https://img.shields.io/badge/compiler-Rust%20%2B%20NASM-red.svg)](src/)
 
 **Simple and intuitive like Python & Bash. Fast, compact, and bare-metal like C & Assembly.**
 
-[The Book (Docs)](https://runvoid.github.io/runvoid/) • [Documentation](docs/DOCUMENTATION.md) • [Examples](examples/) • [Architecture](docs/DOCUMENTATION.md#13-compiler-pipeline-how-runvoid-works) • [License](LICENSE)
+[The Book (Docs)](https://runvoid.github.io/runvoid/) • [Documentation](book/DOCUMENTATION.md) • [Examples](examples/) • [Architecture](book/DOCUMENTATION.md#13-compiler-pipeline-how-runvoid-works) • [License](LICENSE)
 
 </div>
 
@@ -17,14 +17,14 @@
 
 ## 🚀 About Runvoid
 
-**Runvoid** is a modern programming language designed so that anyone can start coding immediately with a syntax that reads like natural English. Runvoid is **not** a slow interpreted script: its native compiler, written in **Rust**, compiles source code directly into **pure x86_64 NASM assembly** and links it into standalone ELF executables as small as **15 KB**—with zero external virtual machines or heavy runtimes.
+**Runvoid** is a modern programming language designed so that anyone can start coding immediately with a syntax that reads like natural English. Runvoid is **not** a slow interpreted script: its native compiler, written in **Rust**, compiles source code directly into **pure x86_64 NASM assembly** and links it into standalone executables (Linux ELF and Windows PE) as small as **15 KB**—with zero external virtual machines or heavy runtimes.
 
 ### ✨ Key Features:
 - 💡 **Human-Centric Syntax:** `say` for printing, `remember` for variables, `ask` for input, `if / otherwise` for control flow, `repeat` and `while` for loops.
-- 🗺️ **First-Class Dictionaries & Maps (v0.3.0):** `remember hero = name: "Alex", hp: 100`, indexing with `hero["name"]` or natural possessive syntax `hero's hp`, `add "shield": 50 to hero`, `remove "hp" from hero`, `hero has "name"`.
-- 🎯 **Pattern Matching & Pipelines (v0.3.0):** Clean branching with `match expr { when 1 -> ... otherwise -> ... }` and left-to-right functional pipelines `5 |> double |> say`.
-- ⚡ **Bitwise Instructions & Synthesizer (v0.3.0):** Native CPU bitwise operations (`bit and`, `bit or`, `bit xor`, `shift left`, `shift right`, `~`) and audio synthesis (`play synth 440, 200`).
-- 🧪 **Native Test Framework (v0.3.0):** First-class unit testing blocks `test "name" { verify that ... }` with automated color-coded test execution.
+- 🗺️ **First-Class Dictionaries & Maps (Runvoid 1.3):** `remember hero = name: "Alex", hp: 100`, indexing with `hero["name"]` or natural possessive syntax `hero's hp`, `add "shield": 50 to hero`, `remove "hp" from hero`, `hero has "name"`.
+- 🎯 **Pattern Matching & Pipelines (Runvoid 1.3):** Clean branching with `match expr { when 1 -> ... otherwise -> ... }` and left-to-right functional pipelines `5 |> double |> say`.
+- ⚡ **Bitwise Instructions & Synthesizer (Runvoid 1.3):** Native CPU bitwise operations (`bit and`, `bit or`, `bit xor`, `shift left`, `shift right`, `~`) and audio synthesis (`play synth 440, 200`).
+- 🧪 **Native Test Framework (Runvoid 1.3):** First-class unit testing blocks `test "name" { verify that ... }` with automated color-coded test execution.
 - 🎨 **Conversational Natural Lists:** `remember backpack = "sword", "potion"`, `for every item in backpack`, `add item to list`, `remove item from list`, `if list has item`, `{count list}`.
 - 🌈 **Terminal Colors & Audio:** `say green "Done!"`, `say red "Error!"`, `say yellow "Warning!"`, terminal `beep`, and text-to-speech `speak`.
 - 🕹️ **2D Screen Canvas & GUI:** Draw hardware-accelerated 2D games (`screen "Title", 640, 480 { draw circle ...; draw box ...; draw line ... }`) and native desktop windows (`window "App" { button "Click" { ... } }`).
@@ -48,11 +48,11 @@
 ## 📦 Installation & Requirements
 
 ### System Requirements:
-- **Operating System:** Linux x86_64
+- **Operating System:** Linux x86_64 or Windows x86_64 (Windows 10/11)
 - **Rust Toolchain:** `rustc` & `cargo` (>= 1.80)
 - **Assembler:** `nasm` (>= 2.15)
-- **Linker:** `gcc` (for final ELF linking)
-- **X11 Libraries:** `libX11` (optional; only needed when building GUI applications)
+- **Linker:** `gcc` (GCC on Linux, MinGW-w64 on Windows)
+- **GUI Libraries:** `libX11` on Linux, `user32` / `gdi32` on Windows (standard Win32)
 
 ### Building from Source:
 ```bash
@@ -181,7 +181,7 @@ say "Square of 8 = {val}"
 
 For full details on syntax, language specification, memory model, compiler flags, and the AST pipeline, check the complete official handbooks:
 - 📖 **[The Runvoid Programming Language Book](https://runvoid.github.io/runvoid/)** — Official interactive book hosted on GitHub Pages.
-- 📄 **[Documentation Guide](docs/DOCUMENTATION.md)** — Comprehensive language guide, architecture, and complete keyword reference.
+- 📄 **[Documentation Guide](book/DOCUMENTATION.md)** — Comprehensive language guide, architecture, and complete keyword reference.
 
 ---
 

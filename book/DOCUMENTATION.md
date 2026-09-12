@@ -1,4 +1,4 @@
-# The Runvoid Programming Language Reference & Guide (v0.3.0)
+# The Runvoid Programming Language Reference & Guide (Runvoid 1 - v1.3.0)
 
 Welcome to the official **Runvoid** documentation! 
 Whether you are writing your very first line of code or building high-performance bare-metal systems, Runvoid is crafted to make programming intuitive, lightning fast, and joyfully productive.
@@ -39,10 +39,10 @@ Whether you are writing your very first line of code or building high-performanc
    - [5.7 Terminal Audio & Speech (`beep`, `speak`)](#57-terminal-audio--speech-beep-speak)
    - [5.8 File System, Web & String Utilities](#58-file-system-web--string-utilities)
    - [5.9 2D Hardware Screen Canvas & Desktop GUI](#59-2d-hardware-screen-canvas--desktop-gui)
-   - [5.10 Key-Value Dictionaries & Maps (v0.3.0)](#510-key-value-dictionaries--maps-v030)
-   - [5.11 Pattern Matching & Pipelines (v0.3.0)](#511-pattern-matching--pipelines-v030)
-   - [5.12 Low-Level Bitwise Operators & Hardware Audio Synthesizer (v0.3.0)](#512-low-level-bitwise-operators--hardware-audio-synthesizer-v030)
-   - [5.13 Test Assertions & Test Blocks (v0.3.0)](#513-test-assertions--test-blocks-v030)
+   - [5.10 Key-Value Dictionaries & Maps (Runvoid 1.3)](#510-key-value-dictionaries--maps-runvoid-13)
+   - [5.11 Pattern Matching & Pipelines (Runvoid 1.3)](#511-pattern-matching--pipelines-runvoid-13)
+   - [5.12 Low-Level Bitwise Operators & Hardware Audio Synthesizer (Runvoid 1.3)](#512-low-level-bitwise-operators--hardware-audio-synthesizer-runvoid-13)
+   - [5.13 Test Assertions & Test Blocks (Runvoid 1.3)](#513-test-assertions--test-blocks-runvoid-13)
 6. [Memory Management & Garbage Collection](#6-memory-management--garbage-collection)
    - [Automatic Mark-and-Sweep GC](#61-automatic-mark-and-sweep-gc)
    - [Disabling GC (`remove garbageC`)](#62-disabling-gc-remove-garbagec)
@@ -629,7 +629,7 @@ window "Runvoid Preferences", 450, 320 {
 }
 ```
 
-### 5.10 Key-Value Dictionaries & Maps (v0.3.0)
+### 5.10 Key-Value Dictionaries & Maps (Runvoid 1.3)
 Define associative dictionaries using conversational pairs or JSON-style braces:
 ```runvoid
 # Conversational declaration
@@ -653,7 +653,7 @@ if hero has "shield" {
 say "Attributes count: {count hero}"
 ```
 
-### 5.11 Pattern Matching & Pipelines (v0.3.0)
+### 5.11 Pattern Matching & Pipelines (Runvoid 1.3)
 Replace nested conditional trees with expressive pattern matching and clean functional pipelines:
 ```runvoid
 remember status = 200
@@ -677,7 +677,7 @@ remember result = 10 |> double |> inc
 say "Pipelined result: {result}" # 21
 ```
 
-### 5.12 Low-Level Bitwise Operators & Hardware Audio Synthesizer (v0.3.0)
+### 5.12 Low-Level Bitwise Operators & Hardware Audio Synthesizer (Runvoid 1.3)
 Perform single-cycle bitwise operations using English keywords or standard symbols:
 ```runvoid
 remember a = 12 bit and 10     # 8
@@ -691,7 +691,7 @@ remember f = ~0                # -1
 play synth 440, 250
 ```
 
-### 5.13 Test Assertions & Test Blocks (v0.3.0)
+### 5.13 Test Assertions & Test Blocks (Runvoid 1.3)
 Write first-class automated tests and assertions:
 ```runvoid
 test "math operations" {

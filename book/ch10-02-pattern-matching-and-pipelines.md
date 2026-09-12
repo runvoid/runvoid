@@ -2,7 +2,7 @@
 
 Modern systems and application programming heavily involve transforming structured data and dispatching actions based on dynamic values.
 
-Runvoid 0.3.0 introduces two expressive constructs:
+Runvoid 1.3 introduces two expressive constructs:
 1. **Pattern Matching (`match`):** High-speed multi-branch value matching that replaces cumbersome `if`/`otherwise` ladders.
 2. **The Function Pipeline Operator (`|>`):** Left-to-right data transformation chains that eliminate unreadable nested parentheses.
 

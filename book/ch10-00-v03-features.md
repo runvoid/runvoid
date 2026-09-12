@@ -1,23 +1,23 @@
-# Chapter 10: Modern Language Features (v0.3.0)
+# Chapter 10: Modern Language Features (Runvoid 1.3)
 
-Runvoid 0.3.0 represents a watershed release in the evolution of the language. It introduces first-class associative data structures, expressive pattern matching, functional pipelines, hardware-level bitwise operations, built-in sound synthesis, and a unified automated testing framework—all while maintaining zero-overhead native machine code compilation for both **Linux x86_64** and **Windows x86_64**.
+Runvoid 1.3 represents a watershed release in the evolution of Runvoid 1. It introduces first-class associative data structures, expressive pattern matching, functional pipelines, hardware-level bitwise operations, built-in sound synthesis, and a unified automated testing framework—all while maintaining zero-overhead native machine code compilation for both **Linux x86_64** and **Windows x86_64**.
 
 ---
 
-## The Vision for Version 0.3.0
+## The Vision for Runvoid 1.3
 
-The goal of Runvoid 0.3.0 is to unite modern software engineering patterns with Runvoid's core design tenets:
+The goal of Runvoid 1.3 is to unite modern software engineering patterns with Runvoid's core design tenets:
 1. **Conversational Clarity:** Code should read naturally without sacrificing precision.
 2. **Deterministic Native Execution:** Every feature must compile into predictable x86_64 assembly with zero virtual machine baggage.
 3. **Cross-Platform Parity:** Binaries running on Linux and Windows should have identical behavior, calling conventions, and native capabilities.
 
 ---
 
-## Landmark Additions in v0.3.0
+## Landmark Additions in Runvoid 1.3
 
 ```
   +-------------------------------------------------------------------------+
-  |                           RUNVOID 0.3.0                                 |
+  |                        RUNVOID 1 (VERSION 1.3.0)                        |
   +-------------------------------------------------------------------------+
   |  - Key-Value Dictionaries & Natural Maps (name: "Alex", hp: 100)        |
   |  - Exhaustive Multi-Branch Pattern Matching (`match`)                   |
