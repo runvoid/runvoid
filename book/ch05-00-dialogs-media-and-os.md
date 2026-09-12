@@ -1,6 +1,6 @@
 # 5. Console Dialogs, Audio & System Utilities
 
-Modern applications often require seamless interaction with the operating system—displaying native alert dialogs, reading sensitive passwords, playing sound alerts, inspecting files, or benchmarking execution times.
+Modern applications often require seamless interaction with the operating system—displaying native alert dialogs, reading sensitive passwords, playing sound alerts, inspecting files, running subprocesses, handling POSIX signals, or benchmarking execution times.
 
 Runvoid provides batteries-included system primitives that automatically adapt to **Linux** and **Windows** without requiring platform-specific `#ifdef` boilerplate.
 
@@ -122,7 +122,50 @@ delete file "build.log"
 
 ---
 
-## 5. Web Networking
+## 5. Subprocess Execution & Environment Inspection
+
+Systems daemons must invoke external utilities and query environment configurations:
+
+### 1. Reading Environment Variables
+```runvoid
+remember user_home = env "HOME"
+remember current_path = env "PATH"
+say "Current Home Directory: {user_home}"
+```
+
+### 2. Spawning Subprocesses
+Runvoid allows executing external shell commands, capturing their exit code and standard output:
+```runvoid
+remember git_commit = exec "git rev-parse --short HEAD"
+say "Active Git Revision: {git_commit}"
+```
+
+---
+
+## 6. Graceful Signal Handling (`SIGINT` / `Ctrl+C`)
+
+When writing persistent daemons or services, terminating abruptly with `Ctrl+C` can corrupt database files or leave orphaned temporary locks. Runvoid provides a signal interceptor:
+
+```runvoid
+remember is_terminating = false
+
+on signal SIGINT {
+    say yellow "\nReceived SIGINT interruption signal. Commencing graceful shutdown..."
+    is_terminating = true
+}
+
+repeat 10 times as tick {
+    if is_terminating {
+        say green "Released system locks. Clean shutdown completed."
+        stop
+    }
+    wait 500
+}
+```
+
+---
+
+## 7. Web Networking
 
 Fetch remote data or download assets using built-in web primitives:
 
@@ -137,7 +180,7 @@ download "https://runvoid.org/favicon.ico" into "icon.ico"
 
 ---
 
-## 6. Text Transformations & Performance Profiling
+## 8. Text Transformations & Performance Profiling
 
 ### In-Place String Transformations
 Runvoid supports conversational text modifiers:
@@ -173,3 +216,64 @@ Sum completed: 49999995000000
 [Execution Time: 8.42 ms]
 ```
 
+---
+
+## 9. OS API Architecture Comparison
+
+Here is how Runvoid abstracts operating system capabilities across platforms:
+
+| Feature | Linux x86_64 Implementation | Windows x86_64 Implementation |
+| :--- | :--- | :--- |
+| **`alert "..."`** | `zenity` / `kdialog` / ANSI fallback | Win32 `MessageBoxA` |
+| **`ask hidden`** | POSIX `tcgetattr`/`tcsetattr` (`~ECHO`) | Win32 `GetConsoleMode`/`SetConsoleMode` |
+| **`beep freq for ms`** | Terminal `\a` or `/dev/console` ioctl | Win32 `Beep(freq, ms)` (`kernel32.dll`) |
+| **`measure time`** | POSIX `clock_gettime(CLOCK_MONOTONIC)` | Win32 `QueryPerformanceCounter` |
+| **`read web`** | `libcurl` / `wget` / POSIX socket | Win32 `WinINet` / `WinHTTP` API |
+| **`speak "..."`** | `spd-say` / `espeak` | SAPI 5 / `System.Speech` |
+| **`env "KEY"`** | POSIX `getenv()` | Win32 `GetEnvironmentVariableA` |
+| **`on signal`** | POSIX `sigaction()` | Win32 `SetConsoleCtrlHandler` |
+
+---
+
+## 10. Hands-On Project: Automated Server Health Auditor
+
+Let's combine dialogs, colored output, filesystem I/O, and timing into an automated server health audit script:
+
+```runvoid
+say cyan "=================================================="
+say cyan "       RUNVOID SERVER HEALTH AUDITOR v1.3         "
+say cyan "=================================================="
+
+remember report_file = "audit_report.txt"
+remember start_audit = ask user "Initiate comprehensive system audit?"
+
+if not start_audit {
+    say yellow "Audit aborted by administrator."
+    give 0
+}
+
+measure time {
+    say "Verifying application directories..."
+    create folder "var/log"
+    create folder "var/cache"
+
+    say "Testing filesystem write latency..."
+    remember sample_data = "AUDIT_TEST_PAYLOAD_8192_BYTES_VERIFIED"
+    write sample_data into "var/cache/probe.tmp"
+
+    if file "var/cache/probe.tmp" exists {
+        say green "[PASS] Filesystem read/write verified."
+        delete file "var/cache/probe.tmp"
+    } otherwise {
+        say red "[FAIL] Filesystem write failed!"
+        alert "Critical: Filesystem permissions check failed!"
+    }
+
+    say "Generating final audit log..."
+    write "Server Audit Log\nStatus: HEALTHY\nNode: Antigravity-1" into report_file
+}
+
+say green "Audit complete. Report saved to: {report_file}"
+beep 523 for 100
+beep 1046 for 200
+```

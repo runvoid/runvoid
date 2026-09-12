@@ -1129,3 +1129,45 @@ use lib "raylib"
 use lib "sqlite3"
 ```
 Ensure the library is installed on your Linux system (`/usr/lib/libraylib.so` or `/usr/lib/libsqlite3.so`).
+
+---
+
+## 8. Project Management & Manifests (`runvoid.toml`)
+
+Runvoid 1.3 provides first-class multi-file project scaffolding:
+
+### 1. Initializing Projects (`runvoid init`)
+```bash
+runvoid init my_project
+cd my_project
+```
+Creates:
+- `runvoid.toml`: Declarative package metadata.
+- `src/main.rv`: Application source code entry point.
+- `tests/main_test.rv`: Verification test suite.
+- `.gitignore`: Ignore build outputs.
+- `README.md`: Project documentation.
+
+### 2. Automatic Project Detection
+Within any directory containing `runvoid.toml`:
+- `runvoid run`: Automatically resolves entry point and executes.
+- `runvoid build`: Compiles into `bin/my_project`.
+- `runvoid clean`: Removes all compiled binaries, intermediate object files (`*.o`), and assembly files (`*.asm`).
+
+---
+
+## 9. Intelligent Compiler Diagnostics ("Did You Mean?")
+
+When the compiler encounters an undeclared identifier or mistyped keyword, it performs Levenshtein distance analysis to provide helpful suggestions:
+
+```text
+error: Use of undeclared variable 'cunter'
+  = help: did you mean 'counter'?
+  --> src/main.rv:12:5
+   |
+12 |     cunter = cunter + 1
+   |     ^^^^^^
+```
+
+Combined with line pointers and file paths, debugging Runvoid programs is fast and intuitive!
+

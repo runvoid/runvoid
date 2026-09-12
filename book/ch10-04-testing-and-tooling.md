@@ -83,7 +83,31 @@ If an assertion fails:
 
 ---
 
-## 3. The Interactive REPL (`runvoid repl`)
+## 3. Mocking & Dependency Injection in Tests
+
+Testing networked or filesystem-heavy actions requires decoupling side-effects from pure business logic:
+
+```runvoid
+// Pass a mock storage dictionary instead of real disk I/O:
+action save_user_profile(user_dict, store) {
+    add user_dict["id"]: user_dict to store
+    give true
+}
+
+test "user profile persistence mock" {
+    remember test_store = {}
+    remember test_user = {"id": 101, "name": "Elena"}
+    
+    save_user_profile(test_user, test_store)
+    
+    verify that test_store has 101
+    verify that test_store[101]["name"] is "Elena"
+}
+```
+
+---
+
+## 4. The Interactive REPL (`runvoid repl`)
 
 The Read-Eval-Print Loop lets you prototype ideas, experiment with expressions, and test library functions without creating temporary files:
 
@@ -110,7 +134,7 @@ Goodbye!
 
 ---
 
-## 4. Hot-Reloading Watcher (`runvoid watch`)
+## 5. Hot-Reloading Watcher (`runvoid watch`)
 
 During active feature development or game prototyping, restarting the compiler on every small edit breaks your flow state. The `watch` subcommand provides frictionless continuous execution:
 
@@ -129,3 +153,50 @@ $ runvoid watch --target windows src/game.rv
 ```
 Whenever you edit code on Linux, Runvoid recompiles the Windows PE executable and launches it inside Wine instantly!
 
+---
+
+## 6. Test-Driven Development (TDD) Workflow
+
+In Test-Driven Development, you write the verification check *before* writing the implementation:
+
+### Step 1: Write the Failing Test (`tests/string_utils_test.rv`)
+```runvoid
+action reverse_word(w) {
+    // Intentionally empty stub
+    give ""
+}
+
+test "reversing standard words" {
+    verify that reverse_word("void") is "diov"
+}
+```
+Run `runvoid test`:
+```text
+[FAIL] tests/string_utils_test.rv
+  Assertion failed at line 8: expected "diov", but received ""
+Result: 1 test suite, 0 passed, 1 failure
+```
+
+### Step 2: Write the Passing Implementation
+```runvoid
+action reverse_word(w) {
+    remember len = w.length
+    remember result = ""
+    remember i = len - 1
+    while i >= 0 {
+        result = result + w[i]
+        i = i - 1
+    }
+    give result
+}
+```
+Run `runvoid test` again:
+```text
+[PASS] tests/string_utils_test.rv (1 assertion passed)
+Result: 1 test suite, 1 passed, 0 failures (10ms)
+```
+
+Now you have automated regression protection for every future refactor!
+
+### Summary of Testing Principles
+By verifying behavior before writing code, checking boundaries, and running automated test suites on every pull request, your software remains bulletproof across platforms and versions.

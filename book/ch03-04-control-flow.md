@@ -160,3 +160,69 @@ The Runvoid compiler produces the following clean NASM sequence:
 
 Because branches map directly to hardware jump targets, Runvoid loops and conditionals benefit from modern CPU branch predictors with zero intermediate interpretation cost.
 
+---
+
+## CPU Branch Prediction & Optimization Insights
+
+Modern x86_64 microprocessors feature speculative execution engines and Branch Target Buffers (BTBs). When a branch (`jle`, `jg`) is encountered:
+1. The CPU guesses whether the branch is taken based on execution history.
+2. If the guess is correct, execution continues with zero stall cycles.
+3. If mispredicted, the CPU pipeline is flushed, causing a 10–20 cycle latency hit.
+
+**Optimization Tip:** Order your `if / otherwise if` branches so that the most frequent condition comes first! This keeps the primary branch predictor biased favorably.
+
+---
+
+## Hands-On Challenges
+
+### Challenge 1: The Canonical FizzBuzz
+Iterate from 1 to 30:
+- If divisible by 3 and 5, print `"FizzBuzz"` in magenta.
+- If divisible by 3, print `"Fizz"` in yellow.
+- If divisible by 5, print `"Buzz"` in cyan.
+- Otherwise, print the number.
+
+```runvoid
+remember i = 1
+while i <= 30 {
+    if (i % 3 == 0) and (i % 5 == 0) {
+        say magenta "FizzBuzz"
+    } otherwise if i % 3 == 0 {
+        say yellow "Fizz"
+    } otherwise if i % 5 == 0 {
+        say cyan "Buzz"
+    } otherwise {
+        say "{i}"
+    }
+    i = i + 1
+}
+```
+
+### Challenge 2: Prime Number Finder with `while` and `skip`
+Find all primes between 2 and 50:
+
+```runvoid
+say cyan "=== Prime Numbers Under 50 ==="
+
+remember candidate = 2
+while candidate < 50 {
+    remember is_p = true
+    remember divisor = 2
+    
+    while divisor * divisor <= candidate {
+        if candidate % divisor == 0 {
+            is_p = false
+            stop
+        }
+        divisor = divisor + 1
+    }
+
+    if is_p {
+        say green "Prime: {candidate}"
+    }
+    
+    candidate = candidate + 1
+}
+```
+
+

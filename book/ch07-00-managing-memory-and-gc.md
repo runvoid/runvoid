@@ -40,7 +40,24 @@ When you allocate dynamically sized data—such as concatenated strings, growing
 
 ---
 
-## 2. The Conservative Mark-and-Sweep GC
+## 2. Virtual Memory, Paging & The TLB
+
+Modern operating systems execute user applications inside isolated **Virtual Address Spaces**:
+
+```
+Virtual Address Space (48-bit Canonical on x86_64):
+0x0000000000000000 to 0x00007FFFFFFFFFFF (User Space, 128 TB)
+0xFFFF800000000000 to 0xFFFFFFFFFFFFFFFF (Kernel Space, 128 TB)
+```
+
+1. **Paging:** Memory is divided into fixed 4 KB chunks called **Pages**.
+2. **Page Tables (4-Level or 5-Level Paging):** The CPU's Memory Management Unit (MMU) translates virtual addresses into physical RAM addresses using page tables referenced by the `%cr3` control register.
+3. **Translation Lookaside Buffer (TLB):** A hardware cache of recent virtual-to-physical address translations. Memory access that hits the TLB takes $< 1\text{ ns}$; a TLB miss triggers a multi-level page table walk taking $10 - 30\text{ ns}$.
+4. **Page Fault (`#PF` Exception 14):** Occurs when code accesses a virtual page that has not yet been committed to physical RAM. The OS kernel handles the page fault, allocates physical memory, updates page tables, and resumes the application.
+
+---
+
+## 3. The Conservative Mark-and-Sweep GC
 
 In default mode, Runvoid includes an embedded, conservative Mark-and-Sweep collector:
 
@@ -53,7 +70,7 @@ Because the collector is conservative and native (written in optimized C and ass
 
 ---
 
-## 3. Disabling the Garbage Collector: `remove garbageC`
+## 4. Disabling the Garbage Collector: `remove garbageC`
 
 When writing real-time audio synthesizers, embedded operating system drivers, or high-throughput network proxies, even a 50-microsecond pause can cause buffer underruns or latency spikes.
 
@@ -76,9 +93,104 @@ action compute_hash(data) {
 
 ---
 
-## 4. Manual Memory in Systems Mode
+## 5. The Tri-Color Marking Abstraction
+
+To visualize how the Mark-and-Sweep engine reasons about object graphs during the mark phase, computer science uses the **Tri-Color Marking Model**:
+
+```
+[ WHITE OBJECTS ]               [ GREY OBJECTS ]               [ BLACK OBJECTS ]
+Unvisited candidates        Discovered, but children       Fully visited & verified live;
+(garbaged if still white     not yet scanned.              will NOT be freed during sweep.
+at the end of mark phase)
+       O                                O                              O
+      / \                              / \                            / \
+     O   O                            O   O                          O   O
+```
+
+1. **White Set:** At the start of a collection cycle, all allocated heap objects are colored White.
+2. **Grey Set:** All objects directly reachable from CPU registers and active stack frames are moved to the Grey set.
+3. **Black Set:** The GC takes an object from the Grey set, scans its internal pointers, moves referenced White objects to Grey, and promotes itself to Black.
+4. **Sweep Phase:** Once the Grey set is empty, all remaining White objects are unreferenced garbage and freed. All Black objects are reset to White for the next cycle.
+
+---
+
+## 6. Memory Fragmentation & Custom Slab Allocators
+
+When an application repeatedly allocates and frees objects of varying sizes, the heap suffers from **External Memory Fragmentation**: memory contains plenty of total free bytes, but no single contiguous block large enough to satisfy new allocations.
+
+### Custom Fixed-Size Slab Allocator in Runvoid:
+To achieve zero fragmentation, high-frequency systems pre-allocate contiguous chunks (slabs) of uniform size:
+
+```runvoid
+say cyan "=== FIXED-SIZE SLAB ALLOCATOR ==="
+
+remember SLAB_COUNT = 64
+remember SLAB_SIZE = 128 // 128 bytes per item
+
+remember free_slots = []
+repeat SLAB_COUNT as slot_idx {
+    add slot_idx to free_slots
+}
+
+action allocate_slab() {
+    if count free_slots > 0 {
+        remember slot = free_slots[count free_slots - 1]
+        remove slot from free_slots
+        say green "Allocated slab slot #{slot} (Zero fragmentation)"
+        give slot
+    }
+    say red "Out of slab memory!"
+    give -1
+}
+
+action free_slab(slot) {
+    add slot to free_slots
+    say yellow "Returned slot #{slot} to slab pool."
+}
+
+remember s1 = allocate_slab()
+remember s2 = allocate_slab()
+free_slab(s1)
+```
+
+---
+
+## 7. Hands-On Experiment: Benchmarking Memory Allocation
+
+Let's write a benchmarking program to measure allocation throughput and observe zero-pause determinism:
+
+```runvoid
+say cyan "=== RUNVOID MEMORY BENCHMARK ==="
+
+measure time {
+    remember count = 0
+    remember list = []
+    
+    repeat 10000 times {
+        add "Payload-Item-{count}" to list
+        count = count + 1
+    }
+
+    say green "Successfully allocated {count} dynamic strings!"
+    say "List capacity managed by native heap."
+}
+```
+
+When run:
+```bash
+$ runvoid run mem_bench.rv
+=== RUNVOID MEMORY BENCHMARK ===
+Successfully allocated 10000 dynamic strings!
+List capacity managed by native heap.
+[Execution Time: 4.15 ms]
+```
+
+Over 10,000 strings allocated, tracked, and managed in just 4.15 milliseconds!
+
+---
+
+## 8. Manual Memory in Systems Mode
 
 Once you have removed the garbage collector, how do you handle dynamic memory? 
 
-In Chapter 8, we will explore **Pro Systems Mode**, where you can use raw pointers, allocate explicit memory blocks with `allocate`, inspect byte addresses, and explicitly reclaim memory with `free`—delivering the absolute control of C with the safety and readability of Runvoid!
-
+In Chapter 8, we will explore **Pro Systems Mode**, where you can use raw pointers, allocate explicit memory blocks with `alloc`, inspect byte addresses, and explicitly reclaim memory with `free`—delivering the absolute control of C with the safety and readability of Runvoid!

@@ -110,3 +110,60 @@ During compilation, the Runvoid compiler:
 2. Resolves and deduplicates AST declarations to prevent cyclic dependency loops.
 3. Inlines and type-checks the unified AST in a single compile pass.
 
+```
+                    Dead Code Elimination (DCE) Pass:
++--------------------------------------------------------------------------+
+| Imported Module `math`: [ sqrt ] [ sin ] [ cos ] [ tan ] [ log ]         |
++--------------------------------------------------------------------------+
+                               |
+                               | Referenced by main(): only `sqrt`
+                               v
++--------------------------------------------------------------------------+
+| Optimized Assembly Emitted:  [ sqrt ]                                    |
+| (Unreferenced functions `sin`, `cos`, `tan`, `log` completely discarded!)|
++--------------------------------------------------------------------------+
+```
+
+---
+
+## 5. Hands-On Project: Multi-File Network Utility
+
+Let's build a clean modular project structured across multiple files:
+
+### File 1: `src/config.rv`
+```runvoid
+struct ServerConfig {
+    port,
+    max_clients,
+    timeout_sec
+}
+
+action load_default_config(): ServerConfig {
+    give ServerConfig(8080, 1000, 30)
+}
+```
+
+### File 2: `src/main.rv`
+```runvoid
+remove garbageC
+remove Basic
+add Advanced
+use ior
+use "config.rv"
+
+remember cfg: ServerConfig = load_default_config()
+
+say cyan "=== SERVER CONFIGURATION ==="
+say "Port: {cfg.port}"
+say "Max Concurrent Clients: {cfg.max_clients}"
+say "Socket Timeout: {cfg.timeout_sec}s"
+```
+
+Compile and run:
+```bash
+runvoid run src/main.rv
+```
+
+Runvoid resolves `config.rv`, inlines the struct, typechecks both modules together, and emits a single, blisteringly fast binary!
+
+

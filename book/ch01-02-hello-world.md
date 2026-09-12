@@ -145,6 +145,79 @@ Notice how clean and idiomatic the output is:
 
 ---
 
+## Deep Dive: Binary Inspection Masterclass
+
+Let's dissect what is actually inside the compiled binary using standard Linux and Windows binary inspection tools.
+
+### 1. Inspecting Strings with `strings`
+Run the `strings` command on your compiled `hello` binary:
+
+```bash
+$ strings hello | grep "Hello, world!"
+Hello, world!
+```
+
+Notice that only your application string and minimal runtime symbols are stored. There are no bloated bytecode interpreters, no 50-megabyte Python shared libraries, and no hidden garbage collector metadata overhead.
+
+### 2. Disassembling Machine Code with `objdump`
+Want to verify the raw machine instructions executed by the CPU? Run:
+
+```bash
+$ objdump -d -M intel hello | grep -A 12 "<main>:"
+0000000000401140 <main>:
+  401140:   55                      push   rbp
+  401141:   48 89 e5                mov    rbp,rsp
+  401144:   48 8d 3d b9 0e 00 00    lea    rdi,[rip+0xeb9]        # str_0
+  40114b:   e8 70 00 00 00          call   4011c0 <print_string>
+  401150:   31 c0                   xor    eax,eax
+  401152:   48 89 ec                mov    rsp,rbp
+  401155:   5d                      pop    rbp
+  401156:   c3                      ret
+```
+
+Every single high-level Runvoid statement maps to 1–2 CPU machine instructions! Notice `xor eax, eax` (hex `31 c0`): a 2-byte instruction clearing `%eax` to zero faster than `mov eax, 0` because it avoids loading an immediate operand from the instruction cache.
+
+---
+
+## Interactive Experiments: Try It Yourself!
+
+Now that your first program runs, try modifying `main.rv` with these quick experiments:
+
+### Experiment 1: String Interpolation
+Runvoid supports string interpolation using `{}` braces directly inside double quotes:
+
+```runvoid
+remember name = "Commander"
+remember level = 42
+say "Welcome back, {name}! Current clearance level: {level * 2}"
+```
+
+### Experiment 2: Full Color Terminal Diagnostics
+```runvoid
+say cyan "=== SYSTEM HEALTH CHECK ==="
+say green "[OK] CPU temperature: 41C"
+say yellow "[WARN] Disk storage at 78%"
+say red "[CRITICAL] Backup drive unmounted!"
+```
+
+### Experiment 3: Return Codes to the Shell
+In Runvoid, you can exit with a custom shell status code using `give`:
+
+```runvoid
+say "Exiting with code 7"
+give 7
+```
+
+Run and inspect the shell exit status with `echo $?`:
+```bash
+$ runvoid run main.rv
+Exiting with code 7
+$ echo $?
+7
+```
+
+---
+
 ## Cross-Compiling for Windows
 
 What if you want to share your new program with a colleague running Windows? Runvoid makes cross-compiling as easy as adding a single flag:
@@ -154,8 +227,10 @@ runvoid build --target windows main.rv -o hello.exe
 ```
 
 The compiler will automatically:
-1. Target the Windows PE-COFF x86_64 binary format.
+1. Target the Windows PE-COFF x86_64 binary format (`nasm -f win64`).
 2. Emit Windows-compliant read-only data sections (`section .rdata`).
-3. Link with the Windows C runtime (`ucrtbase`) and necessary subsystem libraries (`kernel32`, `user32`).
-4. Output a standalone `hello.exe` that runs natively on Windows 10 and 11!
+3. Link with the MinGW-w64 runtime (`x86_64-w64-mingw32-gcc`) and Windows subsystem libraries (`kernel32`, `user32`).
+4. Output a standalone `hello.exe` that runs natively on Windows 10 and 11 with zero external DLLs!
+
+
 

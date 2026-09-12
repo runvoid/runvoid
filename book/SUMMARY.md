@@ -43,4 +43,30 @@
 
 - [11. The Runvoid Cookbook](ch11-00-cookbook.md)
 
+- [12. Real-Time 2D Arcade Game Development](ch12-00-game-development.md)
+
+- [13. Systems Programming & C Interop Masterclass](ch13-00-systems-and-ffi.md)
+
+- [14. Compiler Internals: From Tokens to Silicon](ch14-00-compiler-internals.md)
+
+- [15. Concurrency, Atomics & Multi-Threading Deep Dive](ch15-00-concurrency-deep-dive.md)
+
+- [16. Bare-Metal & Operating System Development](ch16-00-bare-metal-os.md)
+
+- [17. Database Engineering & Persistent Storage](ch17-00-databases-and-storage.md)
+
+- [18. Networking, REST APIs & Distributed Microservices](ch18-00-networking-and-microservices.md)
+
+- [19. Audio Synthesis & Chiptune Sound Engines](ch19-00-audio-and-chiptunes.md)
+
+- [20. Systems Profiling, Cache Locality & Performance Tuning](ch20-00-performance-tuning.md)
+
+- [21. Native Desktop GUI & Window Application Architecture](ch21-00-gui-and-desktop-apps.md)
+
+- [22. Package Architecture, Project Manifests & Production CI/CD](ch22-00-language-ecosystem-and-package-design.md)
+
 - [Appendix A: Complete Keywords & Directives Reference](appendix-01-keywords-reference.md)
+- [Appendix B: x86_64 Assembly & Calling Conventions Reference](appendix-02-x86_64-assembly.md)
+- [Appendix C: Troubleshooting & Error Encyclopedia](appendix-03-troubleshooting.md)
+- [Appendix D: Standard Library & Built-in Action API Reference](appendix-04-stdlib-reference.md)
+- [Appendix E: Rosetta Stone Comparative Syntax Guide](appendix-05-comparative-syntax.md)

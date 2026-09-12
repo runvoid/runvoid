@@ -144,3 +144,64 @@ In Runvoid, dynamic collections are managed by the runtime's memory allocator:
 - Elements are stored contiguously as 64-bit pointers or scalar values.
 - When the capacity is exceeded, the runtime reallocates the buffer with a 1.5x growth factor, minimizing reallocations while keeping memory waste low.
 
+```
+       Heap Memory Layout of a Runvoid Collection:
+       +-------------------+-------------------+-------------------+-------------------+
+       | Capacity (8B)     | Length (8B)       | Element 0 (8B)    | Element 1 (8B)    | ...
+       +-------------------+-------------------+-------------------+-------------------+
+       | 8                 | 3                 | Ptr / Int 1       | Ptr / Int 2       |
+       +-------------------+-------------------+-------------------+-------------------+
+         ^
+         +--- Collection Base Pointer
+```
+
+---
+
+## 7. Hands-On Project: Interactive CLI Task Manager
+
+Let's build a real-world task manager that stores tasks, marks them done, and queries status:
+
+```runvoid
+say cyan "=== RUNVOID TASK TRACKER ==="
+
+remember tasks = "Review Pull Request #42", "Update Documentation Book", "Run Integration Tests"
+
+say "Active tasks ({count tasks}):"
+for every task in tasks {
+    say " [ ] {task}"
+}
+
+// Add a new task:
+say yellow "Adding high-priority security audit..."
+add "Security Vulnerability Audit" to tasks
+
+// Complete a task:
+if tasks has "Run Integration Tests" {
+    say green "Completing: Run Integration Tests"
+    remove "Run Integration Tests" from tasks
+}
+
+say cyan "Remaining Tasks ({count tasks}):"
+remember index = 1
+for every task in tasks {
+    say " {index}. {task}"
+    index = index + 1
+}
+```
+
+Running this code produces:
+```text
+=== RUNVOID TASK TRACKER ===
+Active tasks (3):
+ [ ] Review Pull Request #42
+ [ ] Update Documentation Book
+ [ ] Run Integration Tests
+Adding high-priority security audit...
+Completing: Run Integration Tests
+Remaining Tasks (3):
+ 1. Review Pull Request #42
+ 2. Update Documentation Book
+ 3. Security Vulnerability Audit
+```
+
+

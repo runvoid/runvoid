@@ -238,6 +238,119 @@ The resulting `guessing_game.exe` will run natively on Windows 10 and 11, utiliz
 
 ---
 
+## Advanced Extension: High Score Persistence & Guess History
+
+Let's take our guessing game to production level by adding two powerful features:
+1. **Tracking Guess History in a Dictionary**: Preventing duplicate guesses and showing past attempts.
+2. **Persistent High Scores Saved to Disk**: Recording the best score to a file `highscore.txt`.
+
+Here is the upgraded implementation:
+
+```runvoid
+say cyan "=== RUNVOID GUESSING GAME (DELUXE EDITION) ==="
+
+remember secret_number = random 1 to 100
+remember attempts = 0
+remember history = {}
+remember highscore_file = "highscore.txt"
+
+// Load existing high score if available
+remember best_score = 999
+if file highscore_file exists {
+    best_score = read highscore_file
+    say yellow "Current All-Time High Score: {best_score} attempts"
+} otherwise {
+    say "No high score recorded yet. Set the first record!"
+}
+
+while true {
+    remember guess_input = ask "Enter guess (1-100) or 'quit': "
+
+    if guess_input == "quit" {
+        say "Quitting game. The number was {secret_number}."
+        stop
+    }
+
+    if guess_input == "cheat" {
+        say cyan "[DEBUG DEV CODE] Secret number is: {secret_number}"
+        stop
+    }
+
+    // Check if player already guessed this number
+    if history has guess_input {
+        say yellow "You already tried {guess_input}! Guess something new."
+        stop
+    }
+
+    // Record into history map
+    add guess_input: true to history
+    attempts = attempts + 1
+
+    if guess_input < secret_number {
+        beep 350 for 80
+        say yellow "Too low! Try higher. (Attempts so far: {attempts})"
+    } otherwise if guess_input > secret_number {
+        beep 350 for 80
+        say yellow "Too high! Try lower. (Attempts so far: {attempts})"
+    } otherwise {
+        // Victory fanfare!
+        beep 523 for 100
+        beep 659 for 100
+        beep 784 for 100
+        beep 1046 for 250
+
+        say green "=================================================="
+        say green "VICTORY! You guessed {secret_number} in {attempts} attempts!"
+        say green "=================================================="
+
+        // Check and save high score
+        if attempts < best_score {
+            say green "NEW HIGH SCORE! Saving to {highscore_file}..."
+            write "{attempts}" into highscore_file
+        }
+        stop
+    }
+}
+```
+
+---
+
+## Assembly Disassembly: How Loops and Branches Map to Machine Code
+
+When the Runvoid code generator compiles our `while true` loop and `if / otherwise` ladder, it emits standard x86_64 conditional jumps:
+
+```nasm
+.loop_start:
+    ; Evaluate: if guess < secret_number
+    mov rax, [rbp - 16]   ; Load guess from stack frame
+    cmp rax, [rbp - 24]   ; Compare against secret_number
+    jge .check_greater    ; Jump if guess >= secret_number
+
+    ; Too small branch:
+    lea rdi, [str_too_small]
+    call print_string
+    jmp .loop_start
+
+.check_greater:
+    jg .branch_too_big    ; Jump if guess > secret_number
+
+    ; Equality match (Victory!):
+    lea rdi, [str_victory]
+    call print_string
+    jmp .loop_end
+
+.branch_too_big:
+    lea rdi, [str_too_big]
+    call print_string
+    jmp .loop_start
+
+.loop_end:
+```
+
+Every comparison (`cmp`) sets the CPU's `EFLAGS` register (Zero Flag `ZF`, Sign Flag `SF`), and conditional jumps (`jge`, `jg`, `je`) redirect the Instruction Pointer (`RIP`) with zero runtime overhead.
+
+---
+
 ## Summary
 
 In this tutorial, you built a complete, interactive, cross-platform terminal game with Runvoid. You learned:
@@ -245,8 +358,11 @@ In this tutorial, you built a complete, interactive, cross-platform terminal gam
 - How to handle user input with `ask`.
 - How to generate random numbers with `random A to B`.
 - How to control program execution with `if`, `otherwise`, and `while`.
+- How to track state and past inputs using Key-Value Dictionaries.
+- How to persist data across runs using native filesystem I/O (`write ... into`, `read`).
 - How to enrich CLI applications with native audio (`beep`) and colors.
 - How to compile standalone release binaries for both Linux and Windows.
 
 In the next chapter, we will explore Runvoid’s common programming concepts in deeper detail!
+
 

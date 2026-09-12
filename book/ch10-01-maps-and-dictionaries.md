@@ -122,6 +122,57 @@ Behind the scenes in the Runvoid native runtime (`runtime/gui.c`), maps are impl
 
 1. **Hash Algorithm:** Keys are hashed using the **FNV-1a 64-bit algorithm**, which provides optimal distribution across string and integer keys with minimal CPU clock cycle overhead.
 2. **Collision Resolution:** Collisions are resolved using **open addressing with linear probing**, maximizing CPU L1/L2 cache locality by keeping entries contiguous in memory.
-3. **Dynamic Resizing:** The hash table maintains a load factor threshold of 0.70. When exceeded, the capacity doubles and keys are re-indexed into a contiguous memory block.
 4. **Zero Overhead Reads:** When key literals are known at compile time, their hashes are precomputed during compilation, skipping runtime hashing passes completely!
+
+```
+                    Open-Addressing Hash Table Layout:
+   +-------+-------------------+-------------------+-------------------+
+   | Slot  | Key String Ptr    | Value Ptr / Int   | Hash (64-bit)     |
+   +-------+-------------------+-------------------+-------------------+
+   |   0   | "port"            | 8080              | 0xA8B7C6D5...     |
+   |   1   | (Empty / 0)       | 0                 | 0                 |
+   |   2   | "host"            | "0.0.0.0"         | 0x3F91A2B4...     |
+   |   3   | [Tombstone / -1]  | (Deleted)         | 0                 |
+   |   4   | "tls"             | true              | 0x99238472...     |
+   +-------+-------------------+-------------------+-------------------+
+```
+
+---
+
+## 6. Hands-On Project: Building a Persistent User Profile Store
+
+Let's build a practical profile manager that stores dynamic user properties, updates credentials, and computes profile completion stats:
+
+```runvoid
+say cyan "=== USER PROFILE STORE ==="
+
+remember user_profile = {
+    "username": "void_walker",
+    "email": "walker@runvoid.org",
+    "reputation": 450,
+    "verified": true,
+    "theme": "dark_modern"
+}
+
+say "Active Profile: {user_profile's username}"
+say "User Reputation: {user_profile's reputation}"
+
+// Dynamically add new preferences:
+add "two_factor_auth": true to user_profile
+add "preferred_language": "en-US" to user_profile
+
+// Query keys and attributes:
+remember user_keys = keys user_profile
+say green "Total attributes configured: {count user_keys}"
+
+say yellow "Profile Summary:"
+for every key_name in user_keys {
+    say " - {key_name}: {user_profile[key_name]}"
+}
+
+// Remove deprecated field:
+remove "theme" from user_profile
+say "Updated field count: {count user_profile}"
+```
+
 

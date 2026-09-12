@@ -103,6 +103,74 @@ mov [rbp - 24], rax
 
 Because variables are mapped directly to native CPU stack offsets (`rbp - offset`), variable access and arithmetic execute at full native microprocessor speed, with zero virtual machine dispatch overhead!
 
+```
+         High Memory Addresses
+       +-------------------------+
+       | Return Address (RIP)    | [rbp + 8]
+       +-------------------------+
+       | Saved Base Pointer(RBP) | [rbp] <--- Base Pointer (RBP)
+       +-------------------------+
+       | Variable `x` (8 bytes)  | [rbp - 8]  (mov [rbp - 8], 42)
+       +-------------------------+
+       | Variable `y` (8 bytes)  | [rbp - 16] (mov [rbp - 16], 10)
+       +-------------------------+
+       | Variable `z` (8 bytes)  | [rbp - 24] (mov [rbp - 24], rax)
+       +-------------------------+
+       | 16-Byte Stack Alignment | [rsp] <--- Stack Pointer (RSP)
+       +-------------------------+
+         Low Memory Addresses (Stack grows downward)
+```
+
+---
+
+## Compile-Time Constant Folding
+
+If an expression contains only literal numbers and arithmetic operators known at compile time, the Runvoid optimizer evaluates the result during compilation:
+
+```runvoid
+// Compile-time evaluation: 60 * 60 * 24 = 86400
+remember SECONDS_PER_DAY = 60 * 60 * 24
+say "Seconds in a day: {SECONDS_PER_DAY}"
+```
+
+In the emitted assembly, the multiplication instructions are eliminated entirely:
+```nasm
+mov rax, 86400
+mov [rbp - 8], rax
+```
+This zero-cost constant folding ensures your code remains readable without suffering runtime calculation penalties.
+
+---
+
+## Common Pitfalls & Compiler Gotchas
+
+### 1. Typo in Variable Names
+If you misspell an identifier:
+```runvoid
+remember counter = 10
+cunter = counter + 1
+```
+The compiler catches this and suggests the closest known variable name:
+```text
+error: Use of undeclared variable 'cunter'
+  = help: did you mean 'counter'?
+  --> app.rv:2:1
+   |
+ 2 | cunter = counter + 1
+   | ^^^^^^
+```
+
+### 2. Re-declaring with `remember` in the Same Scope
+```runvoid
+remember speed = 50
+// Error: 'speed' already declared in this scope!
+remember speed = 75
+```
+Fix: Simply reassign without `remember`:
+```runvoid
+speed = 75
+```
+
 ---
 
 ## Comments
@@ -120,4 +188,5 @@ Runvoid provides flexible comment styles to annotate your code:
 
 remember timeout_seconds = 30 // Wait up to 30 seconds for connection
 ```
+
 

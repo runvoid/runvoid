@@ -31,3 +31,50 @@ This chapter guides you step-by-step through every facet of systems development 
 
 Welcome to the metal.
 
+---
+
+## Systems Philosophy: The Zero-Cost Abstraction Principle
+
+In software systems engineering, Bjarne Stroustrup famously coined the Zero-Cost Abstraction rule:
+1. What you don't use, you don't pay for.
+2. What you do use, you couldn't hand-code any better yourself.
+
+Runvoid Pro Systems Mode implements this principle to the letter:
+
+```
++-------------------------------------------------------------------------------+
+| Runvoid Beginner Mode                                                         |
+| [ Garbage Collector (GC) ] [ Dynamic Type Inference ] [ Batteries Included ]  |
++-------------------------------------------------------------------------------+
+                                       |
+                                       | `remove garbageC` (Drop GC overhead)
+                                       | `remove Basic`    (Demand strict types)
+                                       | `add Advanced`    (Unlock systems tools)
+                                       v
++-------------------------------------------------------------------------------+
+| Runvoid Pro Systems Mode                                                      |
+| [ Zero-Pause Execution ] [ Static Types ] [ Raw Pointers ] [ Inline Assembly ]|
++-------------------------------------------------------------------------------+
+                                       |
+                                       | `remove Linux`
+                                       | `add Freestanding`
+                                       v
++-------------------------------------------------------------------------------+
+| Runvoid Bare-Metal Kernel Mode                                                |
+| [ No libc ] [ Entry point: _start ] [ Direct VGA 0xB8000 ] [ Raw Syscalls ]   |
++-------------------------------------------------------------------------------+
+```
+
+---
+
+## Systems Configuration Matrix
+
+| Directive | Impact on Pipeline | Binary Size Impact | Target Use Case |
+| :--- | :--- | :--- | :--- |
+| **Default** | Mark-and-sweep GC active, dynamic types allowed | ~35 KB – 80 KB | CLI scripts, desktop GUIs, web utilities |
+| **`remove garbageC`** | Eliminates allocation headers & GC sweep passes | -15 KB | Real-time audio, games, latency-critical apps |
+| **`remove Basic`** | Mandates explicit static type signatures on variables | 0 KB | Large team codebases, rigorous refactoring |
+| **`add Advanced`** | Enables `struct`, raw pointers, inline `asm`, atomics | Modular | Systems software, network servers, C FFI |
+| **`add Freestanding`** | Strips `libc`, emits naked `_start`, links with `ld -s` | Micro (< 4 KB) | OS kernels, bootloaders, microcontrollers |
+
+

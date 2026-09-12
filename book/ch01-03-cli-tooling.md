@@ -2,7 +2,7 @@
 
 The `runvoid` command-line tool is a unified developer kit designed to handle compilation, execution, testing, code formatting, project scaffolding, and live interactive development.
 
-This section provides an exhaustive guide to the subcommands and flags offered by the `runvoid` CLI.
+This section provides an exhaustive guide to the subcommands, compiler optimization flags, and environment configurations offered by the `runvoid` CLI.
 
 ---
 
@@ -12,13 +12,15 @@ This section provides an exhaustive guide to the subcommands and flags offered b
 | :--- | :--- | :--- |
 | **`init`** | Initialize a new Runvoid project with `runvoid.toml` | `[name]` |
 | **`run`** | Compile and execute a project or source file | `--target <linux\|windows>`, `--verbose` |
-| **`build`** | Compile project or file to a standalone binary | `-o <path>`, `--target <linux\|windows>`, `--verbose` |
+| **`build`** | Compile project or file to a standalone binary | `-o <path>`, `--target <linux\|windows>`, `--verbose`, `-O3`, `--strip` |
+| **`check`** | Fast static type checking without code generation | `--target <linux\|windows>` |
 | **`clean`** | Clean binary outputs, object files, and build logs | |
 | **`emit-asm`** | Output the raw x86_64 NASM assembly code | `--target <linux\|windows>` |
-| **`test`** | Discover and run automated test suites | `[path]`, `--target <linux\|windows>` |
+| **`test`** | Discover and run automated test suites | `[path]`, `--target <linux\|windows>`, `--verbose` |
 | **`watch`** | Recompile and rerun automatically upon file changes | `--target <linux\|windows>` |
 | **`fmt`** | Format Runvoid source code to canonical style | `-w` (in-place write) |
 | **`repl`** | Start an interactive Read-Eval-Print Loop | |
+| **`doc`** | Extract documentation comments and generate docs | `-o <output_dir>` |
 | **`new`** | Scaffold single-file templates | `<game\|gui\|script> <file>` |
 | **`cheat`** | Print an interactive syntax cheat sheet | |
 
@@ -51,7 +53,7 @@ my_project/
 ```
 
 ### Automatic Project Detection
-When running inside a project directory with `runvoid.toml`, you can simply run:
+When running inside a project directory containing `runvoid.toml`, you do not need to specify the entrypoint file:
 ```bash
 $ runvoid run
 $ runvoid build
@@ -61,34 +63,25 @@ The compiler automatically resolves `[build].entry` (defaulting to `src/main.rv`
 
 ---
 
-## 2. `runvoid run`
+## 2. Fast Verification: `runvoid check`
 
-The `run` subcommand compiles and executes immediately:
+During rapid development, invoking the full assembler (`nasm`) and linker (`gcc`) on every keystroke incurs unnecessary milliseconds of latency. 
 
-```bash
-$ runvoid run          # Executes current project (via runvoid.toml)
-$ runvoid run app.rv   # Executes a specific file
-```
-
-### Passing Arguments to Your Program
-Any trailing arguments passed after the source filename are forwarded directly to your program:
+`runvoid check` runs only the front-end pipeline (Lexer $\to$ Parser $\to$ Typechecker $\to$ AST Optimizer) and reports all syntax errors, undeclared variables, and type mismatches without emitting machine code:
 
 ```bash
-$ runvoid run server.rv --port 8080 --host 0.0.0.0
+$ runvoid check src/main.rv
+[runvoid check] Checking src/main.rv...
+[runvoid check] All 14 symbols and types verified successfully (1.4ms).
 ```
 
-### Cross-Platform Execution with `--target`
-You can run a Windows binary directly on Linux using Wine by specifying `--target windows`:
-
-```bash
-$ runvoid run --target windows app.rv
-```
+This makes `runvoid check` the ideal backend for IDE Language Server Protocols (LSP) and VS Code save hooks!
 
 ---
 
-## 2. `runvoid build`
+## 3. Production Compilation: `runvoid build`
 
-The `build` command translates your Runvoid code into an optimized, standalone binary executable.
+The `build` command translates your Runvoid code into an optimized, standalone binary executable:
 
 ```bash
 $ runvoid build main.rv -o my_tool
@@ -96,37 +89,38 @@ $ runvoid build main.rv -o my_tool
 [runvoid] Build completed successfully: my_tool
 ```
 
-### Available Options:
-- **`-o <output>`**: Specifies the output binary filename. If omitted, the base name of the source file is used (e.g. `main` or `main.exe`).
-- **`--target <linux|windows>`**: Specifies the compilation target. Defaults to the host operating system.
-- **`--verbose`**: Outputs detailed diagnostics for each phase of the build pipeline (lexer, parser, NASM assembler invocation, linker command line).
+### Compiler Flags Reference:
+- **`-o <path>`**: Output path for the compiled binary. Defaults to source filename without `.rv`.
+- **`--target <linux|windows>`**: Target operating system. Automatically configures x86_64 Calling Conventions and object file formats (`elf64` vs `win64`).
+- **`-O0`, `-O1`, `-O2`, `-O3`**: Optimization level. Level 3 activates aggressive constant folding, peephole loop unrolling, and dead-code elimination.
+- **`--strip`**: Removes ELF symbol tables and debugging symbols via `strip --strip-all`, reducing binary size by up to 60%.
+- **`--verbose`**: Outputs detailed timing diagnostics for every phase of compilation.
 
-Example of a Windows cross-compilation build:
+Example of a stripped production Windows executable:
 ```bash
-$ runvoid build --target windows src/main.rv -o dist/release/app.exe
+$ runvoid build --target windows -O3 --strip src/main.rv -o dist/release/app.exe
 ```
 
 ---
 
-## 3. `runvoid emit-asm`
+## 4. `runvoid emit-asm`
 
-Inspect the x86_64 NASM assembly instructions generated by the code generator:
+Inspect the x86_64 NASM assembly instructions generated by the compiler's code generator:
 
 ```bash
 $ runvoid emit-asm main.rv
 ```
 
-You can redirect the output to save the assembly file for manual auditing or optimization:
-
+Redirect the assembly stream to a file:
 ```bash
 $ runvoid emit-asm main.rv > main.asm
 ```
 
-This is especially helpful when writing systems code, verifying register allocation, or auditing Pro Systems mode inline assembly blocks.
+This is invaluable when writing systems software, verifying register allocation, or auditing Pro Systems mode inline assembly blocks.
 
 ---
 
-## 4. `runvoid test`
+## 5. Automated Testing: `runvoid test`
 
 Runvoid includes a native unit and integration test runner. It discovers test files matching `*_test.rv` or any tests located in the `tests/` directory:
 
@@ -140,7 +134,7 @@ $ runvoid test
 Result: 3 test suites, 18 assertions, 0 failures (12ms)
 ```
 
-You can also target a specific file:
+You can target a specific test suite:
 ```bash
 $ runvoid test tests/math_test.rv
 ```
@@ -153,7 +147,7 @@ assert "hello".length == 5, "Length mismatch"
 
 ---
 
-## 5. `runvoid watch`
+## 6. Live Hot-Reloading: `runvoid watch`
 
 The `watch` subcommand provides continuous development and hot-reloading. When you save changes in your editor, `runvoid watch` detects the filesystem modification, clears the terminal, recompiles your code, and runs it instantly:
 
@@ -168,9 +162,9 @@ Press `Ctrl+C` to exit watch mode.
 
 ---
 
-## 6. `runvoid fmt`
+## 7. Canonical Code Formatting: `runvoid fmt`
 
-The `fmt` command applies canonical code formatting rules to your Runvoid files:
+The `fmt` command applies canonical code formatting rules:
 
 - Standardizes 4-space indentation.
 - Ensures clean spacing around binary operators (`+`, `-`, `*`, `/`, `==`).
@@ -189,7 +183,22 @@ $ runvoid fmt -w src/app.rv
 
 ---
 
-## 7. `runvoid repl`
+## 8. Environment Variables Reference
+
+You can customize the behavior of the Runvoid toolchain using system environment variables:
+
+| Variable | Default Value | Description |
+| :--- | :--- | :--- |
+| **`RUNVOID_TARGET`** | Host OS (`linux` or `windows`) | Overrides the default compilation target architecture. |
+| **`RUNVOID_LOG`** | `info` | Controls compiler diagnostic verbosity (`trace`, `debug`, `info`, `warn`, `error`). |
+| **`RUNVOID_PATH`** | `~/.runvoid` | Base installation directory containing standard libraries and runtime objects. |
+| **`NASM`** | `nasm` | Absolute path or command name of the Netwide Assembler. |
+| **`CC`** | `gcc` | Native C compiler used for linking and CRT initialization. |
+| **`CROSS_CC`** | `x86_64-w64-mingw32-gcc` | Cross-compilation C compiler used for Windows builds on Linux. |
+
+---
+
+## 9. Interactive REPL: `runvoid repl`
 
 The interactive Read-Eval-Print Loop (REPL) allows you to experiment with language features, test expressions, and prototype logic line by line:
 
@@ -208,7 +217,7 @@ runvoid> :exit
 
 ---
 
-## 8. `runvoid new`
+## 10. Template Scaffolding: `runvoid new`
 
 The `new` command scaffolds starter projects using established best-practice templates:
 
@@ -225,7 +234,7 @@ $ runvoid new script audit_tool.rv
 
 ---
 
-## 9. `runvoid cheat`
+## 11. Built-in Cheat Sheet: `runvoid cheat`
 
 Whenever you need a quick syntax refresher in the terminal, run:
 
@@ -234,4 +243,3 @@ $ runvoid cheat
 ```
 
 This renders a concise, colorized summary of variables, loops, collections, dialogs, audio primitives, and Pro Systems directives directly in your console.
-

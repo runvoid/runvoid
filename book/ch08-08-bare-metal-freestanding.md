@@ -3,7 +3,7 @@
 In systems software engineering, there is a fundamental distinction between two execution environments:
 
 1. **Hosted Environment:** The application runs on top of a fully booted operating system (Linux or Windows). The OS loader allocates virtual memory, loads dynamic shared libraries (`libc.so`, `ntdll.dll`), initializes thread-local storage, and calls `main`.
-2. **Freestanding Environment:** The software executes on the raw physical hardware or within an early boot environment where **no operating system exists**. There is no `libc`, no heap allocator, no standard I/O streams, and no dynamic linker.
+2. **Freestanding Environment:** The software executes on raw physical hardware or within an early boot environment where **no operating system exists**. There is no `libc`, no heap allocator, no standard I/O streams, and no dynamic linker.
 
 Runvoid provides first-class support for freestanding compilation via `add Freestanding`.
 
@@ -76,7 +76,24 @@ In a freestanding Linux binary, you invoke operating system services directly th
 
 Beyond raw Linux binaries, Runvoid can be used to write standalone OS kernels running directly under QEMU or physical hardware.
 
-In protected 32-bit or long 64-bit mode, the PC hardware maps text-mode video memory directly to physical address `0xB8000`. You can write text directly to the screen by storing character-attribute byte pairs into that address:
+### 1. The Multiboot 1 / 2 Header Standard
+For GRUB or modern bootloaders to recognize your binary as a bootable kernel, an ELF binary must contain a 12-byte aligned header within the first 8 KB of the file:
+- **Magic:** `0x1BADB002`
+- **Flags:** `0x00000003` (Align modules on 4KB boundaries, provide memory map)
+- **Checksum:** `-(0x1BADB002 + 0x00000003)` ($= 0xE4524FFB$)
+
+### 2. The VGA 80x25 Text-Mode Buffer (`0xB8000`)
+In protected 32-bit or long 64-bit mode, the PC hardware maps text-mode video memory directly to physical address `0xB8000`. Video memory consists of 2,000 two-byte words ($80 \times 25$ characters):
+
+```
++-------------------+-------------------+
+| Attribute (1 Byte)| ASCII Char (1 Byte)|
++-------------------+-------------------+
+Attribute Byte Layout:
+Bit 7: Blink / Bright Background
+Bits 6-4: Background Color (0 = Black, 1 = Blue, 4 = Red)
+Bits 3-0: Foreground Color (2 = Green, 14 = Yellow, 15 = White)
+```
 
 ```runvoid
 remove garbageC
@@ -89,12 +106,18 @@ action kernel_main(): Void {
     // Pointer to VGA video memory:
     remember vga_buffer: Ptr = 0xB8000
 
-    // Write 'R' with green-on-black attribute (0x02):
-    @(vga_buffer + 0) = 0x0252  // 0x52 = 'R', 0x02 = Green
-    @(vga_buffer + 2) = 0x0255  // 'U'
-    @(vga_buffer + 4) = 0x024E  // 'N'
-    @(vga_buffer + 6) = 0x0256  // 'V'
-    @(vga_buffer + 8) = 0x024F  // 'O'
+    // Color: White text (0x0F) on Blue background (0x10) -> 0x1F
+    remember attr = 0x1F
+
+    // Write "STARVOID OS" banner
+    remember title = "STARVOID OS v1.3 - BARE METAL KERNEL"
+    remember idx = 0
+    while idx < title.length {
+        remember char_code = char_at(title, idx)
+        remember cell_offset = idx * 2
+        @(vga_buffer + cell_offset) = (attr bit shift left 8) bit or char_code
+        idx = idx + 1
+    }
 
     // Halt the CPU indefinitely:
     asm {
@@ -106,5 +129,85 @@ action kernel_main(): Void {
 }
 ```
 
-This demonstrates the ultimate reach of Runvoid: from high-level conversational scripts down to writing your own operating system from scratch!
+---
 
+## 5. Serial Port COM1 (UART) Output for Headless Kernels
+
+When booting in virtualized environments or headless cloud servers without a VGA display, kernels output telemetry through the **Serial COM1 Port (`0x3F8`)**:
+
+```runvoid
+remove garbageC
+remove Basic
+remove Linux
+add Advanced
+add Freestanding
+
+action serial_init(): Void {
+    asm {
+        mov dx, 0x3F9       ; Disable interrupts
+        xor al, al
+        out dx, al
+
+        mov dx, 0x3FB       ; Enable DLAB (set baud rate divisor)
+        mov al, 0x80
+        out dx, al
+
+        mov dx, 0x3F8       ; Divisor low byte (38400 baud)
+        mov al, 0x03
+        out dx, al
+
+        mov dx, 0x3F9       ; Divisor high byte
+        xor al, al
+        out dx, al
+
+        mov dx, 0x3FB       ; 8 bits, no parity, one stop bit (8N1)
+        mov al, 0x03
+        out dx, al
+    }
+}
+
+action serial_write_byte(b: Int): Void {
+    asm {
+        ; Wait until transmitter holding register is empty (port 0x3FD bit 5)
+    .wait_tx:
+        mov dx, 0x3FD
+        in al, dx
+        test al, 0x20
+        jz .wait_tx
+
+        ; Send byte to COM1 (port 0x3F8)
+        mov dx, 0x3F8
+        mov rax, [rbp - 8]
+        out dx, al
+    }
+}
+```
+
+---
+
+## 6. Creating a Bootable ISO & Testing in QEMU
+
+To turn your compiled kernel into a bootable ISO:
+
+```bash
+# 1. Compile freestanding kernel with Runvoid:
+runvoid build --target linux src/kernel.rv -o isodir/boot/kernel.elf
+
+# 2. Configure GRUB menu (isodir/boot/grub/grub.cfg):
+cat << 'EOF' > isodir/boot/grub/grub.cfg
+menuentry "StarVoid OS" {
+    multiboot /boot/kernel.elf
+    boot
+}
+EOF
+
+# 3. Create bootable hybrid ISO image:
+grub-mkrescue -o starvoid.iso isodir
+
+# 4. Boot directly in QEMU emulator:
+qemu-system-x86_64 -cdrom starvoid.iso -serial stdio
+```
+
+QEMU initializes the virtual CPU, sets up 64-bit Long Mode, and jumps directly into your Runvoid `_start` entry point!
+
+This demonstrates the ultimate reach of Runvoid: from high-level conversational scripts down to writing your own operating system from scratch!

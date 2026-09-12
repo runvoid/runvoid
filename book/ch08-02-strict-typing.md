@@ -83,3 +83,55 @@ Why does strict typing matter for systems development?
 2. **Deterministic Calling Conventions:** Because parameter types are static, function calls compile directly into single `mov` instructions loading the appropriate registers (`rdi`, `rsi`, `rdx`) followed by a hardware `call` instruction.
 3. **Early Error Detection:** Type mismatches are caught during compiler semantic analysis, completely eliminating runtime `TypeError` crashes in production servers.
 
+```
+   Boxed Scripting Value (Python / JS / Ruby):
+   +-----------------------+-----------------------+
+   | Type Tag (8 bytes)    | Payload / Ptr (8 bytes) |  <--- 16 bytes overhead + indirection
+   +-----------------------+-----------------------+
+
+   Runvoid Pro Systems Value (Int / Ptr / Bool):
+   +-----------------------------------------------+
+   | Raw 64-bit Integer / Pointer in %rax (8 bytes)|  <--- Direct ALU register access
+   +-----------------------------------------------+
+```
+
+---
+
+## 5. Hands-On Project: Strictly Typed FNV-1a Hash Generator
+
+Let's write a strictly typed, zero-allocation implementation of the Fowler–Noll–Vo 64-bit hash algorithm:
+
+```runvoid
+remove garbageC
+remove Basic
+add Advanced
+use ior
+
+action fnv1a_hash_byte(hash: Int, octet: Int): Int {
+    remember FNV_PRIME: Int = 1099511628211
+    remember mixed: Int = hash bit xor octet
+    give mixed * FNV_PRIME
+}
+
+action hash_string_strict(input: String, length: Int): Int {
+    remember FNV_OFFSET_BASIS: Int = 14695981039346656037
+    remember current_hash: Int = FNV_OFFSET_BASIS
+    remember i: Int = 0
+
+    while i < length {
+        remember byte_code: Int = @(input + i)
+        current_hash = fnv1a_hash_byte(current_hash, byte_code)
+        i = i + 1
+    }
+
+    give current_hash
+}
+
+remember message: String = "RUNVOID_SYSTEMS"
+remember hash_val: Int = hash_string_strict(message, 15)
+say hash_val
+```
+
+This entire algorithm compiles to tight arithmetic in CPU registers without touching memory or allocating a single heap byte!
+
+

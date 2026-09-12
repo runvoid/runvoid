@@ -107,3 +107,74 @@ Under the hood, the runtime uses hardware audio APIs:
 - **On Windows:** Uses the Win32 `Beep(frequency, duration)` driver from `kernel32.dll`.
 - **On Linux:** Interacts with the console audio subsystem or synthesizes PCM waveform bursts.
 
+---
+
+## 4. Systems Bit Hacks: Colors & Bit Counting
+
+### 1. Packing 24-bit RGB Colors
+In graphics programming, color values `(red, green, blue)` from 0 to 255 are packed into a single 32-bit integer:
+
+```runvoid
+action pack_rgb(r: Int, g: Int, b: Int): Int {
+    remember r_shifted: Int = r shift left 16
+    remember g_shifted: Int = g shift left 8
+    give r_shifted bit or g_shifted bit or b
+}
+
+remember neon_cyan: Int = pack_rgb(0, 255, 255)
+say "Packed 24-bit RGB Color: {neon_cyan}" // 0x00FFFF = 65535
+```
+
+### 2. Checking if a Number is a Power of Two
+A classic binary trick: a positive integer `n` is a power of 2 if and only if `n & (n - 1) == 0`:
+
+```runvoid
+action is_power_of_two(n: Int): Int {
+    if n <= 0 { give 0 }
+    if (n bit and (n - 1)) == 0 {
+        give 1
+    }
+    give 0
+}
+
+say "Is 64 power of 2? {is_power_of_two(64)}" // 1 (true)
+say "Is 60 power of 2? {is_power_of_two(60)}" // 0 (false)
+```
+
+---
+
+## 5. Hands-On Project: 8-Bit Chiptune Player ("Ode to Joy")
+
+Let's synthesize a classic melodic sequence using `play synth`:
+
+```runvoid
+say cyan "=== SYNTHESIZING: ODE TO JOY ==="
+
+remember NOTE_E4 = 329
+remember NOTE_F4 = 349
+remember NOTE_G4 = 392
+remember NOTE_D4 = 294
+remember NOTE_C4 = 261
+
+// Measure 1: E E F G
+play synth NOTE_E4, 200
+play synth NOTE_E4, 200
+play synth NOTE_F4, 200
+play synth NOTE_G4, 200
+
+// Measure 2: G F E D
+play synth NOTE_G4, 200
+play synth NOTE_F4, 200
+play synth NOTE_E4, 200
+play synth NOTE_D4, 200
+
+// Measure 3: C C D E
+play synth NOTE_C4, 200
+play synth NOTE_C4, 200
+play synth NOTE_D4, 200
+play synth NOTE_E4, 300
+
+say green "Playback complete!"
+```
+
+

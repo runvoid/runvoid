@@ -52,7 +52,7 @@ Understanding the compiler's internal pipeline gives you deep insight into how y
   +-----------------------------+ +-----------------------------+
                  |                               |
                  v                               v
-       Linux ELF64 Binary             Windows PE32+ .exe
+        Linux ELF64 Binary             Windows PE32+ .exe
 ```
 
 ---
@@ -96,11 +96,102 @@ Manages the build pipeline: invokes `nasm`, compiles `runtime/gui.c`, links the 
 
 ---
 
-## 3. Tooling and Editor Ecosystem
+## 3. Position-Independent Executables (PIE) & Relocations
+
+Modern security standards (such as Address Space Layout Randomization, or ASLR) randomize binary code segments in virtual memory upon every program execution to mitigate buffer overflow exploits.
+
+To support ASLR:
+1. The compiler generates **Position-Independent Code (PIC)** using RIP-relative addressing:
+   ```nasm
+   lea rdi, [rel string_literal_0]
+   ```
+2. Dynamic symbol lookups use the **Procedure Linkage Table (PLT)** and **Global Offset Table (GOT)**:
+   - On the first call to an external library function (`call puts@PLT`), the PLT jumps into the dynamic linker (`ld-linux-x86-64.so.2`).
+   - The linker resolves the actual virtual address of `puts` in libc and caches it in the GOT.
+   - Subsequent calls jump directly from the GOT with zero resolution overhead!
+
+---
+
+## 4. Windows PE/COFF vs. Linux ELF64 Binary Formats
+
+When compiling cross-platform binaries, Runvoid adapts its output to match the target OS's executable container format:
+
+| Attribute | Linux (ELF64) | Windows (PE32+) |
+| :--- | :--- | :--- |
+| **Object File Format** | `elf64` | `win64` |
+| **Executable Extension** | None (e.g. `my_app`) | `.exe` (e.g. `my_app.exe`) |
+| **Read-Only Data Section** | `section .rodata` | `section .rdata` |
+| **Dynamic Libraries** | Shared Objects (`.so`) | Dynamic-Link Libraries (`.dll`) |
+| **Symbol Resolution** | PLT / GOT | Import Address Table (IAT) |
+| **CRT Entry Symbol** | `main` | `main` / `WinMain` |
+| **Stack Shadow Space** | Not required | 32 bytes allocated by caller |
+
+---
+
+## 5. The 16-Byte Stack Alignment Invariant
+
+Both the System V AMD64 ABI (Linux) and the Microsoft x64 ABI mandate that the stack pointer `%rsp` must be aligned to a **16-byte boundary** immediately before executing any `call` instruction:
+
+```
+               Stack Address % 16 == 0  (Valid 16-byte boundary)
+                +---------------------------------------+
+                | Caller Frame Data                     |
+                +---------------------------------------+
+                | Local Variables (e.g. 24 bytes)       |
+                +---------------------------------------+
+                | 8-Byte Alignment Padding (if odd)     | <--- Inserted dynamically by codegen!
+                +---------------------------------------+
+                | Return Address pushed by `call` (8B)  |
+                +---------------------------------------+
+               Stack Address % 16 == 8  (At function entry)
+```
+
+If the stack is misaligned by even 8 bytes, modern CPU vector instructions (such as SSE/AVX `movaps` or `movdqa` used inside standard C library routines like `printf` or `puts`) will trigger a hardware **General Protection Fault (`#GP`)**, causing an immediate operating system crash (`SIGSEGV`).
+
+The Runvoid code generator mathematically tracks every `push`, `pop`, and local stack allocation, automatically inserting dynamic padding (`sub rsp, 8`) whenever an odd number of quadwords is present before a `call` instruction!
+
+---
+
+## 6. Peephole Optimization Passes
+
+After generating raw assembly, Runvoid runs an AST and assembly **peephole optimizer** that scans consecutive instruction windows to prune redundant CPU operations:
+
+### 1. Store-Load Redundancy Elimination
+```nasm
+; Before Optimization:
+mov [rbp - 8], rax
+mov rax, [rbp - 8]    ; Redundant load! rax already contains this value
+
+; After Peephole Pass:
+mov [rbp - 8], rax    ; Redundant load deleted!
+```
+
+### 2. Identity Arithmetic Elimination
+```nasm
+; Before:
+add rax, 0
+imul rax, 1
+
+; After:
+; (Completely removed as zero-cycle no-ops)
+```
+
+### 3. Strength Reduction
+```nasm
+; Before:
+imul rax, 2
+
+; After:
+shl rax, 1            ; Single-cycle bitwise shift is faster than multiplication
+```
+
+---
+
+## 7. Tooling and Editor Ecosystem
 
 Runvoid ships with first-class developer tooling:
 
 - **Source Formatter (`src/formatter.rs`):** Powers `runvoid fmt [-w]`, parsing and formatting Runvoid source code into standard 4-space indented canonical style.
 - **Interactive REPL (`src/repl.rs`):** An interactive terminal shell that evaluates statements line-by-line while maintaining scope state.
 - **VS Code Extension (`editors/vscode/`):** Contains official TextMate grammar definitions (`syntaxes/runvoid.tmLanguage.json`), language configuration (`language-configuration.json`), and code snippets for Visual Studio Code.
-
+- **Canonical Project Scaffolding (`src/main.rs`):** Powers `runvoid init`, creating `runvoid.toml` manifests and structuring multi-file projects with automated build and clean steps.

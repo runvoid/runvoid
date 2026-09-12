@@ -1,0 +1,378 @@
+<!DOCTYPE HTML>
+<html lang="en" class="navy" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>21. Native Desktop GUI &amp; Window Application Architecture - The Runvoid Programming Language</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body class="sidebar-visible no-js">
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "navy";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('navy')
+            html.classList.add(theme);
+            var body = document.querySelector('body');
+            body.classList.remove('no-js')
+            body.classList.add('js');
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var body = document.querySelector('body');
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            body.classList.remove('sidebar-visible');
+            body.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="intro.html">Introduction</a></li><li class="chapter-item expanded "><a href="ch01-00-getting-started.html"><strong aria-hidden="true">1.</strong> 1. Getting Started</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch01-01-installation.html"><strong aria-hidden="true">1.1.</strong> 1.1 Installation & System Requirements</a></li><li class="chapter-item expanded "><a href="ch01-02-hello-world.html"><strong aria-hidden="true">1.2.</strong> 1.2 Hello, World!</a></li><li class="chapter-item expanded "><a href="ch01-03-cli-tooling.html"><strong aria-hidden="true">1.3.</strong> 1.3 The Compiler & CLI Tooling</a></li></ol></li><li class="chapter-item expanded "><a href="ch02-00-guessing-game-tutorial.html"><strong aria-hidden="true">2.</strong> 2. Programming a Guessing Game</a></li><li class="chapter-item expanded "><a href="ch03-00-common-programming-concepts.html"><strong aria-hidden="true">3.</strong> 3. Common Programming Concepts</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch03-01-variables-and-mutability.html"><strong aria-hidden="true">3.1.</strong> 3.1 Variables and Mutability</a></li><li class="chapter-item expanded "><a href="ch03-02-data-types.html"><strong aria-hidden="true">3.2.</strong> 3.2 Data Types & Expressions</a></li><li class="chapter-item expanded "><a href="ch03-03-functions.html"><strong aria-hidden="true">3.3.</strong> 3.3 Functions & Actions</a></li><li class="chapter-item expanded "><a href="ch03-04-control-flow.html"><strong aria-hidden="true">3.4.</strong> 3.4 Control Flow: if, otherwise, while, repeat</a></li></ol></li><li class="chapter-item expanded "><a href="ch04-00-collections-and-lists.html"><strong aria-hidden="true">4.</strong> 4. Natural Word Lists & Collections</a></li><li class="chapter-item expanded "><a href="ch05-00-dialogs-media-and-os.html"><strong aria-hidden="true">5.</strong> 5. Console Dialogs, Audio & System Utilities</a></li><li class="chapter-item expanded "><a href="ch06-00-graphics-and-gui.html"><strong aria-hidden="true">6.</strong> 6. Graphics & Windowing: 2D Canvas & GUI</a></li><li class="chapter-item expanded "><a href="ch07-00-managing-memory-and-gc.html"><strong aria-hidden="true">7.</strong> 7. Managing Memory & The Garbage Collector</a></li><li class="chapter-item expanded "><a href="ch08-00-pro-systems-mode.html"><strong aria-hidden="true">8.</strong> 8. Pro Systems Mode</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch08-01-directives.html"><strong aria-hidden="true">8.1.</strong> 8.1 Systems Philosophy & Directives</a></li><li class="chapter-item expanded "><a href="ch08-02-strict-typing.html"><strong aria-hidden="true">8.2.</strong> 8.2 Strict Static Typing</a></li><li class="chapter-item expanded "><a href="ch08-03-modular-stdlib.html"><strong aria-hidden="true">8.3.</strong> 8.3 The Modular Standard Library</a></li><li class="chapter-item expanded "><a href="ch08-04-pointers-and-memory.html"><strong aria-hidden="true">8.4.</strong> 8.4 Raw Pointers & Manual Memory</a></li><li class="chapter-item expanded "><a href="ch08-05-structs-and-ffi.html"><strong aria-hidden="true">8.5.</strong> 8.5 C-Compatible Structs & C FFI</a></li><li class="chapter-item expanded "><a href="ch08-06-multithreading-and-atomics.html"><strong aria-hidden="true">8.6.</strong> 8.6 Multithreading & Hardware Atomics</a></li><li class="chapter-item expanded "><a href="ch08-07-inline-asm-and-cycles.html"><strong aria-hidden="true">8.7.</strong> 8.7 Inline Assembly & CPU Cycle Profiling</a></li><li class="chapter-item expanded "><a href="ch08-08-bare-metal-freestanding.html"><strong aria-hidden="true">8.8.</strong> 8.8 Bare-Metal Freestanding Binaries</a></li></ol></li><li class="chapter-item expanded "><a href="ch09-00-compiler-architecture.html"><strong aria-hidden="true">9.</strong> 9. Compiler Architecture & Ecosystem</a></li><li class="chapter-item expanded "><a href="ch10-00-v03-features.html"><strong aria-hidden="true">10.</strong> 10. Modern Language Features (Runvoid 1.3)</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch10-01-maps-and-dictionaries.html"><strong aria-hidden="true">10.1.</strong> 10.1 Key-Value Dictionaries & Maps</a></li><li class="chapter-item expanded "><a href="ch10-02-pattern-matching-and-pipelines.html"><strong aria-hidden="true">10.2.</strong> 10.2 Pattern Matching & Pipelines</a></li><li class="chapter-item expanded "><a href="ch10-03-bitwise-and-audio.html"><strong aria-hidden="true">10.3.</strong> 10.3 Bitwise Operations & Audio Synthesizer</a></li><li class="chapter-item expanded "><a href="ch10-04-testing-and-tooling.html"><strong aria-hidden="true">10.4.</strong> 10.4 Test Runner, Assertions & Hot-Reloading Watch</a></li></ol></li><li class="chapter-item expanded "><a href="ch11-00-cookbook.html"><strong aria-hidden="true">11.</strong> 11. The Runvoid Cookbook</a></li><li class="chapter-item expanded "><a href="ch12-00-game-development.html"><strong aria-hidden="true">12.</strong> 12. Real-Time 2D Arcade Game Development</a></li><li class="chapter-item expanded "><a href="ch13-00-systems-and-ffi.html"><strong aria-hidden="true">13.</strong> 13. Systems Programming & C Interop Masterclass</a></li><li class="chapter-item expanded "><a href="ch14-00-compiler-internals.html"><strong aria-hidden="true">14.</strong> 14. Compiler Internals: From Tokens to Silicon</a></li><li class="chapter-item expanded "><a href="ch15-00-concurrency-deep-dive.html"><strong aria-hidden="true">15.</strong> 15. Concurrency, Atomics & Multi-Threading Deep Dive</a></li><li class="chapter-item expanded "><a href="ch16-00-bare-metal-os.html"><strong aria-hidden="true">16.</strong> 16. Bare-Metal & Operating System Development</a></li><li class="chapter-item expanded "><a href="ch17-00-databases-and-storage.html"><strong aria-hidden="true">17.</strong> 17. Database Engineering & Persistent Storage</a></li><li class="chapter-item expanded "><a href="ch18-00-networking-and-microservices.html"><strong aria-hidden="true">18.</strong> 18. Networking, REST APIs & Distributed Microservices</a></li><li class="chapter-item expanded "><a href="ch19-00-audio-and-chiptunes.html"><strong aria-hidden="true">19.</strong> 19. Audio Synthesis & Chiptune Sound Engines</a></li><li class="chapter-item expanded "><a href="ch20-00-performance-tuning.html"><strong aria-hidden="true">20.</strong> 20. Systems Profiling, Cache Locality & Performance Tuning</a></li><li class="chapter-item expanded "><a href="ch21-00-gui-and-desktop-apps.html" class="active"><strong aria-hidden="true">21.</strong> 21. Native Desktop GUI & Window Application Architecture</a></li><li class="chapter-item expanded "><a href="ch22-00-language-ecosystem-and-package-design.html"><strong aria-hidden="true">22.</strong> 22. Package Architecture, Project Manifests & Production CI/CD</a></li><li class="chapter-item expanded "><a href="appendix-01-keywords-reference.html"><strong aria-hidden="true">23.</strong> Appendix A: Complete Keywords & Directives Reference</a></li><li class="chapter-item expanded "><a href="appendix-02-x86_64-assembly.html"><strong aria-hidden="true">24.</strong> Appendix B: x86_64 Assembly & Calling Conventions Reference</a></li><li class="chapter-item expanded "><a href="appendix-03-troubleshooting.html"><strong aria-hidden="true">25.</strong> Appendix C: Troubleshooting & Error Encyclopedia</a></li><li class="chapter-item expanded "><a href="appendix-04-stdlib-reference.html"><strong aria-hidden="true">26.</strong> Appendix D: Standard Library & Built-in Action API Reference</a></li><li class="chapter-item expanded "><a href="appendix-05-comparative-syntax.html"><strong aria-hidden="true">27.</strong> Appendix E: Rosetta Stone Comparative Syntax Guide</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <!-- Track and set sidebar scroll position -->
+        <script>
+            var sidebarScrollbox = document.querySelector('#sidebar .sidebar-scrollbox');
+            sidebarScrollbox.addEventListener('click', function(e) {
+                if (e.target.tagName === 'A') {
+                    sessionStorage.setItem('sidebar-scroll', sidebarScrollbox.scrollTop);
+                }
+            }, { passive: true });
+            var sidebarScrollTop = sessionStorage.getItem('sidebar-scroll');
+            sessionStorage.removeItem('sidebar-scroll');
+            if (sidebarScrollTop) {
+                // preserve sidebar scroll position when navigating via links within sidebar
+                sidebarScrollbox.scrollTop = sidebarScrollTop;
+            } else {
+                // scroll sidebar to current active section when navigating via "next/previous chapter" buttons
+                var activeSection = document.querySelector('#sidebar .active');
+                if (activeSection) {
+                    activeSection.scrollIntoView({ block: 'center' });
+                }
+            }
+        </script>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">The Runvoid Programming Language</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/runvoid/runvoid" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="21-native-desktop-gui--window-application-architecture"><a class="header" href="#21-native-desktop-gui--window-application-architecture">21. Native Desktop GUI &amp; Window Application Architecture</a></h1>
+<p>Modern graphical user interfaces (GUIs) power desktop utilities, creative applications, developer tools, and operating system shells. Unlike stateless terminal programs that run sequentially from top to bottom and exit, GUI applications operate as <strong>long-running stateful event loops</strong>.</p>
+<p>In this chapter, you will master GUI engineering in Runvoid:</p>
+<ol>
+<li>The Windowing and Event-Driven Architecture (Win32, Wayland/X11, Cocoa).</li>
+<li>The Anatomy of an Event Loop: Mouse, Keyboard, and Redraw signals.</li>
+<li>State Management: Single Source of Truth and Declarative Canvas Rendering.</li>
+<li>Building Custom UI Widgets: Buttons, Sliders, Progress Bars, and Textboxes.</li>
+<li>Hands-On Project: A Complete Desktop System Monitor &amp; Control Dashboard.</li>
+</ol>
+<hr />
+<h2 id="1-the-architecture-of-graphical-desktop-applications"><a class="header" href="#1-the-architecture-of-graphical-desktop-applications">1. The Architecture of Graphical Desktop Applications</a></h2>
+<p>Every native desktop window is a managed OS surface connected to the display server:</p>
+<pre><code>+-------------------------------------------------------------------------+
+| Display Server / Window Manager (Wayland, X11, Windows DWM)             |
++-------------------------------------------------------------------------+
+       |                                                 ^
+       | OS Input Events (Key, Mouse, Resize)            | Framebuffer Blit
+       v                                                 |
++-------------------------------------------------------------------------+
+| Runvoid Event Loop (poll_event)                                         |
++-------------------------------------------------------------------------+
+       |                                                 |
+       v                                                 v
++-------------------------------------------------------------------------+
+| State Update (Mutate Data)  ---&gt; Render Canvas (Draw Rect, Text, Sprites)
++-------------------------------------------------------------------------+
+</code></pre>
+<h3 id="the-event-loop-cycle"><a class="header" href="#the-event-loop-cycle">The Event Loop Cycle</a></h3>
+<p>A standard 60 FPS (Frames Per Second) GUI application has approximately <strong>$16.6\text{ milliseconds}$</strong> per frame to complete:</p>
+<ol>
+<li><strong>Poll OS Event Queue:</strong> Collect mouse clicks, key presses, and window close events.</li>
+<li><strong>Update Application State:</strong> Mutate active models (e.g. increase click counter, toggle checkboxes).</li>
+<li><strong>Layout &amp; Compute Bounds:</strong> Calculate pixel coordinates for all on-screen elements.</li>
+<li><strong>Draw Framebuffer:</strong> Issue 2D canvas drawing calls.</li>
+<li><strong>Swap Buffers:</strong> Flip the back buffer to the physical monitor to prevent visual tearing.</li>
+</ol>
+<hr />
+<h2 id="2-immediate-mode-vs-retained-mode-gui"><a class="header" href="#2-immediate-mode-vs-retained-mode-gui">2. Immediate Mode vs. Retained Mode GUI</a></h2>
+<p>There are two dominant GUI design paradigms in modern software:</p>
+<h3 id="1-retained-mode-dom-qt-wpf-gtk"><a class="header" href="#1-retained-mode-dom-qt-wpf-gtk">1. Retained Mode (DOM, Qt, WPF, GTK):</a></h3>
+<p>The programmer constructs an object graph of UI widgets (<code>Button</code>, <code>Window</code>, <code>Panel</code>). The framework maintains this tree in memory and handles rendering automatically.</p>
+<ul>
+<li><em>Pros:</em> Easy layout management.</li>
+<li><em>Cons:</em> Heavy memory allocations, complex synchronization between business state and UI state.</li>
+</ul>
+<h3 id="2-immediate-mode-dear-imgui-runvoid-2d-canvas"><a class="header" href="#2-immediate-mode-dear-imgui-runvoid-2d-canvas">2. Immediate Mode (Dear ImGui, Runvoid 2D Canvas):</a></h3>
+<p>No widget objects are retained between frames. The UI is rebuilt every single frame directly from pure application state:</p>
+<pre><code class="language-runvoid">if button("Save File", x: 100, y: 50) {
+    save_document()
+}
+</code></pre>
+<ul>
+<li><em>Pros:</em> Zero synchronization bugs; minimal memory allocation; total visual control.</li>
+<li><em>Cons:</em> CPU must redraw elements each frame (mitigated by GPU acceleration).</li>
+</ul>
+<hr />
+<h2 id="3-hands-on-project-desktop-system-monitor-dashboard"><a class="header" href="#3-hands-on-project-desktop-system-monitor-dashboard">3. Hands-On Project: Desktop System Monitor Dashboard</a></h2>
+<p>Let’s build a multi-widget desktop application in Runvoid that displays real-time hardware telemetry and provides interactive control buttons:</p>
+<pre><code class="language-runvoid">say cyan "=================================================="
+say cyan "       RUNVOID DESKTOP CONTROL DASHBOARD          "
+say cyan "=================================================="
+
+// 1. Initialize Window Canvas
+remember SCREEN_WIDTH = 640
+remember SCREEN_HEIGHT = 480
+
+say green "Spawning Native OS Window: 640x480..."
+open window "System Control Panel" size 640 by 480
+
+// 2. Application State Model
+remember app_state = {
+    "is_running": true,
+    "cpu_usage_pct": 28,
+    "ram_used_mb": 412,
+    "ram_total_mb": 1024,
+    "fan_boost_enabled": false,
+    "selected_tab": "OVERVIEW"
+}
+
+// 3. UI Component: Progress Bar Widget
+action draw_progress_bar(x, y, width, height, percent, label) {
+    // Background bar
+    draw rect at x, y size width by height color "darkgray"
+    
+    // Filled progress
+    remember fill_w = (width * percent) / 100
+    remember bar_color = "green"
+    if percent &gt; 80 {
+        bar_color = "red"
+    } otherwise if percent &gt; 50 {
+        bar_color = "yellow"
+    }
+    
+    draw rect at x, y size fill_w by height color bar_color
+    draw text "{label}: {percent}%" at x, y - 18 color "white"
+}
+
+// 4. UI Component: Interactive Push Button
+action draw_button(x, y, width, height, label, is_active) {
+    remember btn_color = "gray"
+    if is_active {
+        btn_color = "cyan"
+    }
+    draw rect at x, y size width by height color btn_color
+    draw text label at x + 15, y + 10 color "black"
+}
+
+// 5. Main Application Event &amp; Render Loop
+say yellow "Entering primary 60 FPS desktop event loop..."
+
+repeat 5 times { // Simulated 5 consecutive frames
+    // Clear Framebuffer
+    clear canvas "black"
+    
+    // Header Banner
+    draw rect at 0, 0 size 640 by 50 color "blue"
+    draw text "RUNVOID HARDWARE TELEMETRY MONITOR" at 20, 15 color "white"
+    
+    // Telemetry Gauges
+    draw_progress_bar(50, 100, 300, 24, app_state["cpu_usage_pct"], "CPU Core Utilization")
+    
+    remember ram_pct = (app_state["ram_used_mb"] * 100) / app_state["ram_total_mb"]
+    draw_progress_bar(50, 160, 300, 24, ram_pct, "RAM Occupancy ({app_state[\"ram_used_mb\"]} MB)")
+    
+    // Interactive Controls
+    draw_button(50, 230, 180, 40, "TOGGLE FAN BOOST", app_state["fan_boost_enabled"])
+    draw_button(250, 230, 180, 40, "TERMINATE PROCESS", false)
+    
+    // Render Frame to Display Surface
+    render canvas
+    
+    // Simulate real-time sensor fluctuation
+    app_state["cpu_usage_pct"] = app_state["cpu_usage_pct"] + 7
+    wait 30
+}
+
+say green "Dashboard event loop shut down cleanly."
+</code></pre>
+<hr />
+<h2 id="4-cross-platform-windowing-backends"><a class="header" href="#4-cross-platform-windowing-backends">4. Cross-Platform Windowing Backends</a></h2>
+<p>Runvoid generates native GUI binaries across platforms:</p>
+<ul>
+<li><strong>Linux (Wayland &amp; X11):</strong> Interacts with <code>libwayland-client</code> and XCB/Xlib. Window rendering utilizes OpenGL/EGL hardware surfaces.</li>
+<li><strong>Windows (x86_64):</strong> Utilizes <code>user32.dll</code> and Direct2D/DirectX hardware acceleration with native DPI scaling.</li>
+<li><strong>macOS (Cocoa):</strong> Direct bridging into <code>NSWindow</code> and Metal 2D canvas surfaces.</li>
+</ul>
+<p>With Runvoid’s unified graphics and audio abstractions, your desktop applications run natively everywhere with zero code alterations!</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="ch20-00-performance-tuning.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="ch22-00-language-ecosystem-and-package-design.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="ch20-00-performance-tuning.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="ch22-00-language-ecosystem-and-package-design.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>

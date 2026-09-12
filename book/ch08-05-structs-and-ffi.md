@@ -5,6 +5,8 @@ Systems programming rarely happens in an isolated vacuum. Operating system kerne
 Runvoid Pro Systems Mode provides binary-level compatibility with C:
 1. **C-Compatible POD Structs:** Define composite types whose physical memory layout matches C structures byte-for-byte.
 2. **Native C FFI (`extern "C"`):** Call any C function with zero marshalling or wrapper overhead.
+3. **Cross-Platform OS Bindings:** Direct access to POSIX `libc` on Linux and `kernel32.dll` / `user32.dll` on Windows.
+4. **C Callbacks:** Pass Runvoid function pointers to C subroutines like `qsort`.
 
 ---
 
@@ -126,9 +128,109 @@ When declaring C function signatures in Runvoid, use this mapping:
 
 ---
 
-## 4. String Passing Convention
+## 4. Interfacing with the Win32 API on Windows
 
-Runvoid strings are null-terminated in memory. When you pass a Runvoid `String` to an `extern "C"` function expecting a `const char*` (such as `puts`, `fopen`, or `printf`), the compiler automatically supplies the 64-bit memory pointer to the null-terminated byte sequence in the register `%rdi`.
+When compiling for Windows x86_64, Runvoid binds directly into Microsoft system dynamic-link libraries:
 
-There is **zero heap allocation, zero string copying, and zero marshalling overhead**.
+```runvoid
+remove garbageC
+remove Basic
+add Advanced
+use ior
+use lib "user32"
+use lib "kernel32"
 
+extern "C" {
+    action MessageBoxA(hwnd: Ptr, text: String, caption: String, type: Int) -> Int
+    action GetTickCount64() -> Int
+    action Beep(dwFreq: Int, dwDuration: Int) -> Int
+}
+
+remember start_ticks: Int = GetTickCount64()
+say "System Milliseconds Since Boot: {start_ticks}"
+
+// Play 750 Hz hardware beep for 200 ms
+Beep(750, 200)
+
+// Spawn native Windows modal dialog box (MB_OK | MB_ICONINFORMATION = 0x40):
+MessageBoxA(0, "Runvoid running natively on Windows x64!", "System Alert", 0x40)
+```
+
+---
+
+## 5. Function Pointers & C Callbacks (`qsort`)
+
+Many C APIs require passing a callback function pointer (e.g. event listeners, custom sorting predicates). In Runvoid, the `addr` operator retrieves the memory entry address of any declared `action`:
+
+```runvoid
+remove garbageC
+remove Basic
+add Advanced
+use ior
+
+extern "C" {
+    action qsort(base: Ptr, num: Int, size: Int, comparator: Ptr) -> Void
+}
+
+// Comparator signature: int (*comp)(const void *, const void *)
+action int_comparator(a_ptr: Ptr, b_ptr: Ptr) -> Int {
+    remember a_val: Int = @a_ptr
+    remember b_val: Int = @b_ptr
+    if a_val < b_val { give -1 }
+    if a_val > b_val { give 1 }
+    give 0
+}
+
+remember numbers = [95, 12, 88, 3, 42]
+qsort(addr numbers, 5, 8, addr int_comparator)
+
+say green "Sorted numbers via native C qsort callback!"
+```
+
+---
+
+## 6. Hands-On Project: Calling a Custom C Shared Library
+
+Want to write a custom C algorithm and call it from Runvoid? Here is how:
+
+### Step 1: Write the C code (`fast_crypto.c`)
+```c
+// fast_crypto.c
+#include <stdint.h>
+
+int64_t compute_xor_checksum(const uint8_t* buffer, int64_t len) {
+    int64_t sum = 0;
+    for (int64_t i = 0; i < len; ++i) {
+        sum ^= buffer[i];
+    }
+    return sum;
+}
+```
+
+Compile to a shared library:
+```bash
+gcc -shared -fPIC -O3 fast_crypto.c -o libfastcrypto.so
+```
+
+### Step 2: Call it from Runvoid (`crypto_app.rv`)
+```runvoid
+remove garbageC
+remove Basic
+add Advanced
+use ior
+use lib "fastcrypto"
+
+extern "C" {
+    action compute_xor_checksum(buf: String, len: Int) -> Int
+}
+
+remember message: String = "RUNVOID_CRYPTOGRAPHIC_PAYLOAD"
+remember result: Int = compute_xor_checksum(message, 30)
+say "Hardware XOR Checksum: {result}"
+```
+
+Compile and run:
+```bash
+runvoid run -L. crypto_app.rv
+```
+You get native C execution speed with conversational Runvoid syntax!

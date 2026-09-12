@@ -97,13 +97,42 @@ This appendix provides an exhaustive reference of all keywords, directives, oper
 
 | Subcommand | Usage | Options / Flags |
 | :--- | :--- | :--- |
-| **`runvoid run`** | `runvoid run <file.rv> [args...]` | `--target <linux\|windows>`, `--verbose` |
-| **`runvoid build`** | `runvoid build <file.rv> -o <name>` | `-o <path>`, `--target <linux\|windows>`, `--verbose` |
-| **`runvoid emit-asm`**| `runvoid emit-asm <file.rv>` | `--target <linux\|windows>` |
+| **`runvoid init`** | `runvoid init [app_name]` | Scaffolds multi-file project with `runvoid.toml` |
+| **`runvoid run`** | `runvoid run [file.rv] [args...]` | `--target <linux\|windows>`, `--verbose` |
+| **`runvoid build`** | `runvoid build [file.rv] -o <name>` | `-o <path>`, `--target <linux\|windows>`, `--verbose` |
+| **`runvoid clean`** | `runvoid clean` | Removes `bin/`, `*.o`, `*.asm`, and build artifacts |
+| **`runvoid emit-asm`**| `runvoid emit-asm [file.rv]` | `--target <linux\|windows>` |
 | **`runvoid test`** | `runvoid test [path]` | `--target <linux\|windows>` |
-| **`runvoid watch`** | `runvoid watch <file.rv>` | `--target <linux\|windows>` |
+| **`runvoid watch`** | `runvoid watch [file.rv]` | `--target <linux\|windows>` |
 | **`runvoid fmt`** | `runvoid fmt <file.rv>` | `-w` (overwrite in-place) |
 | **`runvoid repl`** | `runvoid repl` | Interactive shell with state persistence |
 | **`runvoid new`** | `runvoid new <game\|gui\|script> <file>`| Project scaffolding |
 | **`runvoid cheat`** | `runvoid cheat` | Terminal syntax cheatsheet |
+
+---
+
+## 5. Binary Operators & Precedence Table
+
+| Precedence | Operator | Conversational Equivalent | Meaning |
+| :--- | :--- | :--- | :--- |
+| **1 (Highest)** | `*`, `/`, `%` | - | Multiplication, division, remainder |
+| **2** | `+`, `-` | - | Addition, subtraction, string concatenation |
+| **3** | `<<`, `>>` | `shift left`, `shift right` | Logical bitwise shifts |
+| **4** | `&` | `bit and` | Bitwise conjunction |
+| **5** | `^` | `bit xor` | Bitwise exclusive OR |
+| **6** | `\|` | `bit or` | Bitwise disjunction |
+| **7** | `==`, `!=`, `<`, `>`, `<=`, `>=` | `is`, `is not` | Relational equality and ordering |
+| **8** | `and`, `or`, `not` | `and`, `or`, `not` | Logical boolean operations |
+| **9 (Lowest)** | `\|>` | - | Forward function pipeline |
+
+---
+
+## 6. Standard Environment Variables
+
+| Variable | Default Value | Description |
+| :--- | :--- | :--- |
+| **`RUNVOID_TARGET`** | Host OS architecture | Overrides compilation target (`linux` or `windows`) |
+| **`RUNVOID_RUNTIME`**| `/usr/local/share/runvoid/runtime` | Path to `gui.c` and native runtime headers |
+| **`NO_COLOR`** | Unset | Disables ANSI terminal colors when set |
+
 

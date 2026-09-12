@@ -227,3 +227,78 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 .\install.ps1
 ```
 
+---
+
+## Alternative Installation: Docker & DevContainers
+
+If you prefer zero local configuration or want to run Runvoid in an isolated sandbox, Runvoid provides official Docker images and VS Code DevContainer configurations.
+
+### 1. Running via Docker
+
+The official Runvoid Docker image bundles the `runvoid` compiler, `nasm`, `gcc`, and the full runtime in a compact multi-stage container:
+
+```bash
+# Pull and run the interactive cheat sheet:
+docker run --rm -it runvoid/runvoid:latest cheat
+
+# Mount your current directory and compile an application:
+docker run --rm -v $(pwd):/workspace -w /workspace runvoid/runvoid:latest run app.rv
+```
+
+### 2. Instant Cloud Development with VS Code DevContainers
+
+Runvoid includes a `.devcontainer` configuration supporting **GitHub Codespaces** and the **VS Code Dev Containers extension**:
+
+```
++--------------------------------------------------------------------------+
+| VS Code Desktop / Browser (GitHub Codespaces)                            |
+| +----------------------------------------------------------------------+ |
+| | DevContainer: Debian Trixie + Rust + NASM + GCC + MinGW + Wine + X11 | |
+| | Extensions: Rust Analyzer, CodeLLDB, Runvoid TextMate Syntax         | |
+| +----------------------------------------------------------------------+ |
++--------------------------------------------------------------------------+
+```
+
+1. Open the repository in VS Code:
+   ```bash
+   code .
+   ```
+2. When prompted with **"Folder contains a Dev Container configuration file. Reopen in Container?"**, click **Reopen in Container**.
+3. All compilers, linkers, cross-compilers, and editor extensions are configured automatically inside the container within seconds!
+
+---
+
+## Toolchain Resolution & Compilation Flow
+
+When `runvoid` compiles a source file, it dynamically probes and coordinates the system toolchain:
+
+```
+                  +---------------------------+
+                  | Runvoid Compiler Engine   |
+                  +---------------------------+
+                                |
+                                v
+               Detects Target: Linux or Windows?
+                                |
+             +------------------+------------------+
+             |                                     |
+             v (Linux ELF64)                       v (Windows PE32+)
+    +-----------------+                   +-----------------+
+    | Probe nasm      |                   | Probe nasm      |
+    | (nasm -f elf64) |                   | (nasm -f win64) |
+    +-----------------+                   +-----------------+
+             |                                     |
+             v                                     v
+    +-----------------+                   +-----------------+
+    | Probe gcc       |                   | Probe MinGW GCC |
+    | (gcc -no-pie)   |                   | (x86_64-w64-    |
+    +-----------------+                   |  mingw32-gcc)   |
+             |                            +-----------------+
+             v                                     |
+    Native Linux Binary                            v
+                                          Windows .exe Binary
+```
+
+If any prerequisite is missing from your system `PATH`, Runvoid reports the exact missing binary along with instructions on how to install it.
+
+

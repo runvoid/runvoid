@@ -1,8 +1,8 @@
 # 8.7 Inline Assembly & CPU Cycle Profiling
 
-High-performance systems programming sometimes requires instructions that cannot be expressed in high-level languages: specialized vector intrinsics (AVX2 / AVX-512), hardware AES acceleration, memory fences, or raw CPU model-specific registers.
+High-performance systems programming sometimes requires instructions that cannot be expressed in high-level languages: specialized vector intrinsics (AVX2 / AVX-512), hardware AES acceleration, true hardware random numbers (`rdrand`), single-cycle bit manipulation (`popcnt`), memory fences, or raw CPU model-specific registers.
 
-Runvoid Pro Systems Mode gives you direct access to the CPU silicon through **Hardware Inline Assembly (`asm`)** and cycle-accurate performance benchmarking with the **`measure cycles`** block.
+Runvoid Pro Systems Mode gives you direct access to CPU silicon through **Hardware Inline Assembly (`asm`)** and cycle-accurate performance benchmarking with the **`measure cycles`** block.
 
 ---
 
@@ -44,7 +44,54 @@ To avoid corrupting the calling stack frame or local variables, adhere to the st
 
 ---
 
-## 2. Hardware Memory Fences
+## 2. Hardware Random Number Generation (`rdrand`)
+
+Cryptographic key generation and monte-carlo simulations require cryptographically secure random entropy. Modern x86_64 processors provide an on-chip thermal noise entropy generator via the `rdrand` instruction:
+
+```runvoid
+remove garbageC
+remove Basic
+add Advanced
+use ior
+
+action hardware_random_u64(): Int {
+    remember val: Int = 0
+    asm {
+    .retry:
+        rdrand rax          ; Query on-die hardware TRNG
+        jnc .retry          ; Retry if hardware CF is 0 (underflow)
+        mov [rbp - 8], rax  ; Store into val
+    }
+    give val
+}
+
+remember secret_seed: Int = hardware_random_u64()
+say "Cryptographic Hardware Seed: {secret_seed}"
+```
+
+---
+
+## 3. Single-Cycle Bit Manipulation: `popcnt` & `lzcnt`
+
+Bit twiddling algorithms (e.g. chess engines, bitboards, Bloom filters) frequently need to count set bits:
+
+```runvoid
+action count_set_bits(mask: Int): Int {
+    remember count: Int = 0
+    asm {
+        mov rax, [rbp - 8]
+        popcnt rcx, rax     ; Single-cycle population count
+        mov [rbp - 16], rcx
+    }
+    give count
+}
+
+say "Set bits in 0b10110101: {count_set_bits(181)}" // Prints: 5
+```
+
+---
+
+## 4. Hardware Memory Fences
 
 When coordinating lock-free data structures across multiple CPU cores, you can emit hardware memory barriers:
 
@@ -58,7 +105,7 @@ This prevents the out-of-order execution pipeline of modern superscalar processo
 
 ---
 
-## 3. High-Precision Cycle Profiling: `measure cycles`
+## 5. High-Precision Cycle Profiling: `measure cycles`
 
 While standard profiling tools measure wall-clock milliseconds via operating system timers, micro-optimizations—such as comparing two sorting algorithms or auditing cache misses—demand cycle-accurate hardware measurements.
 
@@ -113,3 +160,71 @@ Behind the scenes, the compiler generates a serialized hardware benchmark sandwi
 1. **Pipeline Serialization (`cpuid` / `rdtscp`):** Prevents the CPU from executing instructions outside the measured block ahead of time.
 2. **Nanosecond Resolution:** On a modern 4.0 GHz processor, 1 CPU cycle corresponds to **0.25 nanoseconds**! This gives you unmatched precision when fine-tuning high-performance routines.
 
+---
+
+## 6. Hands-On Project: Querying CPU Model via `cpuid`
+
+Let's write a program that uses inline assembly to query the raw CPU brand vendor string directly from the processor silicon:
+
+```runvoid
+remove garbageC
+remove Basic
+add Advanced
+use ior
+
+action print_cpu_vendor(): Void {
+    // Buffers to hold vendor string registers (EBX, EDX, ECX)
+    remember b_reg: Int = 0
+    remember d_reg: Int = 0
+    remember c_reg: Int = 0
+
+    asm {
+        xor eax, eax        ; CPUID function 0: Vendor String
+        cpuid
+        mov [rbp - 8], rbx  ; Characters 0-3 (e.g. "Genu")
+        mov [rbp - 16], rdx ; Characters 4-7 (e.g. "ineI")
+        mov [rbp - 24], rcx ; Characters 8-11(e.g. "ntel")
+    }
+
+    say "CPU Vendor signature registers captured successfully!"
+}
+
+print_cpu_vendor()
+```
+
+---
+
+## 7. Micro-Optimization Challenge: Loop Unrolling Benchmark
+
+Compare standard loop execution against 4x manual unrolling using `measure cycles`:
+
+```runvoid
+remove garbageC
+remove Basic
+add Advanced
+use ior
+
+say cyan "=== Micro-Benchmark: Standard Loop vs Unrolled Loop ==="
+
+// Test 1: Standard Loop
+measure cycles {
+    remember total1: Int = 0
+    remember i: Int = 0
+    while i < 1000 {
+        total1 = total1 + i
+        i = i + 1
+    }
+}
+
+// Test 2: 4x Unrolled Loop (Reduces branch checks by 75%)
+measure cycles {
+    remember total2: Int = 0
+    remember j: Int = 0
+    while j < 1000 {
+        total2 = total2 + j + (j + 1) + (j + 2) + (j + 3)
+        j = j + 4
+    }
+}
+```
+
+The 4x unrolled loop eliminates hundreds of branch instructions, reducing total CPU cycle latency significantly!

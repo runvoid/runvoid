@@ -2,7 +2,7 @@
 
 In high-level application code, variables and collections abstract away the physical addresses where bytes reside. But in systems software—such as memory allocators, network device drivers, packet serializers, and game engines—direct access to raw memory addresses is indispensable.
 
-Runvoid Pro Systems Mode provides full, unconstrained access to 64-bit hardware pointers, address-of operators, memory dereferencing, and manual heap allocation.
+Runvoid Pro Systems Mode provides full, unconstrained access to 64-bit hardware pointers, address-of operators, memory dereferencing, double pointers, and manual heap allocation.
 
 ---
 
@@ -75,7 +75,25 @@ mov qword [rax], 500  ; Store 64-bit value directly into address
 
 ---
 
-## 4. Pointer Arithmetic
+## 4. Double Pointers & C FFI Out-Parameters
+
+In many C APIs (such as `sqlite3_open`, `pthread_create`, or POSIX socket handles), functions return handles via **Out-Parameters** using pointers-to-pointers (`void**` or `int**`).
+
+In Runvoid, you handle this by passing the address of a pointer variable:
+
+```runvoid
+remember handle: Ptr = 0
+remember handle_ptr: Ptr = addr handle
+
+// The C function writes the new address into *handle_ptr:
+// sqlite3_open("db.sqlite", handle_ptr)
+
+say "Allocated resource handle: {handle}"
+```
+
+---
+
+## 5. Pointer Arithmetic
 
 You can navigate contiguous memory blocks by applying integer arithmetic to pointers. Because addresses are byte-indexed, stepping to the next 64-bit (`Int`) element requires adding 8 bytes:
 
@@ -89,7 +107,7 @@ action read_element(base_ptr: Ptr, index: Int): Int {
 
 ---
 
-## 5. Manual Heap Allocation: `alloc` and `free`
+## 6. Manual Heap Allocation: `alloc` and `free`
 
 When you remove the garbage collector (`remove garbageC`), dynamic memory must be explicitly allocated and freed using `alloc` and `free` from the `mem` module:
 
@@ -127,7 +145,7 @@ say green "Memory deallocated cleanly."
 
 ---
 
-## 6. Systems Memory Safety Best Practices
+## 7. Systems Memory Safety Best Practices
 
 Working with raw pointers grants absolute power, but requires engineering discipline:
 1. **Always Check for Null:** `alloc` returns `0` (null) if the operating system runs out of virtual address space. Always verify `if ptr != 0` before dereferencing.
@@ -135,3 +153,76 @@ Working with raw pointers grants absolute power, but requires engineering discip
 3. **Null After Free:** Immediately assign `ptr = 0` after calling `free ptr` to prevent dangling pointer bugs.
 4. **Bounds Discipline:** Ensure pointer offsets never exceed the allocated byte boundary.
 
+---
+
+## 8. Hands-On Project: Building a High-Performance Arena Allocator
+
+An **Arena Allocator** (bump allocator) allocates memory by simply bumping a pointer forward inside a pre-allocated slab. It achieves near-instant allocations (O(1)) and frees all allocated objects in a single pass with zero fragmentation:
+
+```runvoid
+remove garbageC
+remove Basic
+add Advanced
+use ior
+use mem
+
+// Arena structure: Base pointer, current offset, and total capacity
+remember ARENA_SIZE: Int = 4096
+remember arena_base: Ptr = alloc ARENA_SIZE
+remember arena_offset: Int = 0
+
+action arena_alloc(bytes_needed: Int): Ptr {
+    // Maintain 8-byte alignment
+    remember aligned_bytes: Int = (bytes_needed + 7) bit and (~7)
+
+    if arena_offset + aligned_bytes > ARENA_SIZE {
+        say red "Arena Out of Memory!"
+        give 0
+    }
+
+    remember alloc_ptr: Ptr = arena_base + arena_offset
+    arena_offset = arena_offset + aligned_bytes
+    give alloc_ptr
+}
+
+action arena_reset(): Void {
+    arena_offset = 0 // Instant O(1) deallocation of all objects!
+}
+
+// Allocate multiple objects from the arena:
+remember obj1: Ptr = arena_alloc(8)
+remember obj2: Ptr = arena_alloc(8)
+remember obj3: Ptr = arena_alloc(16)
+
+@obj1 = 111
+@obj2 = 222
+@obj3 = 333
+
+say "Obj 1: {@obj1}"
+say "Obj 2: {@obj2}"
+say "Obj 3: {@obj3}"
+say "Total arena bytes used: {arena_offset} / {ARENA_SIZE}"
+
+// Free all allocations in 1 CPU instruction:
+arena_reset()
+say green "Arena wiped cleanly in 0 microseconds!"
+
+// Finally free the main arena buffer
+free arena_base
+```
+
+---
+
+## 9. Auditing Memory with Valgrind
+
+Because Runvoid compiles directly to native x86_64 machine code, you can audit your programs with standard binary analysis tools like **Valgrind**:
+
+```bash
+$ valgrind --leak-check=full ./arena_app
+==12345== HEAP SUMMARY:
+==12345==     in use at exit: 0 bytes in 0 blocks
+==12345==   total heap usage: 1 allocs, 1 frees, 4,096 bytes allocated
+==12345== All heap blocks were freed -- no leaks are possible
+```
+
+Zero leaks, zero hidden garbage collection baggage!

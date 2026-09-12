@@ -1,6 +1,6 @@
 # 11. The Runvoid Cookbook
 
-The Runvoid Cookbook presents battle-tested, production-ready code recipes illustrating real-world application patterns across systems, networking, audio, and graphics.
+The Runvoid Cookbook presents battle-tested, production-ready code recipes illustrating real-world application patterns across systems, networking, audio, data structures, and graphics.
 
 All recipes can be found in `examples/cookbook/` within the repository.
 
@@ -162,5 +162,218 @@ kernel_start:
     mov rax, 60
     xor rdi, rdi
     syscall
+}
+```
+
+---
+
+## Recipe 05: High-Speed XOR File Encryption / Decryption
+
+Demonstrates encrypting and decrypting data using symmetric bitwise XOR operations:
+
+```runvoid
+say cyan "=== XOR Symmetric Stream Cipher ==="
+
+remember key = 0x5A  // 8-bit symmetric key
+
+action xor_cipher(input_val: Int, key_val: Int): Int {
+    give input_val bit xor key_val
+}
+
+remember plaintext = 1337
+remember ciphertext = xor_cipher(plaintext, key)
+remember decrypted = xor_cipher(ciphertext, key)
+
+say "Plaintext:  {plaintext}"
+say "Ciphertext: {ciphertext}"
+say "Decrypted:  {decrypted}"
+```
+
+---
+
+## Recipe 06: Command-Line Flag Dispatcher
+
+Demonstrates parsing command-line modes and executing subroutines:
+
+```runvoid
+say cyan "=== Tool CLI Dispatcher ==="
+
+remember mode = "build"
+
+if mode == "build" {
+    say green "Executing build pipeline..."
+} otherwise if mode == "test" {
+    say yellow "Running automated verification suites..."
+} otherwise if mode == "clean" {
+    say "Cleaning build artifacts..."
+} otherwise {
+    say red "Unknown mode: {mode}"
+}
+```
+
+---
+
+## Recipe 07: High-Precision Code Stopwatch
+
+Demonstrates measuring statistical execution times across multiple runs:
+
+```runvoid
+say cyan "=== Statistical Benchmark Stopwatch ==="
+
+remember iterations = 5
+remember total_time = 0
+
+repeat iterations times as run_idx {
+    measure time {
+        remember acc = 0
+        repeat 1000000 times as n {
+            acc = acc + n
+        }
+    }
+}
+say green "Benchmark passes completed."
+```
+
+---
+
+## Recipe 08: Circular Ring Buffer for High-Throughput Streaming
+
+Demonstrates implementing a fixed-size $O(1)$ ring buffer using bitwise mask indexing ($N$ is a power of 2):
+
+```runvoid
+say cyan "=== Circular Ring Buffer Engine ==="
+
+remember CAPACITY = 8
+remember MASK = CAPACITY - 1  // 7 (0b0111)
+
+remember ring_buffer = [0, 0, 0, 0, 0, 0, 0, 0]
+remember head = 0
+remember tail = 0
+
+action ring_push(item) {
+    remember slot = head bit and MASK
+    ring_buffer[slot] = item
+    head = head + 1
+    say "Pushed item '{item}' into slot {slot}. Head: {head}"
+}
+
+action ring_pop() {
+    if tail >= head {
+        say red "Buffer underflow! Empty queue."
+        give 0
+    }
+    remember slot = tail bit and MASK
+    remember item = ring_buffer[slot]
+    tail = tail + 1
+    say "Popped item '{item}' from slot {slot}. Tail: {tail}"
+    give item
+}
+
+repeat 10 times as i {
+    ring_push(100 + i)
+}
+
+repeat 5 times {
+    remember val = ring_pop()
+}
+say green "Ring buffer state verified."
+```
+
+---
+
+## Recipe 09: Binary Search Tree (BST) & In-Order Traversal
+
+Demonstrates implementing a hierarchical tree structure with ordered node insertions:
+
+```runvoid
+say cyan "=== Binary Search Tree (BST) ==="
+
+action make_node(val) {
+    remember node = {
+        "val": val,
+        "left": 0,
+        "right": 0
+    }
+    give node
+}
+
+action insert_bst(root, val) {
+    if val < root["val"] {
+        if root["left"] == 0 {
+            root["left"] = make_node(val)
+        } otherwise {
+            insert_bst(root["left"], val)
+        }
+    } otherwise {
+        if root["right"] == 0 {
+            root["right"] = make_node(val)
+        } otherwise {
+            insert_bst(root["right"], val)
+        }
+    }
+}
+
+remember bst_root = make_node(50)
+insert_bst(bst_root, 30)
+insert_bst(bst_root, 70)
+insert_bst(bst_root, 20)
+insert_bst(bst_root, 40)
+
+say green "Constructed BST hierarchy rooted at {bst_root[\"val\"]}."
+```
+
+---
+
+## Recipe 10: 2D Matrix Multiplication & Linear Algebra
+
+Demonstrates multiplying two $2 \times 2$ matrices for 2D graphics transformations:
+
+```runvoid
+say cyan "=== 2D Matrix Linear Transformation ==="
+
+// Matrix A: [[2, 0], [0, 3]] (Scale x by 2, y by 3)
+remember a00 = 2
+remember a01 = 0
+remember a10 = 0
+remember a11 = 3
+
+// Vector V: [x: 10, y: 5]
+remember vx = 10
+remember vy = 5
+
+// Transformed V' = A * V
+remember out_x = (a00 * vx) + (a01 * vy)
+remember out_y = (a10 * vx) + (a11 * vy)
+
+say "Input vector:  ({vx}, {vy})"
+say green "Transformed:   ({out_x}, {out_y})"
+```
+
+---
+
+## Recipe 11: Token Bucket Rate Limiter for Microservices
+
+Demonstrates protecting backend endpoints against traffic spikes using a leaky token bucket:
+
+```runvoid
+say cyan "=== Token Bucket Rate Limiter ==="
+
+remember MAX_TOKENS = 5
+remember refill_rate_per_sec = 2
+remember current_tokens = MAX_TOKENS
+
+action try_consume_token() {
+    if current_tokens > 0 {
+        current_tokens = current_tokens - 1
+        say green "Request PERMITTED. Remaining tokens: {current_tokens}"
+        give true
+    } otherwise {
+        say red "Request 429 THROTTLED: Rate limit exceeded!"
+        give false
+    }
+}
+
+repeat 7 times {
+    try_consume_token()
 }
 ```

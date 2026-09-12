@@ -1,0 +1,434 @@
+<!DOCTYPE HTML>
+<html lang="en" class="navy" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>19. Audio Synthesis &amp; Chiptune Sound Engines - The Runvoid Programming Language</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="highlight.css">
+        <link rel="stylesheet" href="tomorrow-night.css">
+        <link rel="stylesheet" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body class="sidebar-visible no-js">
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "navy";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('navy')
+            html.classList.add(theme);
+            var body = document.querySelector('body');
+            body.classList.remove('no-js')
+            body.classList.add('js');
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var body = document.querySelector('body');
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            body.classList.remove('sidebar-visible');
+            body.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="intro.html">Introduction</a></li><li class="chapter-item expanded "><a href="ch01-00-getting-started.html"><strong aria-hidden="true">1.</strong> 1. Getting Started</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch01-01-installation.html"><strong aria-hidden="true">1.1.</strong> 1.1 Installation & System Requirements</a></li><li class="chapter-item expanded "><a href="ch01-02-hello-world.html"><strong aria-hidden="true">1.2.</strong> 1.2 Hello, World!</a></li><li class="chapter-item expanded "><a href="ch01-03-cli-tooling.html"><strong aria-hidden="true">1.3.</strong> 1.3 The Compiler & CLI Tooling</a></li></ol></li><li class="chapter-item expanded "><a href="ch02-00-guessing-game-tutorial.html"><strong aria-hidden="true">2.</strong> 2. Programming a Guessing Game</a></li><li class="chapter-item expanded "><a href="ch03-00-common-programming-concepts.html"><strong aria-hidden="true">3.</strong> 3. Common Programming Concepts</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch03-01-variables-and-mutability.html"><strong aria-hidden="true">3.1.</strong> 3.1 Variables and Mutability</a></li><li class="chapter-item expanded "><a href="ch03-02-data-types.html"><strong aria-hidden="true">3.2.</strong> 3.2 Data Types & Expressions</a></li><li class="chapter-item expanded "><a href="ch03-03-functions.html"><strong aria-hidden="true">3.3.</strong> 3.3 Functions & Actions</a></li><li class="chapter-item expanded "><a href="ch03-04-control-flow.html"><strong aria-hidden="true">3.4.</strong> 3.4 Control Flow: if, otherwise, while, repeat</a></li></ol></li><li class="chapter-item expanded "><a href="ch04-00-collections-and-lists.html"><strong aria-hidden="true">4.</strong> 4. Natural Word Lists & Collections</a></li><li class="chapter-item expanded "><a href="ch05-00-dialogs-media-and-os.html"><strong aria-hidden="true">5.</strong> 5. Console Dialogs, Audio & System Utilities</a></li><li class="chapter-item expanded "><a href="ch06-00-graphics-and-gui.html"><strong aria-hidden="true">6.</strong> 6. Graphics & Windowing: 2D Canvas & GUI</a></li><li class="chapter-item expanded "><a href="ch07-00-managing-memory-and-gc.html"><strong aria-hidden="true">7.</strong> 7. Managing Memory & The Garbage Collector</a></li><li class="chapter-item expanded "><a href="ch08-00-pro-systems-mode.html"><strong aria-hidden="true">8.</strong> 8. Pro Systems Mode</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch08-01-directives.html"><strong aria-hidden="true">8.1.</strong> 8.1 Systems Philosophy & Directives</a></li><li class="chapter-item expanded "><a href="ch08-02-strict-typing.html"><strong aria-hidden="true">8.2.</strong> 8.2 Strict Static Typing</a></li><li class="chapter-item expanded "><a href="ch08-03-modular-stdlib.html"><strong aria-hidden="true">8.3.</strong> 8.3 The Modular Standard Library</a></li><li class="chapter-item expanded "><a href="ch08-04-pointers-and-memory.html"><strong aria-hidden="true">8.4.</strong> 8.4 Raw Pointers & Manual Memory</a></li><li class="chapter-item expanded "><a href="ch08-05-structs-and-ffi.html"><strong aria-hidden="true">8.5.</strong> 8.5 C-Compatible Structs & C FFI</a></li><li class="chapter-item expanded "><a href="ch08-06-multithreading-and-atomics.html"><strong aria-hidden="true">8.6.</strong> 8.6 Multithreading & Hardware Atomics</a></li><li class="chapter-item expanded "><a href="ch08-07-inline-asm-and-cycles.html"><strong aria-hidden="true">8.7.</strong> 8.7 Inline Assembly & CPU Cycle Profiling</a></li><li class="chapter-item expanded "><a href="ch08-08-bare-metal-freestanding.html"><strong aria-hidden="true">8.8.</strong> 8.8 Bare-Metal Freestanding Binaries</a></li></ol></li><li class="chapter-item expanded "><a href="ch09-00-compiler-architecture.html"><strong aria-hidden="true">9.</strong> 9. Compiler Architecture & Ecosystem</a></li><li class="chapter-item expanded "><a href="ch10-00-v03-features.html"><strong aria-hidden="true">10.</strong> 10. Modern Language Features (Runvoid 1.3)</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="ch10-01-maps-and-dictionaries.html"><strong aria-hidden="true">10.1.</strong> 10.1 Key-Value Dictionaries & Maps</a></li><li class="chapter-item expanded "><a href="ch10-02-pattern-matching-and-pipelines.html"><strong aria-hidden="true">10.2.</strong> 10.2 Pattern Matching & Pipelines</a></li><li class="chapter-item expanded "><a href="ch10-03-bitwise-and-audio.html"><strong aria-hidden="true">10.3.</strong> 10.3 Bitwise Operations & Audio Synthesizer</a></li><li class="chapter-item expanded "><a href="ch10-04-testing-and-tooling.html"><strong aria-hidden="true">10.4.</strong> 10.4 Test Runner, Assertions & Hot-Reloading Watch</a></li></ol></li><li class="chapter-item expanded "><a href="ch11-00-cookbook.html"><strong aria-hidden="true">11.</strong> 11. The Runvoid Cookbook</a></li><li class="chapter-item expanded "><a href="ch12-00-game-development.html"><strong aria-hidden="true">12.</strong> 12. Real-Time 2D Arcade Game Development</a></li><li class="chapter-item expanded "><a href="ch13-00-systems-and-ffi.html"><strong aria-hidden="true">13.</strong> 13. Systems Programming & C Interop Masterclass</a></li><li class="chapter-item expanded "><a href="ch14-00-compiler-internals.html"><strong aria-hidden="true">14.</strong> 14. Compiler Internals: From Tokens to Silicon</a></li><li class="chapter-item expanded "><a href="ch15-00-concurrency-deep-dive.html"><strong aria-hidden="true">15.</strong> 15. Concurrency, Atomics & Multi-Threading Deep Dive</a></li><li class="chapter-item expanded "><a href="ch16-00-bare-metal-os.html"><strong aria-hidden="true">16.</strong> 16. Bare-Metal & Operating System Development</a></li><li class="chapter-item expanded "><a href="ch17-00-databases-and-storage.html"><strong aria-hidden="true">17.</strong> 17. Database Engineering & Persistent Storage</a></li><li class="chapter-item expanded "><a href="ch18-00-networking-and-microservices.html"><strong aria-hidden="true">18.</strong> 18. Networking, REST APIs & Distributed Microservices</a></li><li class="chapter-item expanded "><a href="ch19-00-audio-and-chiptunes.html" class="active"><strong aria-hidden="true">19.</strong> 19. Audio Synthesis & Chiptune Sound Engines</a></li><li class="chapter-item expanded "><a href="ch20-00-performance-tuning.html"><strong aria-hidden="true">20.</strong> 20. Systems Profiling, Cache Locality & Performance Tuning</a></li><li class="chapter-item expanded "><a href="ch21-00-gui-and-desktop-apps.html"><strong aria-hidden="true">21.</strong> 21. Native Desktop GUI & Window Application Architecture</a></li><li class="chapter-item expanded "><a href="ch22-00-language-ecosystem-and-package-design.html"><strong aria-hidden="true">22.</strong> 22. Package Architecture, Project Manifests & Production CI/CD</a></li><li class="chapter-item expanded "><a href="appendix-01-keywords-reference.html"><strong aria-hidden="true">23.</strong> Appendix A: Complete Keywords & Directives Reference</a></li><li class="chapter-item expanded "><a href="appendix-02-x86_64-assembly.html"><strong aria-hidden="true">24.</strong> Appendix B: x86_64 Assembly & Calling Conventions Reference</a></li><li class="chapter-item expanded "><a href="appendix-03-troubleshooting.html"><strong aria-hidden="true">25.</strong> Appendix C: Troubleshooting & Error Encyclopedia</a></li><li class="chapter-item expanded "><a href="appendix-04-stdlib-reference.html"><strong aria-hidden="true">26.</strong> Appendix D: Standard Library & Built-in Action API Reference</a></li><li class="chapter-item expanded "><a href="appendix-05-comparative-syntax.html"><strong aria-hidden="true">27.</strong> Appendix E: Rosetta Stone Comparative Syntax Guide</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <!-- Track and set sidebar scroll position -->
+        <script>
+            var sidebarScrollbox = document.querySelector('#sidebar .sidebar-scrollbox');
+            sidebarScrollbox.addEventListener('click', function(e) {
+                if (e.target.tagName === 'A') {
+                    sessionStorage.setItem('sidebar-scroll', sidebarScrollbox.scrollTop);
+                }
+            }, { passive: true });
+            var sidebarScrollTop = sessionStorage.getItem('sidebar-scroll');
+            sessionStorage.removeItem('sidebar-scroll');
+            if (sidebarScrollTop) {
+                // preserve sidebar scroll position when navigating via links within sidebar
+                sidebarScrollbox.scrollTop = sidebarScrollTop;
+            } else {
+                // scroll sidebar to current active section when navigating via "next/previous chapter" buttons
+                var activeSection = document.querySelector('#sidebar .active');
+                if (activeSection) {
+                    activeSection.scrollIntoView({ block: 'center' });
+                }
+            }
+        </script>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">The Runvoid Programming Language</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/runvoid/runvoid" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="19-audio-synthesis--chiptune-sound-engines"><a class="header" href="#19-audio-synthesis--chiptune-sound-engines">19. Audio Synthesis &amp; Chiptune Sound Engines</a></h1>
+<p>Sound design and audio feedback bring computer software, operating systems, and video games to life. From arcade chiptunes and retro bleeps to real-time audio DSP (Digital Signal Processing), understanding how digital silicon models acoustic vibrations is a core systems capability.</p>
+<p>In this chapter, you will master:</p>
+<ol>
+<li>The physics of sound: frequency (Pitch), amplitude (Volume), and sample rates.</li>
+<li>Waveform mathematics: Square, Triangle, Sawtooth, and Sine waves.</li>
+<li>ADSR (Attack, Decay, Sustain, Release) volume envelopes.</li>
+<li>Building an 8-bit Sound Effects (SFX) Generator in Runvoid.</li>
+<li>Programming a multi-track tracker engine to compose polyphonic chiptune melodies.</li>
+</ol>
+<hr />
+<h2 id="1-the-physics-of-digital-audio"><a class="header" href="#1-the-physics-of-digital-audio">1. The Physics of Digital Audio</a></h2>
+<p>Sound in the physical world is a mechanical wave of pressure oscillations traveling through air. A digital computer represents continuous sound waves as a discrete sequence of numbers sampled thousands of times per second (Pulse Code Modulation, or PCM).</p>
+<pre><code>Continuous Acoustic Sound Wave:
+      +1.0 |    _--_                _--_
+           |  /      \            /      \
+       0.0 +------------\------/------------\------/---&gt; Time (t)
+           |              \__--/              \__--/
+      -1.0 |
+
+Digital Discrete Sampling (e.g. 44,100 samples per second):
+      +1.0 |   * * *               * * *
+           | *       *           *       *
+       0.0 +-----------*-------*-----------*-------*---&gt; Sample Index (n)
+           |             * * *               * * *
+      -1.0 |
+</code></pre>
+<h3 id="the-nyquist-shannon-sampling-theorem"><a class="header" href="#the-nyquist-shannon-sampling-theorem">The Nyquist-Shannon Sampling Theorem</a></h3>
+<p>To accurately represent an audio frequency $f_{\text{max}}$, the digital sampling rate $f_s$ must be at least double that frequency:</p>
+<p>$$f_s \ge 2 \cdot f_{\text{max}}$$</p>
+<p>Human hearing spans roughly $20\text{ Hz}$ to $20,000\text{ Hz}$ ($20\text{ kHz}$). Therefore, CD audio standards use $44,100\text{ Hz}$ ($44.1\text{ kHz}$), comfortably capturing the full audible spectrum without aliasing artifacts.</p>
+<hr />
+<h2 id="2-the-four-classic-chiptune-waveforms"><a class="header" href="#2-the-four-classic-chiptune-waveforms">2. The Four Classic Chiptune Waveforms</a></h2>
+<p>Retro gaming hardware (such as the Nintendo NES RP2A03 or Game Boy LR35902 sound chips) generated sound using four fundamental waveforms:</p>
+<pre><code>1. Square Wave (Crisp, hollow, 8-bit lead melodies):
+   +1 |---|   |---|   |---|
+   -1     |---|   |---|   |---
+
+2. Triangle Wave (Smooth, mellow, basslines and flutes):
+   +1   /\      /\      /\
+   -1  /  \    /  \    /  \
+           \  /    \  /    \  /
+            \/      \/      \/
+
+3. Sawtooth Wave (Rich, buzzy, sharp synth brass):
+   +1  /|  /|  /|  /|
+   -1 / | / | / | / |
+
+4. White Noise (Random numbers, percussion, snare drums, explosions):
+   +1 || | | |||| | ||| | ||
+   -1 ||||| || |||||| ||||||
+</code></pre>
+<h3 id="musical-note-frequencies-a4--440-hz"><a class="header" href="#musical-note-frequencies-a4--440-hz">Musical Note Frequencies (A4 = 440 Hz)</a></h3>
+<p>Western music divides octaves into 12 semitones. The frequency $f$ of any MIDI note $n$ relative to A4 ($n = 69$, $440\text{ Hz}$) is:</p>
+<p>$$f = 440 \cdot 2^{(n - 69) / 12}$$</p>
+<p>Standard Note Frequencies in Hertz:</p>
+<ul>
+<li><strong>C4 (Middle C):</strong> $261.63\text{ Hz}$</li>
+<li><strong>D4:</strong> $293.66\text{ Hz}$</li>
+<li><strong>E4:</strong> $329.63\text{ Hz}$</li>
+<li><strong>F4:</strong> $349.23\text{ Hz}$</li>
+<li><strong>G4:</strong> $392.00\text{ Hz}$</li>
+<li><strong>A4:</strong> $440.00\text{ Hz}$</li>
+<li><strong>B4:</strong> $493.88\text{ Hz}$</li>
+<li><strong>C5:</strong> $523.25\text{ Hz}$</li>
+</ul>
+<hr />
+<h2 id="3-adsr-volume-envelopes"><a class="header" href="#3-adsr-volume-envelopes">3. ADSR Volume Envelopes</a></h2>
+<p>A constant-volume square wave sounds sterile and artificial. Acoustic instruments have dynamic volume profiles over time. Synthesizers model this with the <strong>ADSR Envelope</strong>:</p>
+<pre><code>Amplitude (Volume)
+  100% |     /\  (Decay)
+       |    /  \_______ (Sustain Level)
+       |   /           \
+       |  / (Attack)    \ (Release)
+    0% +-----------------\---------&gt; Time (ms)
+       ^ Key Pressed     ^ Key Released
+</code></pre>
+<ol>
+<li><strong>Attack:</strong> Time taken for the volume to rise from 0 to peak amplitude.</li>
+<li><strong>Decay:</strong> Time taken to drop from peak down to the steady sustain level.</li>
+<li><strong>Sustain:</strong> Constant volume held while the note remains active.</li>
+<li><strong>Release:</strong> Time taken for sound to fade out to zero after note release.</li>
+</ol>
+<hr />
+<h2 id="4-hands-on-project-the-arcade-chiptune-sfx-engine"><a class="header" href="#4-hands-on-project-the-arcade-chiptune-sfx-engine">4. Hands-On Project: The Arcade Chiptune SFX Engine</a></h2>
+<p>Let’s write a complete sound synthesizer in Runvoid that generates retro game sound effects:</p>
+<pre><code class="language-runvoid">say cyan "=================================================="
+say cyan "        RUNVOID CHIPTUNE SOUND FX ENGINE          "
+say cyan "=================================================="
+
+// Sound Frequency Presets (in Hertz)
+remember NOTE_C4 = 262
+remember NOTE_E4 = 330
+remember NOTE_G4 = 392
+remember NOTE_B4 = 494
+remember NOTE_C5 = 523
+remember NOTE_E5 = 659
+remember NOTE_G5 = 784
+
+// Sound Effect 1: Coin Pickup (Ascending Arpeggio)
+action play_sfx_coin() {
+    say yellow "[SFX] Coin Collected!"
+    play tone NOTE_B4 for 70
+    play tone NOTE_E5 for 180
+}
+
+// Sound Effect 2: Jump Sound (Fast Frequency Slide Up)
+action play_sfx_jump() {
+    say cyan "[SFX] Player Jump!"
+    remember freq = 150
+    repeat 8 times {
+        play tone freq for 25
+        freq = freq + 40
+    }
+}
+
+// Sound Effect 3: Laser Blast (Frequency Slide Down)
+action play_sfx_laser() {
+    say magenta "[SFX] Laser Fire!"
+    remember freq = 900
+    repeat 10 times {
+        play tone freq for 18
+        freq = freq - 70
+    }
+}
+
+// Sound Effect 4: Explosion (Simulated Low-Frequency Rumbling)
+action play_sfx_explosion() {
+    say red "[SFX] Explosion Impact!"
+    remember low_freq = 110
+    repeat 6 times {
+        play tone low_freq for 60
+        low_freq = low_freq - 12
+    }
+}
+
+// Sound Effect 5: Level Complete Victory Fanfare
+action play_sfx_victory() {
+    say green "[SFX] Victory Fanfare!"
+    play tone NOTE_C4 for 120
+    play tone NOTE_E4 for 120
+    play tone NOTE_G4 for 120
+    play tone NOTE_C5 for 350
+}
+
+// Demonstration Routine
+say "Testing Retro Arcade Audio Generator:"
+play_sfx_coin()
+play_sfx_jump()
+play_sfx_laser()
+play_sfx_explosion()
+play_sfx_victory()
+
+say green "Audio sound effects synthesis completed successfully!"
+</code></pre>
+<hr />
+<h2 id="5-hands-on-project-multi-track-music-tracker"><a class="header" href="#5-hands-on-project-multi-track-music-tracker">5. Hands-On Project: Multi-Track Music Tracker</a></h2>
+<p>Now let’s construct a music score sequencer that reads an array of note-duration pairs and renders a melodic composition:</p>
+<pre><code class="language-runvoid">say cyan "=================================================="
+say cyan "          8-BIT MUSIC SCORE SEQUENCER             "
+say cyan "=================================================="
+
+// Track Data: [Frequency_Hz, Duration_ms]
+remember melody = [
+    [NOTE_E5, 200], [NOTE_E5, 200], [0, 100],       [NOTE_E5, 200],
+    [0, 100],       [NOTE_C5, 200], [NOTE_E5, 200], [NOTE_G5, 400],
+    [0, 200],       [NOTE_G4, 400]
+]
+
+action play_tracker_score(score) {
+    say yellow "Sequencing melody track ({count score} events)..."
+    
+    remember step = 1
+    for every note_event in score {
+        remember hz = note_event[0]
+        remember ms = note_event[1]
+        
+        if hz &gt; 0 {
+            say "Step {step}: Tone {hz} Hz ({ms} ms)"
+            play tone hz for ms
+        } otherwise {
+            say "Step {step}: Rest silence ({ms} ms)"
+            wait ms
+        }
+        step = step + 1
+    }
+    
+    say green "Melody playback completed!"
+}
+
+play_tracker_score(melody)
+</code></pre>
+<hr />
+<h2 id="6-real-time-audio-buffers-via-c-ffi"><a class="header" href="#6-real-time-audio-buffers-via-c-ffi">6. Real-Time Audio Buffers via C FFI</a></h2>
+<p>In production game engines (like SDL2 or ALSA/PulseAudio on Linux, WASAPI on Windows), sound is played through a double-buffered circular DMA queue.</p>
+<pre><code>+-------------------------------------------------------------+
+| Circular Audio Ring Buffer (e.g. 2048 Samples, Float32)     |
+| [ Left Ear Buffer ][ Right Ear Buffer ]                     |
++-------------------------------------------------------------+
+         ^                               ^
+         | Hardware DMA Playhead         | Audio Engine Synthesizer
+     (Consumer)                     (Producer - Generates Next Frame)
+</code></pre>
+<p>In Runvoid Pro mode (<code>add Advanced</code>), you can link directly to <code>libasound</code> on Linux or <code>OpenAL</code> across platforms to generate raw uncompressed waveform PCM samples in real time, bypassing all OS audio latency!</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="ch18-00-networking-and-microservices.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="ch20-00-performance-tuning.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="ch18-00-networking-and-microservices.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="ch20-00-performance-tuning.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>

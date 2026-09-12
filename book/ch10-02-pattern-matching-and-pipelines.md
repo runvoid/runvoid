@@ -119,3 +119,50 @@ Output:
 
 By chaining actions with `|>`, your business logic mirrors a clear assembly line, making complex transformations trivial to inspect, refactor, and test.
 
+---
+
+## 4. Hands-On Project: Interactive CLI Command Dispatcher
+
+Let's combine `match` and pipelines to build an interactive command processor:
+
+```runvoid
+say cyan "=== COMMAND REPL ENGINE ==="
+
+action trim_command(cmd) {
+    make cmd trim
+    give cmd
+}
+
+action dispatch_command(cmd) {
+    match cmd {
+        when "status" -> {
+            say green "[STATUS] All 12 worker nodes operational. Uptime: 99.98%."
+            beep 880 for 50
+        }
+        when "sync" -> {
+            say yellow "[SYNC] Flushed 1,420 cached records to NVMe storage."
+            beep 660 for 50
+        }
+        when "reboot" -> {
+            say red "[WARN] Simulating cluster reboot in 5 seconds..."
+            beep 330 for 150
+        }
+        when "help" -> {
+            say "Available commands: status, sync, reboot, exit"
+        }
+        when "exit" -> {
+            say "Exiting REPL session."
+            give "EXIT"
+        }
+        otherwise -> {
+            say red "Unknown command '{cmd}'. Type 'help' for options."
+        }
+    }
+    give "CONTINUE"
+}
+
+remember test_input = "   status   "
+test_input |> trim_command |> dispatch_command
+```
+
+
