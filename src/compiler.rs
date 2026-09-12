@@ -438,6 +438,19 @@ mod tests {
 
     #[test]
     fn test_windows_target_cross_compilation() {
+        // Skip test if MinGW cross compiler is not installed on this machine
+        let has_mingw = std::process::Command::new("which")
+            .arg("x86_64-w64-mingw32-gcc")
+            .output()
+            .map(|o| o.status.success())
+            .unwrap_or(false);
+        if !has_mingw {
+            eprintln!(
+                "Skipping test_windows_target_cross_compilation: MinGW compiler not installed"
+            );
+            return;
+        }
+
         let code = r#"
             say "Hello from Windows target test!"
             remember x = 40

@@ -15,10 +15,10 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Install System Dependencies (NASM, GCC, libX11)
+      - name: Install System Dependencies (NASM, GCC, MinGW, Wine, libX11)
         run: |
           sudo apt-get update
-          sudo apt-get install -y nasm gcc libx11-dev
+          sudo apt-get install -y nasm gcc gcc-mingw-w64-x86-64 wine64 libx11-dev
 
       - name: Set up Rust Toolchain
         uses: dtolnay/rust-toolchain@stable
