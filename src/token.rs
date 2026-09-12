@@ -197,16 +197,16 @@ pub enum TokenKind {
     Eof,
 
     // Brackets and extra operators
-    OpenBracket,  // [
-    CloseBracket, // ]
-    Pipe,         // |
-    PipeGreater,  // |>
-    Ampersand,    // &
-    Caret,        // ^
-    Tilde,        // ~
-    DoubleLess,   // <<
-    DoubleGreater,// >>
-    ApostropheS,  // 's
+    OpenBracket,   // [
+    CloseBracket,  // ]
+    Pipe,          // |
+    PipeGreater,   // |>
+    Ampersand,     // &
+    Caret,         // ^
+    Tilde,         // ~
+    DoubleLess,    // <<
+    DoubleGreater, // >>
+    ApostropheS,   // 's
 }
 
 #[derive(Debug, Clone, PartialEq)]

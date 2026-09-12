@@ -38,24 +38,13 @@ impl std::fmt::Display for TargetOs {
     }
 }
 
+#[derive(Default)]
 pub struct CompilerOptions {
     pub output_path: Option<PathBuf>,
     pub run_after_build: bool,
     pub emit_asm_only: bool,
     pub verbose: bool,
     pub target: TargetOs,
-}
-
-impl Default for CompilerOptions {
-    fn default() -> Self {
-        Self {
-            output_path: None,
-            run_after_build: false,
-            emit_asm_only: false,
-            verbose: false,
-            target: TargetOs::default(),
-        }
-    }
 }
 
 pub struct Compiler;
@@ -278,7 +267,10 @@ impl Compiler {
                 return Ok(status.code());
             }
 
-            println!("Successfully compiled Windows binary to {:?}", final_bin_path);
+            println!(
+                "Successfully compiled Windows binary to {:?}",
+                final_bin_path
+            );
             let _ = fs::remove_file(&user_asm_path);
             let _ = fs::remove_file(&user_obj_path);
             let _ = fs::remove_file(&gui_c_path);
@@ -460,7 +452,11 @@ mod tests {
             target: TargetOs::Windows,
         };
         let res = Compiler::compile_source(code, &options);
-        assert!(res.is_ok(), "Windows target compile/run failed: {:?}", res.err());
+        assert!(
+            res.is_ok(),
+            "Windows target compile/run failed: {:?}",
+            res.err()
+        );
         assert_eq!(res.unwrap(), Some(0));
     }
 
@@ -681,4 +677,3 @@ mod tests {
         assert_eq!(res.unwrap(), Some(0));
     }
 }
-

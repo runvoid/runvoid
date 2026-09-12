@@ -18,8 +18,7 @@ use std::path::PathBuf;
 #[command(
     about = "Compiler for the simple, high-performance Runvoid programming language (Runvoid 1)",
     version = "1.3.0"
-)
-]
+)]
 struct Cli {
     #[command(subcommand)]
     command: Commands,
@@ -335,14 +334,12 @@ fn run_tests(file: Option<PathBuf>, verbose: bool, target: Option<TargetOs>) {
         if let Ok(entries) = fs::read_dir(".") {
             for entry in entries.flatten() {
                 let p = entry.path();
-                if let Some(name) = p.file_name().and_then(|n| n.to_str()) {
-                    if name.ends_with("_test.rv")
-                        || (name.starts_with("test_") && name.ends_with(".rv"))
-                    {
-                        if !files.contains(&p) {
-                            files.push(p);
-                        }
-                    }
+                if let Some(name) = p.file_name().and_then(|n| n.to_str())
+                    && (name.ends_with("_test.rv")
+                        || (name.starts_with("test_") && name.ends_with(".rv")))
+                    && !files.contains(&p)
+                {
+                    files.push(p);
                 }
             }
         }
@@ -387,7 +384,10 @@ fn run_tests(file: Option<PathBuf>, verbose: bool, target: Option<TargetOs>) {
 
     println!("\n==========================================");
     if failed == 0 {
-        println!("\x1b[1;32mTest suite passed! ({} passed, 0 failed)\x1b[0m", passed);
+        println!(
+            "\x1b[1;32mTest suite passed! ({} passed, 0 failed)\x1b[0m",
+            passed
+        );
     } else {
         eprintln!(
             "\x1b[1;31mTest suite failed! ({} passed, {} failed)\x1b[0m",
@@ -403,7 +403,6 @@ fn run_repl() {
     println!("\x1b[1;36m║           Runvoid 1 Interactive REPL (v1.3)                  ║\x1b[0m");
     println!("\x1b[1;36m║   Type :help for help, :clear to reset, :exit to quit        ║\x1b[0m");
     println!("\x1b[1;36m╚══════════════════════════════════════════════════════════════╝\x1b[0m");
-
 
     let stdin = io::stdin();
     let mut history: Vec<String> = Vec::new();
@@ -498,7 +497,7 @@ fn run_repl() {
         };
 
         match Compiler::compile_file(&tmp_path, &options) {
-            Ok(Some(code)) if code == 0 => {
+            Ok(Some(0)) => {
                 if trimmed.starts_with("remember ")
                     || trimmed.starts_with("define ")
                     || trimmed.starts_with("add ")

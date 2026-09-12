@@ -62,8 +62,19 @@ impl Lexer {
                 let start_col = self.col;
                 let is_possessive = if self.peek_ahead(1) == 's' {
                     let after_s = self.peek_ahead(2);
-                    let valid_follower = after_s == '\0' || (!after_s.is_alphanumeric() && after_s != '_' && after_s != '\'');
-                    let prev_is_expr = tokens.last().map(|t| matches!(t.kind, TokenKind::Ident(_) | TokenKind::CloseParen | TokenKind::CloseBracket)).unwrap_or(false);
+                    let valid_follower = after_s == '\0'
+                        || (!after_s.is_alphanumeric() && after_s != '_' && after_s != '\'');
+                    let prev_is_expr = tokens
+                        .last()
+                        .map(|t| {
+                            matches!(
+                                t.kind,
+                                TokenKind::Ident(_)
+                                    | TokenKind::CloseParen
+                                    | TokenKind::CloseBracket
+                            )
+                        })
+                        .unwrap_or(false);
                     prev_is_expr && valid_follower
                 } else {
                     false

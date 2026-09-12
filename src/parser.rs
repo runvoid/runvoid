@@ -1091,7 +1091,7 @@ impl Parser {
                     let duration = self.parse_expression()?;
                     Ok(Stmt::PlaySynth { freq, duration })
                 } else {
-                    return Err("Expected 'synth' after 'play'".to_string());
+                    Err("Expected 'synth' after 'play'".to_string())
                 }
             }
             TokenKind::Ident(ref name) => {
@@ -1130,22 +1130,21 @@ impl Parser {
                 if name == "set"
                     && self.pos + 2 < self.tokens.len()
                     && matches!(self.tokens[self.pos + 1].kind, TokenKind::Ident(_))
+                    && self.tokens[self.pos + 2].kind == TokenKind::Equal
                 {
-                    if self.tokens[self.pos + 2].kind == TokenKind::Equal {
-                        self.advance(); // consume "set"
-                        let var_tok = self.peek().clone();
-                        let var_name = match var_tok.kind {
-                            TokenKind::Ident(s) => s,
-                            _ => unreachable!(),
-                        };
-                        self.advance(); // consume ident
-                        self.advance(); // consume '='
-                        let value = self.parse_expression()?;
-                        return Ok(Stmt::Assign {
-                            name: var_name,
-                            value,
-                        });
-                    }
+                    self.advance(); // consume "set"
+                    let var_tok = self.peek().clone();
+                    let var_name = match var_tok.kind {
+                        TokenKind::Ident(s) => s,
+                        _ => unreachable!(),
+                    };
+                    self.advance(); // consume ident
+                    self.advance(); // consume '='
+                    let value = self.parse_expression()?;
+                    return Ok(Stmt::Assign {
+                        name: var_name,
+                        value,
+                    });
                 }
 
                 // Check if index assignment: `target[index] = expr`
