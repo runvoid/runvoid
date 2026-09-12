@@ -5,17 +5,27 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
-echo "=== 1. Building Linux Release Binary ==="
-cargo build --release
+echo "=== 1. Locating or Building Linux Release Binary ==="
+if [ -f target/x86_64-unknown-linux-gnu/release/runvoid ]; then
+    LINUX_BIN="target/x86_64-unknown-linux-gnu/release/runvoid"
+elif [ -f target/release/runvoid ]; then
+    LINUX_BIN="target/release/runvoid"
+else
+    cargo build --release
+    LINUX_BIN="target/release/runvoid"
+fi
 
-echo "=== 2. Building Windows Release Binary ==="
-cargo build --release --target x86_64-pc-windows-gnu
+echo "=== 2. Locating or Building Windows Release Binary ==="
+WIN_BIN="target/x86_64-pc-windows-gnu/release/runvoid.exe"
+if [ ! -f "$WIN_BIN" ]; then
+    cargo build --release --target x86_64-pc-windows-gnu
+fi
 
 echo "=== 3. Generating Embedded Payloads ==="
 mkdir -p installer
 python3 scripts/generate_payloads.py runtime/gui.c payload_gui installer/payload_gui.h
-python3 scripts/generate_payloads.py target/release/runvoid payload_runvoid_linux installer/payload_runvoid_linux.h
-python3 scripts/generate_payloads.py target/x86_64-pc-windows-gnu/release/runvoid.exe payload_runvoid_win installer/payload_runvoid_win.h
+python3 scripts/generate_payloads.py "$LINUX_BIN" payload_runvoid_linux installer/payload_runvoid_linux.h
+python3 scripts/generate_payloads.py "$WIN_BIN" payload_runvoid_win installer/payload_runvoid_win.h
 
 echo "=== 4. Compiling Linux GUI Installer ==="
 gcc -O2 installer/installer_linux.c -o runvoid-installer-linux -lX11

@@ -55,7 +55,11 @@ jobs:
           mkdir -p staging_linux staging_windows
 
           # Prepare Linux Package
-          cp target/x86_64-unknown-linux-gnu/release/runvoid staging_linux/
+          if [ -f target/x86_64-unknown-linux-gnu/release/runvoid ]; then
+            cp target/x86_64-unknown-linux-gnu/release/runvoid staging_linux/
+          else
+            cp target/release/runvoid staging_linux/
+          fi
           cp -r runtime staging_linux/
           cp install.sh staging_linux/
           cp README.md LICENSE staging_linux/
