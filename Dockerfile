@@ -1,5 +1,5 @@
 # Multi-stage Dockerfile for Runvoid Language & Compiler
-FROM rust:1.80-slim-bookworm AS builder
+FROM rust:slim AS builder
 
 WORKDIR /usr/src/runvoid
 
@@ -15,7 +15,7 @@ COPY . .
 RUN cargo build --release
 
 # Final lightweight runner image
-FROM debian:bookworm-slim
+FROM debian:trixie-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     nasm \
