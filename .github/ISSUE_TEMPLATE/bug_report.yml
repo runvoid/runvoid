@@ -1,0 +1,67 @@
+name: 🐛 Bug Report
+description: File a bug report to help us improve Runvoid
+title: "[Bug]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report an issue! Please check existing issues before submitting.
+  - type: input
+    id: version
+    attributes:
+      label: Runvoid Version
+      description: What version of Runvoid are you running? (Run `runvoid --version`)
+      placeholder: e.g. 1.3.0
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating System
+      description: What OS are you compiling / running on?
+      options:
+        - Linux (Arch / Manjaro)
+        - Linux (Ubuntu / Debian)
+        - Linux (Fedora / RHEL)
+        - Linux (Other)
+        - Windows 11 (x86_64)
+        - Windows 10 (x86_64)
+        - macOS (x86_64 or Apple Silicon)
+    validations:
+      required: true
+  - type: textarea
+    id: code
+    attributes:
+      label: Minimal Reproducible Code Example
+      description: Paste the shortest .rv snippet that triggers the bug.
+      render: runvoid
+      placeholder: |
+        remember x = 10
+        say x
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: A concise description of what you expected to happen.
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior & Compiler Output
+      description: What happened instead? Include the terminal error output or assembly output.
+      render: text
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Confirmation
+      options:
+        - label: I verified that this bug is reproducible with the latest release or main branch.
+          required: true
+        - label: I searched existing issues and did not find a duplicate.
+          required: true

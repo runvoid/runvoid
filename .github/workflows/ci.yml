@@ -25,6 +25,15 @@ jobs:
         with:
           components: clippy, rustfmt
 
+      - name: Enforce Zero-Cyrillic Policy
+        run: |
+          if rg -q '\p{Cyrillic}'; then
+            echo "ERROR: Cyrillic characters detected in repository files!"
+            rg -n '\p{Cyrillic}'
+            exit 1
+          fi
+          echo "PASS: Zero Cyrillic characters found in repository."
+
       - name: Check Formatting
         run: cargo fmt --check
 

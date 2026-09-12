@@ -1,0 +1,32 @@
+name: Docker Build & Test
+
+on:
+  push:
+    branches: [ "main" ]
+    tags: [ "v*" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  docker:
+    name: Build & Test Docker Image
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          load: true
+          tags: runvoid:test
+
+      - name: Test Docker Container Execution
+        run: |
+          docker run --rm runvoid:test --version
+          docker run --rm runvoid:test cheat

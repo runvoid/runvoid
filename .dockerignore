@@ -1,0 +1,8 @@
+target/
+.git/
+installer/payload_*.h
+runvoid-installer-linux
+runvoid-setup.exe
+release_assets/
+staging_*/
+docs/

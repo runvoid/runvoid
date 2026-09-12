@@ -1,0 +1,32 @@
+// Cookbook Recipe 04: Bare-Metal Freestanding Kernel Entry
+// Demonstrates: 'remove All' Directives, Raw Syscalls, Zero Libc/GC Overhead
+
+remove garbageC
+remove Basic
+remove Linux
+add Advanced
+add Freestanding
+
+// Direct Linux x86_64 Syscalls:
+// sys_write (rax = 1, rdi = stdout (1), rsi = buffer, rdx = len)
+// sys_exit  (rax = 60, rdi = exit_code (0))
+
+asm {
+    jmp kernel_start
+
+    msg db "[Kernel] Runvoid Freestanding Bare-Metal Kernel Loaded!", 10
+    len equ $ - msg
+
+kernel_start:
+    ; Invoke sys_write
+    mov rax, 1
+    mov rdi, 1
+    lea rsi, [rel msg]
+    mov rdx, len
+    syscall
+
+    ; Invoke sys_exit with code 0
+    mov rax, 60
+    xor rdi, rdi
+    syscall
+}

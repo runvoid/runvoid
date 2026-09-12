@@ -1,0 +1,45 @@
+name: 💡 Feature Request
+description: Suggest a new feature, syntax idea, or standard library module
+title: "[Feature]: "
+labels: ["enhancement", "proposal"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for suggesting improvements to Runvoid!
+  - type: textarea
+    id: problem
+    attributes:
+      label: Is your feature request related to a problem?
+      description: Describe the problem or limitation you are facing.
+      placeholder: e.g. I am always frustrated when I need to...
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed Solution / Syntax Design
+      description: How should this look in Runvoid code? Provide code examples.
+      render: runvoid
+      placeholder: |
+        # Proposed syntax example:
+        action process(data) { ... }
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Considered Alternatives
+      description: Have you considered any alternative workarounds or designs?
+  - type: dropdown
+    id: component
+    attributes:
+      label: Affected Component
+      options:
+        - Compiler / Lexer / Parser
+        - Code Generator (x86_64 NASM)
+        - Garbage Collector / Systems Runtime
+        - Standard Library & Modular Directives
+        - CLI Tooling (fmt, test, repl, watch)
+        - VS Code Extension / Developer Experience
+        - Documentation & The Book

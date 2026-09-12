@@ -69,7 +69,16 @@ sudo cp target/release/runvoid /usr/local/bin/
 
 ## ⚡ Quick Start
 
-### 1. Instant Script Execution (`run` mode):
+### 1. Initialize a Project (`init` & `runvoid.toml`):
+```bash
+runvoid init my_app
+cd my_app
+runvoid run        # Automatically builds and executes src/main.rv
+runvoid build      # Outputs standalone binary to bin/my_app
+runvoid clean      # Cleans binary outputs and build artifacts
+```
+
+### 2. Instant Script Execution (`run` mode):
 Create `hello.rv`:
 ```runvoid
 say "Hello, Runvoid world!"
@@ -85,45 +94,45 @@ Run directly without manual build steps:
 runvoid run hello.rv
 ```
 
-### 2. Standalone Native Compilation (`build` mode):
+### 3. Standalone Native Compilation (`build` mode):
 ```bash
 runvoid build hello.rv -o my_app
 ./my_app
 ```
 
-### 3. Inspect Generated Assembly (`emit-asm` mode):
+### 4. Inspect Generated Assembly (`emit-asm` mode):
 ```bash
 runvoid emit-asm hello.rv
 ```
 
-### 4. Run Automated Tests (`test` mode):
+### 5. Run Automated Tests (`test` mode):
 ```bash
 runvoid test
 ```
 
-### 5. Interactive REPL (`repl` mode):
+### 6. Interactive REPL (`repl` mode):
 ```bash
 runvoid repl
 ```
 
-### 6. Hot-Reloading Watcher (`watch` mode):
+### 7. Hot-Reloading Watcher (`watch` mode):
 ```bash
 runvoid watch hello.rv
 ```
 
-### 7. Interactive Terminal Cheat Sheet (`cheat` mode):
+### 8. Interactive Terminal Cheat Sheet (`cheat` mode):
 ```bash
 runvoid cheat
 ```
 
-### 8. Create a Project Template (`new` mode):
+### 9. Create a Project Template (`new` mode):
 ```bash
 runvoid new game my_game.rv    # 2D Screen canvas starter
 runvoid new gui my_gui.rv      # Desktop GUI starter
 runvoid new script my_app.rv   # Conversational starter script
 ```
 
-### 9. Auto-Format Code (`fmt` mode):
+### 10. Auto-Format Code (`fmt` mode):
 ```bash
 runvoid fmt -w hello.rv
 ```
@@ -177,23 +186,26 @@ say "Square of 8 = {val}"
 
 ---
 
-## 📖 Documentation
-
-For full details on syntax, language specification, memory model, compiler flags, and the AST pipeline, check the complete official handbooks:
-- 📖 **[The Runvoid Programming Language Book](https://runvoid.github.io/runvoid/)** — Official interactive book hosted on GitHub Pages.
-- 📄 **[Documentation Guide](book/DOCUMENTATION.md)** — Comprehensive language guide, architecture, and complete keyword reference.
-
----
-
-## 🧪 Running Tests
-
-Run the test suite to verify the compiler and typechecker:
-```bash
-cargo test
-```
-
----
-
-## 📄 License
-
-The Runvoid programming language and compiler are licensed under the **GNU General Public License v3.0 (GPL-3.0-or-later)**. See the [LICENSE](LICENSE) file for complete details.
+## 📖 Documentation & Governance
+ 
+ For full details on syntax, language specification, memory model, compiler flags, and the AST pipeline:
+ - 📖 **[The Runvoid Programming Language Book](https://runvoid.github.io/runvoid/)** — Official interactive book hosted on GitHub Pages.
+ - 📄 **[Compiler Internals & ABI Specification](INTERNALS.md)** — Deep architectural guide to calling conventions, GC, and bare-metal execution.
+ - 📋 **[RFC Process & Proposals](rfcs/)** — Evolution proposals and language feature specifications.
+ - 🤝 **[Contributing Guide](CONTRIBUTING.md)** & **[Code of Conduct](CODE_OF_CONDUCT.md)** — Guidelines for contributing to Runvoid.
+ - 🔒 **[Security Policy](SECURITY.md)** — Vulnerability reporting and disclosure.
+ 
+ ---
+ 
+ ## 🧪 Running Tests
+ 
+ Run the test suite to verify the compiler and typechecker:
+ ```bash
+ cargo test
+ ```
+ 
+ ---
+ 
+ ## 📄 License
+ 
+ The Runvoid programming language and compiler are licensed under the **GNU General Public License v3.0 (GPL-3.0-or-later)**. See the [LICENSE](LICENSE) file for complete details.

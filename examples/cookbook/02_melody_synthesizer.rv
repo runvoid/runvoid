@@ -1,0 +1,31 @@
+// Cookbook Recipe 02: 8-Bit Melody Synthesizer & Tone Generator
+// Demonstrates: Tone Generation, Arrays/Lists, Functions, and Frequency Math
+
+say cyan "=== Runvoid 8-Bit Melody Synthesizer ==="
+
+// Note frequency map (Hertz)
+remember NOTE_C4 = 261
+remember NOTE_D4 = 294
+remember NOTE_E4 = 329
+remember NOTE_F4 = 349
+remember NOTE_G4 = 392
+remember NOTE_A4 = 440
+remember NOTE_B4 = 493
+remember NOTE_C5 = 523
+
+// Render ASCII keyboard visualization
+say "   +---+---+---+---+---+---+---+---+"
+say "   | C | D | E | F | G | A | B | C |"
+say "   +---+---+---+---+---+---+---+---+"
+say "   |261|294|329|349|392|440|493|523|"
+say "   +---+---+---+---+---+---+---+---+"
+
+say yellow "Synthesizing Arcade Victory Fanfare..."
+
+// Play rising arpeggio
+play synth NOTE_C4, 120
+play synth NOTE_E4, 120
+play synth NOTE_G4, 120
+play synth NOTE_C5, 300
+
+say green "Fanfare playback complete!"

@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Runvoid Discussions
+    url: https://github.com/runvoid/runvoid/discussions
+    about: Ask questions, discuss design proposals, and share code.
+  - name: The Runvoid Book & Documentation
+    url: https://runvoid.github.io/runvoid/
+    about: Read the official interactive handbook and syntax reference.

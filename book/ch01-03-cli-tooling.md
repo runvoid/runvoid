@@ -10,24 +10,64 @@ This section provides an exhaustive guide to the subcommands and flags offered b
 
 | Subcommand | Description | Common Flags |
 | :--- | :--- | :--- |
-| **`run`** | Compile and execute a `.rv` source file immediately | `--target <linux\|windows>`, `--verbose` |
-| **`build`** | Compile to a standalone binary executable | `-o <path>`, `--target <linux\|windows>`, `--verbose` |
+| **`init`** | Initialize a new Runvoid project with `runvoid.toml` | `[name]` |
+| **`run`** | Compile and execute a project or source file | `--target <linux\|windows>`, `--verbose` |
+| **`build`** | Compile project or file to a standalone binary | `-o <path>`, `--target <linux\|windows>`, `--verbose` |
+| **`clean`** | Clean binary outputs, object files, and build logs | |
 | **`emit-asm`** | Output the raw x86_64 NASM assembly code | `--target <linux\|windows>` |
 | **`test`** | Discover and run automated test suites | `[path]`, `--target <linux\|windows>` |
 | **`watch`** | Recompile and rerun automatically upon file changes | `--target <linux\|windows>` |
 | **`fmt`** | Format Runvoid source code to canonical style | `-w` (in-place write) |
 | **`repl`** | Start an interactive Read-Eval-Print Loop | |
-| **`new`** | Scaffold new starter projects or templates | `<game\|gui\|script> <file>` |
+| **`new`** | Scaffold single-file templates | `<game\|gui\|script> <file>` |
 | **`cheat`** | Print an interactive syntax cheat sheet | |
 
 ---
 
-## 1. `runvoid run`
+## 1. Project Management: `runvoid init` and `runvoid.toml`
 
-The `run` subcommand compiles the target source file into a temporary binary and executes it immediately:
+Runvoid 1.3 introduces canonical project manifests (`runvoid.toml`). To initialize a new project:
 
 ```bash
-$ runvoid run app.rv
+$ runvoid init my_project
+$ cd my_project
+```
+
+Or initialize an existing directory:
+```bash
+$ runvoid init
+```
+
+This scaffolds a complete project structure:
+```text
+my_project/
+├── runvoid.toml        # Declarative manifest (package name, entry point, target)
+├── src/
+│   └── main.rv         # Application source entry point
+├── tests/
+│   └── main_test.rv    # Verification test suite
+├── .gitignore          # Ignores build artifacts and binaries
+└── README.md           # Project documentation
+```
+
+### Automatic Project Detection
+When running inside a project directory with `runvoid.toml`, you can simply run:
+```bash
+$ runvoid run
+$ runvoid build
+$ runvoid clean
+```
+The compiler automatically resolves `[build].entry` (defaulting to `src/main.rv`).
+
+---
+
+## 2. `runvoid run`
+
+The `run` subcommand compiles and executes immediately:
+
+```bash
+$ runvoid run          # Executes current project (via runvoid.toml)
+$ runvoid run app.rv   # Executes a specific file
 ```
 
 ### Passing Arguments to Your Program

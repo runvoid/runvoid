@@ -21,4 +21,5 @@ installer/payload_*.h
 dist/
 release/
 SHA256SUMS.txt
+*.vsix
 

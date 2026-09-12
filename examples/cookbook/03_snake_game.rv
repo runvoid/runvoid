@@ -1,0 +1,42 @@
+// Cookbook Recipe 03: Retro Snake Game (2D Hardware Canvas)
+// Demonstrates: Hardware Graphics, Game Loop State, Dictionaries, and Drawing Primitives
+
+say cyan "=== Launching Runvoid Retro Snake Game Demo ==="
+
+remember score = 150
+remember high_score = 420
+remember snake_length = 5
+
+say yellow "Initializing game grid 640x480..."
+
+screen "Runvoid Retro Snake - 2D Canvas", 640, 480 {
+    // 1. Clear background
+    draw box at 0, 0, size 640, 480, color "black"
+
+    // 2. Render game boundary walls
+    draw line from 20, 40, to 620, 40, color "white"
+    draw line from 20, 440, to 620, 440, color "white"
+    draw line from 20, 40, to 20, 440, color "white"
+    draw line from 620, 40, to 620, 440, color "white"
+
+    // 3. Render Snake Body Segments (Green)
+    draw box at 200, 200, size 20, 20, color "green"
+    draw box at 220, 200, size 20, 20, color "green"
+    draw box at 240, 200, size 20, 20, color "green"
+    draw box at 260, 200, size 20, 20, color "green"
+
+    // 4. Render Snake Head (Cyan)
+    draw box at 280, 200, size 20, 20, color "cyan"
+
+    // 5. Render Food Item (Red Apple)
+    draw circle at 400, 200, size 10, color "red"
+    draw circle at 150, 320, size 10, color "yellow"
+
+    // 6. HUD / Scoreboard Display
+    draw text "RUNVOID RETRO SNAKE", at 30, 25, color "green"
+    draw text "SCORE: 150", at 300, 25, color "yellow"
+    draw text "HIGH SCORE: 420", at 480, 25, color "white"
+    draw text "Press any key to return to desktop...", at 180, 460, color "cyan"
+}
+
+say green "Game session finished cleanly. Final Score: {score}"

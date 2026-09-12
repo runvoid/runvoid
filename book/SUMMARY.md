@@ -41,4 +41,6 @@
     - [10.3 Bitwise Operations & Audio Synthesizer](ch10-03-bitwise-and-audio.md)
     - [10.4 Test Runner, Assertions & Hot-Reloading Watch](ch10-04-testing-and-tooling.md)
 
+- [11. The Runvoid Cookbook](ch11-00-cookbook.md)
+
 - [Appendix A: Complete Keywords & Directives Reference](appendix-01-keywords-reference.md)

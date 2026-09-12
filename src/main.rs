@@ -26,10 +26,10 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
-    /// Run a Runvoid script directly (compiles and executes immediately)
+    /// Run a Runvoid script or project directly (compiles and executes immediately)
     Run {
-        /// Path to the .rv source file
-        file: PathBuf,
+        /// Path to the .rv source file (defaults to runvoid.toml or src/main.rv)
+        file: Option<PathBuf>,
 
         /// Verbose optimizer output
         #[arg(short, long)]
@@ -40,10 +40,10 @@ enum Commands {
         target: Option<TargetOs>,
     },
 
-    /// Compile a Runvoid file into a standalone native binary
+    /// Compile a Runvoid file or project into a standalone native binary
     Build {
-        /// Path to the .rv source file
-        file: PathBuf,
+        /// Path to the .rv source file (defaults to runvoid.toml or src/main.rv)
+        file: Option<PathBuf>,
 
         /// Output executable binary path
         #[arg(short, long)]
@@ -60,8 +60,8 @@ enum Commands {
 
     /// Emit generated NASM assembly (x86_64) without compiling to binary
     EmitAsm {
-        /// Path to the .rv source file
-        file: PathBuf,
+        /// Path to the .rv source file (defaults to runvoid.toml or src/main.rv)
+        file: Option<PathBuf>,
 
         /// Output .asm file path
         #[arg(short, long)]
@@ -124,18 +124,44 @@ enum Commands {
 
     /// Interactive quick-reference cheat sheet for all Runvoid syntax & features
     Cheat,
+
+    /// Initialize a new Runvoid project with runvoid.toml and standard layout
+    Init {
+        /// Project directory name (defaults to current directory)
+        name: Option<String>,
+    },
+
+    /// Clean build artifacts, object files, and bin/ directory
+    Clean,
 }
 
 fn main() {
     let cli = Cli::parse();
 
-    let result = match cli.command {
+    let (result, active_file) = match cli.command {
+        Commands::Init { name } => {
+            handle_init(name);
+            return;
+        }
+        Commands::Clean => {
+            handle_clean();
+            return;
+        }
         Commands::Run {
             file,
             verbose,
             target,
         } => {
-            let t = target.unwrap_or_default();
+            let (target_file, project_cfg) = match resolve_source_file(file) {
+                Ok(res) => res,
+                Err(err) => {
+                    eprintln!("\x1b[1;31merror\x1b[0m: {}", err);
+                    std::process::exit(1);
+                }
+            };
+            let t = target
+                .or_else(|| project_cfg.as_ref().and_then(|c| c.target))
+                .unwrap_or_default();
             let options = CompilerOptions {
                 output_path: None,
                 run_after_build: true,
@@ -143,7 +169,10 @@ fn main() {
                 verbose,
                 target: t,
             };
-            Compiler::compile_file(&file, &options)
+            (
+                Compiler::compile_file(&target_file, &options),
+                Some(target_file),
+            )
         }
         Commands::Build {
             file,
@@ -151,16 +180,27 @@ fn main() {
             verbose,
             target,
         } => {
-            let t = target.unwrap_or_default();
-            let out_file = output.unwrap_or_else(|| {
-                let mut p = file.clone();
-                if t == TargetOs::Windows {
-                    p.set_extension("exe");
-                } else {
-                    p.set_extension("");
+            let (target_file, project_cfg) = match resolve_source_file(file) {
+                Ok(res) => res,
+                Err(err) => {
+                    eprintln!("\x1b[1;31merror\x1b[0m: {}", err);
+                    std::process::exit(1);
                 }
-                p
-            });
+            };
+            let t = target
+                .or_else(|| project_cfg.as_ref().and_then(|c| c.target))
+                .unwrap_or_default();
+            let out_file = output
+                .or_else(|| project_cfg.as_ref().and_then(|c| c.output.clone()))
+                .unwrap_or_else(|| {
+                    let mut p = target_file.clone();
+                    if t == TargetOs::Windows {
+                        p.set_extension("exe");
+                    } else {
+                        p.set_extension("");
+                    }
+                    p
+                });
             let options = CompilerOptions {
                 output_path: Some(out_file),
                 run_after_build: false,
@@ -168,14 +208,26 @@ fn main() {
                 verbose,
                 target: t,
             };
-            Compiler::compile_file(&file, &options)
+            (
+                Compiler::compile_file(&target_file, &options),
+                Some(target_file),
+            )
         }
         Commands::EmitAsm {
             file,
             output,
             target,
         } => {
-            let t = target.unwrap_or_default();
+            let (target_file, project_cfg) = match resolve_source_file(file) {
+                Ok(res) => res,
+                Err(err) => {
+                    eprintln!("\x1b[1;31merror\x1b[0m: {}", err);
+                    std::process::exit(1);
+                }
+            };
+            let t = target
+                .or_else(|| project_cfg.as_ref().and_then(|c| c.target))
+                .unwrap_or_default();
             let options = CompilerOptions {
                 output_path: output,
                 run_after_build: false,
@@ -183,7 +235,10 @@ fn main() {
                 verbose: false,
                 target: t,
             };
-            Compiler::compile_file(&file, &options)
+            (
+                Compiler::compile_file(&target_file, &options),
+                Some(target_file),
+            )
         }
         Commands::Test {
             file,
@@ -312,7 +367,7 @@ beep
         }
         Ok(_) => {}
         Err(err) => {
-            eprintln!("{}", err);
+            format_compiler_error(&err, active_file.as_deref());
             std::process::exit(1);
         }
     }
@@ -655,4 +710,429 @@ fn print_cheat_sheet() {
     println!("  remove Basic                          # Require explicit type annotations");
     println!("  add Advanced                          # Enable Pro optimizations & inline ASM");
     println!("  use ior                               # Explicit I/O library import\n");
+
+    println!("\x1b[1;33m📌 11. PROJECT MANAGEMENT & CLI\x1b[0m");
+    println!("  runvoid init [app]                    # Initialize new project with runvoid.toml");
+    println!("  runvoid run                           # Run project from current directory");
+    println!(
+        "  runvoid build                         # Build native binary specified in runvoid.toml"
+    );
+    println!("  runvoid test                          # Run automated test suites");
+    println!("  runvoid clean                         # Clean build artifacts and bin/ folder\n");
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ProjectConfig {
+    pub name: String,
+    pub version: String,
+    pub entry: PathBuf,
+    pub output: Option<PathBuf>,
+    pub target: Option<TargetOs>,
+}
+
+impl ProjectConfig {
+    pub fn load_from_dir(dir: &std::path::Path) -> Option<Self> {
+        let manifest_path = dir.join("runvoid.toml");
+        if !manifest_path.exists() {
+            return None;
+        }
+
+        let content = fs::read_to_string(&manifest_path).ok()?;
+        let mut name = dir
+            .file_name()
+            .and_then(|s| s.to_str())
+            .unwrap_or("app")
+            .to_string();
+        let mut version = "1.0.0".to_string();
+        let mut entry = PathBuf::from("src/main.rv");
+        let mut output = None;
+        let mut target = None;
+
+        for line in content.lines() {
+            let line = line.trim();
+            if line.is_empty() || line.starts_with('#') || line.starts_with('[') {
+                continue;
+            }
+            if let Some((k, v)) = line.split_once('=') {
+                let key = k.trim();
+                let val = v.trim().trim_matches('"').trim_matches('\'').trim();
+                match key {
+                    "name" => name = val.to_string(),
+                    "version" => version = val.to_string(),
+                    "entry" => entry = PathBuf::from(val),
+                    "output" => output = Some(PathBuf::from(val)),
+                    "target" => {
+                        if val.eq_ignore_ascii_case("windows") {
+                            target = Some(TargetOs::Windows);
+                        } else if val.eq_ignore_ascii_case("linux") {
+                            target = Some(TargetOs::Linux);
+                        }
+                    }
+                    _ => {}
+                }
+            }
+        }
+
+        Some(Self {
+            name,
+            version,
+            entry,
+            output,
+            target,
+        })
+    }
+}
+
+fn resolve_source_file(file: Option<PathBuf>) -> Result<(PathBuf, Option<ProjectConfig>), String> {
+    if let Some(f) = file {
+        if !f.exists() {
+            return Err(format!("Source file not found: {}", f.display()));
+        }
+        let cfg = ProjectConfig::load_from_dir(&PathBuf::from("."));
+        return Ok((f, cfg));
+    }
+
+    if let Some(cfg) = ProjectConfig::load_from_dir(&PathBuf::from("."))
+        && cfg.entry.exists()
+    {
+        return Ok((cfg.entry.clone(), Some(cfg)));
+    }
+
+    if PathBuf::from("src/main.rv").exists() {
+        return Ok((PathBuf::from("src/main.rv"), None));
+    }
+    if PathBuf::from("main.rv").exists() {
+        return Ok((PathBuf::from("main.rv"), None));
+    }
+
+    Err(
+        "No input file specified and no 'runvoid.toml' or 'src/main.rv' found.\nRun 'runvoid init' to scaffold a new project, or pass a file: 'runvoid run <file.rv>'".to_string(),
+    )
+}
+
+fn handle_init(name_opt: Option<String>) {
+    let (target_dir, proj_name) = match name_opt {
+        Some(name) => {
+            let path = PathBuf::from(&name);
+            (path, name)
+        }
+        None => {
+            let current = std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
+            let dir_name = current
+                .file_name()
+                .and_then(|s| s.to_str())
+                .unwrap_or("runvoid_app")
+                .to_string();
+            (PathBuf::from("."), dir_name)
+        }
+    };
+
+    if target_dir != std::path::Path::new(".")
+        && !target_dir.exists()
+        && let Err(e) = fs::create_dir_all(&target_dir)
+    {
+        eprintln!("\x1b[1;31merror\x1b[0m: Failed to create directory: {}", e);
+        return;
+    }
+
+    let manifest_path = target_dir.join("runvoid.toml");
+    if manifest_path.exists() {
+        eprintln!(
+            "\x1b[1;33mwarning\x1b[0m: 'runvoid.toml' already exists in {}.",
+            target_dir.display()
+        );
+        return;
+    }
+
+    let src_dir = target_dir.join("src");
+    let tests_dir = target_dir.join("tests");
+    let _ = fs::create_dir_all(&src_dir);
+    let _ = fs::create_dir_all(&tests_dir);
+
+    // Write runvoid.toml
+    let manifest_content = format!(
+        r#"[project]
+name = "{proj_name}"
+version = "1.0.0"
+entry = "src/main.rv"
+description = "A modern Runvoid application"
+authors = []
+
+[build]
+target = "auto"
+output = "bin/{proj_name}"
+"#
+    );
+    let _ = fs::write(&manifest_path, manifest_content);
+
+    // Write src/main.rv
+    let main_path = src_dir.join("main.rv");
+    if !main_path.exists() {
+        let main_content = format!(
+            r#"# ==============================================================================
+# {proj_name} - Main Entry Point
+# ==============================================================================
+
+say "Welcome to {proj_name} powered by Runvoid 1!"
+
+remember lucky = random 1 to 100
+say "Your lucky number today: {{lucky}}"
+"#
+        );
+        let _ = fs::write(&main_path, main_content);
+    }
+
+    // Write tests/main_test.rv
+    let test_path = tests_dir.join("main_test.rv");
+    if !test_path.exists() {
+        let test_content = r#"test "project sanity test" {
+    remember val = 10 + 20
+    verify that val is 30
+}
+"#;
+        let _ = fs::write(&test_path, test_content);
+    }
+
+    // Write .gitignore
+    let gitignore_path = target_dir.join(".gitignore");
+    if !gitignore_path.exists() {
+        let gitignore_content = "bin/\n*.o\n*.asm\nbuild.log\n";
+        let _ = fs::write(&gitignore_path, gitignore_content);
+    }
+
+    // Write README.md
+    let readme_path = target_dir.join("README.md");
+    if !readme_path.exists() {
+        let readme_content = format!(
+            r#"# {proj_name}
+
+A modern high-performance application built with the **Runvoid** programming language.
+
+## Quick Start
+
+```bash
+# Run directly:
+runvoid run
+
+# Run tests:
+runvoid test
+
+# Build standalone native binary:
+runvoid build
+
+# Clean build artifacts:
+runvoid clean
+```
+"#
+        );
+        let _ = fs::write(&readme_path, readme_content);
+    }
+
+    println!("\x1b[1;32m✓ Initialized new Runvoid project '{proj_name}' successfully!\x1b[0m");
+    println!("Created:");
+    println!("  ├── runvoid.toml");
+    println!("  ├── src/main.rv");
+    println!("  ├── tests/main_test.rv");
+    println!("  ├── .gitignore");
+    println!("  └── README.md\n");
+    println!("To start running:");
+    if target_dir != std::path::Path::new(".") {
+        println!("  cd {proj_name}");
+    }
+    println!("  runvoid run");
+}
+
+fn handle_clean() {
+    let mut removed = 0;
+    if PathBuf::from("bin").exists() && fs::remove_dir_all("bin").is_ok() {
+        println!("✓ Removed bin/ directory");
+        removed += 1;
+    }
+    if let Ok(entries) = fs::read_dir(".") {
+        for entry in entries.flatten() {
+            let p = entry.path();
+            if let Some(ext) = p.extension()
+                && (ext == "o" || ext == "asm")
+            {
+                let _ = fs::remove_file(&p);
+                removed += 1;
+            }
+        }
+    }
+    if PathBuf::from("build.log").exists() {
+        let _ = fs::remove_file("build.log");
+        removed += 1;
+    }
+    println!(
+        "\x1b[1;32m✓ Clean complete! ({} items cleaned)\x1b[0m",
+        removed
+    );
+}
+
+fn levenshtein_distance(a: &str, b: &str) -> usize {
+    let a_bytes = a.as_bytes();
+    let b_bytes = b.as_bytes();
+    let mut dp = vec![vec![0; b_bytes.len() + 1]; a_bytes.len() + 1];
+    for (i, row) in dp.iter_mut().enumerate().take(a_bytes.len() + 1) {
+        row[0] = i;
+    }
+    if let Some(first_row) = dp.first_mut() {
+        for (j, cell) in first_row.iter_mut().enumerate().take(b_bytes.len() + 1) {
+            *cell = j;
+        }
+    }
+    for i in 1..=a_bytes.len() {
+        for j in 1..=b_bytes.len() {
+            let cost = if a_bytes[i - 1] == b_bytes[j - 1] {
+                0
+            } else {
+                1
+            };
+            dp[i][j] = (dp[i - 1][j] + 1)
+                .min(dp[i][j - 1] + 1)
+                .min(dp[i - 1][j - 1] + cost);
+        }
+    }
+    dp[a_bytes.len()][b_bytes.len()]
+}
+
+fn find_did_you_mean(word: &str) -> Option<&'static str> {
+    const KEYWORDS: &[&str] = &[
+        "say",
+        "remember",
+        "ask",
+        "choose",
+        "alert",
+        "if",
+        "otherwise",
+        "while",
+        "repeat",
+        "for",
+        "every",
+        "in",
+        "action",
+        "give",
+        "define",
+        "match",
+        "when",
+        "play",
+        "synth",
+        "beep",
+        "speak",
+        "wait",
+        "write",
+        "read",
+        "screen",
+        "window",
+        "button",
+        "label",
+        "checkbox",
+        "measure",
+        "time",
+        "cycles",
+        "verify",
+        "that",
+        "test",
+        "add",
+        "remove",
+        "use",
+        "struct",
+        "asm",
+        "thread",
+        "atomic",
+    ];
+
+    let word_lower = word.to_lowercase();
+    let mut best_match = None;
+    let mut best_dist = usize::MAX;
+
+    for &kw in KEYWORDS {
+        let dist = levenshtein_distance(&word_lower, kw);
+        if dist < best_dist && dist <= 2 {
+            best_dist = dist;
+            best_match = Some(kw);
+        }
+    }
+    best_match
+}
+
+fn format_compiler_error(err: &str, file: Option<&std::path::Path>) {
+    eprintln!("\x1b[1;31merror\x1b[0m: {}", err);
+
+    // Try extracting word after 'Ident("..."', 'undeclared variable '...', or 'Unknown function '...'
+    let mut candidate_ident = None;
+    if let Some(pos) = err.find("Ident(\"") {
+        let after = &err[pos + 7..];
+        if let Some(end) = after.find('"') {
+            candidate_ident = Some(&after[..end]);
+        }
+    } else if let Some(pos) = err.find("undeclared variable '") {
+        let after = &err[pos + 21..];
+        if let Some(end) = after.find('\'') {
+            candidate_ident = Some(&after[..end]);
+        }
+    } else if let Some(pos) = err.find("Unknown function '") {
+        let after = &err[pos + 18..];
+        if let Some(end) = after.find('\'') {
+            candidate_ident = Some(&after[..end]);
+        }
+    }
+
+    if let Some(ident) = candidate_ident
+        && let Some(suggestion) = find_did_you_mean(ident)
+    {
+        eprintln!(
+            "  \x1b[1;36m= help\x1b[0m: did you mean '\x1b[1;32m{}\x1b[0m'?",
+            suggestion
+        );
+    }
+
+    if let Some(f) = file
+        && let Some(line_pos) = err.find("line ")
+        && let rest = &err[line_pos + 5..]
+        && let Some((l_str, c_rest)) = rest.split_once(',')
+        && let Ok(line_num) = l_str.trim().parse::<usize>()
+    {
+        let col_num = if let Some(c_pos) = c_rest.find("col ") {
+            c_rest[c_pos + 4..].trim().parse::<usize>().unwrap_or(1)
+        } else {
+            1
+        };
+        eprintln!(
+            "  \x1b[1;34m-->\x1b[0m {}:{}:{}",
+            f.display(),
+            line_num,
+            col_num
+        );
+
+        // Show source line if available
+        if let Ok(source) = fs::read_to_string(f)
+            && let Some(src_line) = source.lines().nth(line_num.saturating_sub(1))
+        {
+            eprintln!("   \x1b[1;34m|\x1b[0m");
+            eprintln!("\x1b[1;34m{:>2} |\x1b[0m {}", line_num, src_line);
+            let pad = " ".repeat(col_num.saturating_sub(1));
+            eprintln!("   \x1b[1;34m|\x1b[0m \x1b[1;31m{}^\x1b[0m", pad);
+        }
+    }
+}
+
+#[cfg(test)]
+mod project_tests {
+    use super::*;
+
+    #[test]
+    fn test_did_you_mean_suggestions() {
+        assert_eq!(find_did_you_mean("remembr"), Some("remember"));
+        assert_eq!(find_did_you_mean("sy"), Some("say"));
+        assert_eq!(find_did_you_mean("verfy"), Some("verify"));
+        assert_eq!(find_did_you_mean("swiitch"), None);
+    }
+
+    #[test]
+    fn test_levenshtein_distance() {
+        assert_eq!(levenshtein_distance("kitten", "sitting"), 3);
+        assert_eq!(levenshtein_distance("say", "say"), 0);
+        assert_eq!(levenshtein_distance("say", "sayy"), 1);
+    }
 }
